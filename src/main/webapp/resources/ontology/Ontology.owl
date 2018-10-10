@@ -1,0 +1,333 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns="https://wlab.ddns.net/Ontology.owl#"
+     xml:base="https://wlab.ddns.net/Ontology.owl"
+     xmlns:owl="http://www.w3.org/2002/07/owl#"
+     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:xml="http://www.w3.org/XML/1998/namespace"
+     xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+     xmlns:OntologyTesi="https://wlab.ddns.net/Ontology.owl#">
+    <owl:Ontology rdf:about="https://wlab.ddns.net/Ontology.owl"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Object Properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#after -->
+
+    <owl:ObjectProperty rdf:about="https://wlab.ddns.net/Ontology.owl#after">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <rdfs:range rdf:resource="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#canBeFoundIn -->
+
+    <owl:ObjectProperty rdf:about="https://wlab.ddns.net/Ontology.owl#canBeFoundIn">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Item"/>
+        <rdfs:range rdf:resource="https://wlab.ddns.net/Ontology.owl#Place"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#relatedTo -->
+
+    <owl:ObjectProperty rdf:about="https://wlab.ddns.net/Ontology.owl#relatedTo">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Verb"/>
+        <rdfs:range rdf:resource="https://wlab.ddns.net/Ontology.owl#Item"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#requires -->
+
+    <owl:ObjectProperty rdf:about="https://wlab.ddns.net/Ontology.owl#requires">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Verb"/>
+        <rdfs:range rdf:resource="https://wlab.ddns.net/Ontology.owl#Param"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#wants -->
+
+    <owl:ObjectProperty rdf:about="https://wlab.ddns.net/Ontology.owl#wants">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <rdfs:range rdf:resource="https://wlab.ddns.net/Ontology.owl#Param"/>
+    </owl:ObjectProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Data properties
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#vword -->
+
+    <owl:DatatypeProperty rdf:about="https://wlab.ddns.net/Ontology.owl#vword">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Verb"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#wword -->
+
+    <owl:DatatypeProperty rdf:about="https://wlab.ddns.net/Ontology.owl#wword">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    </owl:DatatypeProperty>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Classes
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#Cmarker -->
+
+    <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#Cword -->
+
+    <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Cword"/>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#Item -->
+
+    <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Item"/>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#Param -->
+
+    <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Param"/>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#Place -->
+
+    <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Place"/>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#Verb -->
+
+    <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Verb"/>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // Individuals
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#CW1 -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#CW1">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <after rdf:resource="https://wlab.ddns.net/Ontology.owl#quando"/>
+        <wants rdf:resource="https://wlab.ddns.net/Ontology.owl#location_house"/>
+        <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">casa</wword>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#CW2 -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#CW2">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <after rdf:resource="https://wlab.ddns.net/Ontology.owl#entro"/>
+        <wants rdf:resource="https://wlab.ddns.net/Ontology.owl#time_bed"/>
+        <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">domani</wword>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#CW3 -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#CW3">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <after rdf:resource="https://wlab.ddns.net/Ontology.owl#prima"/>
+        <wants rdf:resource="https://wlab.ddns.net/Ontology.owl#time_bed"/>
+        <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">letto</wword>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#CW4 -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#CW4">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <after rdf:resource="https://wlab.ddns.net/Ontology.owl#dopo"/>
+        <wants rdf:resource="https://wlab.ddns.net/Ontology.owl#time_lunch"/>
+        <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">pranzo</wword>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#V1 -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#V1">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Verb"/>
+        <relatedTo rdf:resource="https://wlab.ddns.net/Ontology.owl#latte"/>
+        <relatedTo rdf:resource="https://wlab.ddns.net/Ontology.owl#pane"/>
+        <requires rdf:resource="https://wlab.ddns.net/Ontology.owl#location_item"/>
+        <vword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">prendere</vword>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#dopo -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#dopo">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#entro -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#entro">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#latte -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#latte">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Item"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#location_house -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#location_house">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Param"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#location_item -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#location_item">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Param"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#pane -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#pane">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Item"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#panetteria -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#panetteria">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Place"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#prima -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#prima">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#quando -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#quando">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#supermercato -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#supermercato">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Place"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#time_bed -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#time_bed">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Param"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#time_lunch -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#time_lunch">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Param"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- 
+    ///////////////////////////////////////////////////////////////////////////////////////
+    //
+    // General axioms
+    //
+    ///////////////////////////////////////////////////////////////////////////////////////
+     -->
+
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Cword"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Item"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Param"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Place"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Verb"/>
+        </owl:members>
+    </rdf:Description>
+</rdf:RDF>
+
+
+
+<!-- Generated by the OWL API (version 4.5.6.2018-09-06T00:27:41Z) https://github.com/owlcs/owlapi -->
+
