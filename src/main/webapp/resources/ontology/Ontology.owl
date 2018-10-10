@@ -230,6 +230,7 @@
 
     <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#latte">
         <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Item"/>
+        <canBeFoundIn rdf:resource="https://wlab.ddns.net/Ontology.owl#supermercato"/>
     </owl:NamedIndividual>
     
 
@@ -254,6 +255,8 @@
 
     <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#pane">
         <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Item"/>
+        <canBeFoundIn rdf:resource="https://wlab.ddns.net/Ontology.owl#panetteria"/>
+        <canBeFoundIn rdf:resource="https://wlab.ddns.net/Ontology.owl#supermercato"/>
     </owl:NamedIndividual>
     
 
