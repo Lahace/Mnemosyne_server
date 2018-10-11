@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package apontini.mnemosyne.resources;
+package ap.mnemosyne.resources;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.*;

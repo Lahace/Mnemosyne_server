@@ -1,4 +1,4 @@
-package apontini.mnemosyne.resources;
+package ap.mnemosyne.resources;
 
 public class Utente
 {

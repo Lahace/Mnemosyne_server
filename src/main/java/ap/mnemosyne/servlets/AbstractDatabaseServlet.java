@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package apontini.mnemosyne.servlets;
+package ap.mnemosyne.servlets;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;

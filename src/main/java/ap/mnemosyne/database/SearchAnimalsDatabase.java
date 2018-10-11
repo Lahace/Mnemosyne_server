@@ -1,6 +1,6 @@
-package apontini.mnemosyne.database;
+package ap.mnemosyne.database;
 
-import apontini.mnemosyne.resources.Animale;
+import ap.mnemosyne.resources.Animale;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

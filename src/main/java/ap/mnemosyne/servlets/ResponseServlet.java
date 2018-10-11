@@ -1,16 +1,16 @@
-package apontini.mnemosyne.servlets;
+package ap.mnemosyne.servlets;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServlet;
 
 import java.io.IOException;
 import java.sql.SQLException;
 
-import apontini.mnemosyne.database.SearchAnimalsDatabase;
-import apontini.mnemosyne.resources.*;
-import apontini.mnemosyne.database.*;
+import ap.mnemosyne.database.SearchAnimalsDatabase;
+import ap.mnemosyne.resources.Animale;
+import ap.mnemosyne.resources.Message;
+import ap.mnemosyne.resources.ResourceList;
 
 public class ResponseServlet extends AbstractDatabaseServlet
 {
