@@ -16,3 +16,5 @@ buildNumber.properties
 .idea/
 *.iml
 *.iws
+
+src/main/webapp/resources/ontology/catalog-v001.xml
