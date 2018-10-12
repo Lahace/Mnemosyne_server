@@ -1,5 +1,7 @@
 package ap.mnemosyne.parser;
 
+import ap.mnemosyne.parser.pResources.Marker;
+
 class SentenceStrips
 {
 	private String fullSentence, action, constraint;
@@ -8,16 +10,16 @@ class SentenceStrips
 	{
 		this.fullSentence = fullSentence;
 		action = first;
-		for(String e : parserInstance.CONSTRAINT_MARKERS)
-			if(first.contains(e))
+		for(Marker e : parserInstance.CONSTRAINT_MARKERS)
+			if(first.contains(e.getMarker()))
 			{
 				constraint = first;
 				action = second;
 				break;
 			}
 
-		for(String e : parserInstance.CONSTRAINT_MARKERS)
-			if(second.contains(e))
+		for(Marker e : parserInstance.CONSTRAINT_MARKERS)
+			if(second.contains(e.getMarker()))
 			{
 				constraint = second;
 				action = first;
