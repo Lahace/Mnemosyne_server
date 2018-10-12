@@ -9,6 +9,6 @@ public class ParserITTest
 	public void testParser()
 	{
 		ParserIT p = new ParserIT();
-		System.out.print(p.parseString("devo mangiare per domani"));
+		System.out.print(p.parseString("devo prendere il pane"));
 	}
 }
