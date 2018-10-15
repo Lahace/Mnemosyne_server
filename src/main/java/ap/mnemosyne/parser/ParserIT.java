@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import ap.mnemosyne.parser.pResources.Marker;
 import ap.mnemosyne.parser.pResources.TextualAction;
+import ap.mnemosyne.parser.pResources.TextualConstraint;
 import ap.mnemosyne.parser.pResources.TextualTask;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
@@ -31,6 +32,7 @@ public class ParserIT extends Parser
 				new Marker("alle", new String[]{"N"})
 		)));
 
+		System.out.print("Loading pipeline.. ");
 		pipeline = new TintPipeline();
 		try
 		{
@@ -42,6 +44,7 @@ public class ParserIT extends Parser
 			return;
 		}
 		pipeline.load();
+		System.out.println("Loaded.");
 	}
 
 	public String parseString(String toParse)
@@ -68,13 +71,12 @@ public class ParserIT extends Parser
 
 	private SentenceStrips splitActionConstraint(String toSplit) throws MalformedNLStringException
 	{
-		String[] ctemp = new String[CONSTRAINT_MARKERS.size()];
-		for(int i=0; i<CONSTRAINT_MARKERS.size(); i++) ctemp[i] = CONSTRAINT_MARKERS.get(i).getMarker();
+
 
 		List<String> regexp = new ArrayList<>(Arrays.asList(
-				"(" + String.join(".+|", ctemp) +".+)\\sdevo\\s(.+)",
-				"devo\\s(.+)\\s("+ String.join(".+$|", ctemp) + ".+$)",
-				"devo\\s(?!" +String.join(".+$|", ctemp) + ".+$)(.+)$"
+				"(" + String.join(".+|", CONSTRAINT_TOKENS) +".+)\\sdevo\\s(.+)",
+				"devo\\s(.+)\\s("+ String.join(".+$|", CONSTRAINT_TOKENS) + ".+$)",
+				"devo\\s(?!" +String.join(".+$|", CONSTRAINT_TOKENS) + ".+$)(.+)$"
 		));
 
 		SentenceStrips toReturn = null;
@@ -134,7 +136,7 @@ public class ParserIT extends Parser
 		System.out.println(textAct.toString());
 
 		//Constraint Processing
-
+		TextualConstraint textConstr = null;
 		if(constraintProcessed != null)
 		{
 			sentences = constraintProcessed.get(CoreAnnotations.SentencesAnnotation.class);
@@ -145,17 +147,55 @@ public class ParserIT extends Parser
 			{
 				if(sp.getConstraint().contains(m.getMarker()))
 				{
+					String check = "";
 					for (CoreLabel e : sentence.get(CoreAnnotations.TokensAnnotation.class))
 					{
 						System.out.println("\t" + e.toString() + " is " + e.get(CoreAnnotations.PartOfSpeechAnnotation.class));
+						if(e.get(CoreAnnotations.PartOfSpeechAnnotation.class).matches("N|V|S")) check += e.get(CoreAnnotations.PartOfSpeechAnnotation.class) + " ";
+					}
+					check = check.trim();
+					boolean found = false;
+					String snPattern = "";
+					for(String e: m.getSyntacticNeeds())
+						if(e.equals(check))
+						{
+							found = true;
+							snPattern = e;
+							break;
+						}
 
+					if(!found) throw new MalformedNLStringException("No matching pattern found in constraint");
+
+					String regexp = "(" + String.join("|", CONSTRAINT_TOKENS) + ")\\s(.+$)";
+
+					Pattern reg = Pattern.compile(regexp);
+					Matcher matcher = reg.matcher(sp.getConstraint());
+					if(matcher.find() && matcher.groupCount() == 2)
+					{
+						int sn = 0;
+						String res="";
+						String[] snArray = snPattern.split(" ");
+						for (CoreLabel e : sentence.get(CoreAnnotations.TokensAnnotation.class))
+						{
+							if(e.get(CoreAnnotations.PartOfSpeechAnnotation.class).equals(snArray[sn]))
+							{
+								res += e.toString().split("-")[0] + "_";
+								sn++;
+							}
+						}
+						textConstr = new TextualConstraint(matcher.group(1), res.substring(0,res.length()-1));
+						System.out.println(textConstr);
+					}
+					else
+					{
+						throw new MalformedNLStringException("Malformed constraint");
 					}
 					break;
 				}
 			}
 		}
 
-		return null;
+		return new TextualTask(textAct, textConstr);
 	}
 
 	private int matchesList(String toMatch, List<String> regexps)

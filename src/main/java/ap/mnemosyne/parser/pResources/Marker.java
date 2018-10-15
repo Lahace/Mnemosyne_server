@@ -1,5 +1,7 @@
 package ap.mnemosyne.parser.pResources;
 
+import java.security.InvalidParameterException;
+
 public class Marker
 {
 	String marker;
@@ -8,6 +10,9 @@ public class Marker
 	public Marker(String marker, String[] syntacticNeeds)
 	{
 		this.marker = marker;
+		for(String e: syntacticNeeds)
+			if(!e.matches("((N|V|S)\\s)*(N|V|S)"))
+				throw new InvalidParameterException("syntacticNeeds must satisfy regex: ((N|V|S)\\s)*(N|V|S) (found: " + e +")");
 		this.syntacticNeeds = syntacticNeeds;
 	}
 

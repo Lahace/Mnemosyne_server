@@ -40,6 +40,15 @@
     
 
 
+    <!-- https://wlab.ddns.net/Ontology.owl#needs -->
+
+    <owl:ObjectProperty rdf:about="https://wlab.ddns.net/Ontology.owl#needs">
+        <rdfs:domain rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
+        <rdfs:range rdf:resource="https://wlab.ddns.net/Ontology.owl#Extra"/>
+    </owl:ObjectProperty>
+    
+
+
     <!-- https://wlab.ddns.net/Ontology.owl#relatedTo -->
 
     <owl:ObjectProperty rdf:about="https://wlab.ddns.net/Ontology.owl#relatedTo">
@@ -119,6 +128,12 @@
     
 
 
+    <!-- https://wlab.ddns.net/Ontology.owl#Extra -->
+
+    <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Extra"/>
+    
+
+
     <!-- https://wlab.ddns.net/Ontology.owl#Item -->
 
     <owl:Class rdf:about="https://wlab.ddns.net/Ontology.owl#Item"/>
@@ -159,8 +174,9 @@
     <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#CW1">
         <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
         <after rdf:resource="https://wlab.ddns.net/Ontology.owl#quando"/>
+        <needs rdf:resource="https://wlab.ddns.net/Ontology.owl#get_to"/>
         <wants rdf:resource="https://wlab.ddns.net/Ontology.owl#location_house"/>
-        <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">casa</wword>
+        <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">torno_casa</wword>
     </owl:NamedIndividual>
     
 
@@ -181,6 +197,7 @@
     <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#CW3">
         <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Cword"/>
         <after rdf:resource="https://wlab.ddns.net/Ontology.owl#prima"/>
+        <needs rdf:resource="https://wlab.ddns.net/Ontology.owl#get_to"/>
         <wants rdf:resource="https://wlab.ddns.net/Ontology.owl#time_bed"/>
         <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">letto</wword>
     </owl:NamedIndividual>
@@ -226,11 +243,27 @@
     
 
 
+    <!-- https://wlab.ddns.net/Ontology.owl#get_to -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#get_to">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Extra"/>
+    </owl:NamedIndividual>
+    
+
+
     <!-- https://wlab.ddns.net/Ontology.owl#latte -->
 
     <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#latte">
         <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Item"/>
         <canBeFoundIn rdf:resource="https://wlab.ddns.net/Ontology.owl#supermercato"/>
+    </owl:NamedIndividual>
+    
+
+
+    <!-- https://wlab.ddns.net/Ontology.owl#leave -->
+
+    <owl:NamedIndividual rdf:about="https://wlab.ddns.net/Ontology.owl#leave">
+        <rdf:type rdf:resource="https://wlab.ddns.net/Ontology.owl#Extra"/>
     </owl:NamedIndividual>
     
 
@@ -317,6 +350,18 @@
     ///////////////////////////////////////////////////////////////////////////////////////
      -->
 
+    <rdf:Description>
+        <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
+        <owl:members rdf:parseType="Collection">
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Cmarker"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Cword"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Extra"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Item"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Param"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Place"/>
+            <rdf:Description rdf:about="https://wlab.ddns.net/Ontology.owl#Verb"/>
+        </owl:members>
+    </rdf:Description>
     <rdf:Description>
         <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#AllDisjointClasses"/>
         <owl:members rdf:parseType="Collection">
