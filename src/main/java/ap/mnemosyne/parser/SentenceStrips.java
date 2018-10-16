@@ -1,30 +1,17 @@
 package ap.mnemosyne.parser;
 
-import ap.mnemosyne.parser.pResources.Marker;
+import java.util.List;
 
 class SentenceStrips
 {
-	private String fullSentence, action, constraint;
+	private String fullSentence, action;
+	private List<String> constraints;
 
-	public SentenceStrips(String fullSentence, String first, String second, Parser parserInstance)
+	public SentenceStrips(String fullSentence, String first, List<String> second)
 	{
 		this.fullSentence = fullSentence;
 		action = first;
-		for(Marker e : parserInstance.CONSTRAINT_MARKERS)
-			if(first.contains(e.getMarker()))
-			{
-				constraint = first;
-				action = second;
-				break;
-			}
-
-		for(Marker e : parserInstance.CONSTRAINT_MARKERS)
-			if(second.contains(e.getMarker()))
-			{
-				constraint = second;
-				action = first;
-				break;
-			}
+		constraints = second;
 	}
 
 	public String getFullSentence()
@@ -47,14 +34,14 @@ class SentenceStrips
 		this.action = action;
 	}
 
-	public String getConstraint()
+	public List<String> getConstraints()
 	{
-		return constraint;
+		return constraints;
 	}
 
-	public void setConstraint(String constraint)
+	public void setConstraints(List<String> constraint)
 	{
-		this.constraint = constraint;
+		this.constraints = constraint;
 	}
 
 	@Override
@@ -63,7 +50,7 @@ class SentenceStrips
 		return "SentenceStrips{" +
 				"fullSentence='" + fullSentence + '\'' +
 				", action='" + action + '\'' +
-				", constraint='" + constraint + '\'' +
+				", constraint='" + constraints + '\'' +
 				'}';
 	}
 

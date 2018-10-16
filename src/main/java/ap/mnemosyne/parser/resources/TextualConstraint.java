@@ -1,4 +1,4 @@
-package ap.mnemosyne.parser.pResources;
+package ap.mnemosyne.parser.resources;
 
 public class TextualConstraint
 {

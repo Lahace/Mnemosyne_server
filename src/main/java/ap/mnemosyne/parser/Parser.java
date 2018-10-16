@@ -1,6 +1,6 @@
 package ap.mnemosyne.parser;
 
-import ap.mnemosyne.parser.pResources.Marker;
+import ap.mnemosyne.parser.resources.Marker;
 
 import java.util.List;
 
