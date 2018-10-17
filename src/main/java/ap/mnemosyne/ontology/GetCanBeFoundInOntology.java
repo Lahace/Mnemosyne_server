@@ -3,36 +3,32 @@ package ap.mnemosyne.ontology;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 
-public class GetVerbObjectParameterOntology
+public class GetCanBeFoundInOntology
 {
 	private OntologyEngine oe;
-	private String verb, obj;
+	private String item;
 	private String query = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
-	"PREFIX owl: <http://www.w3.org/2002/07/owl#>\n"+
-	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"+
-	"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"+
-	"PREFIX : <@=@>\n"+
-	"SELECT ?y " +
+			"PREFIX owl: <http://www.w3.org/2002/07/owl#>\n"+
+			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n"+
+			"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"+
+			"PREFIX : <@=@>\n"+
+			"SELECT ?y " +
 			"WHERE " +
 			"{\n" +
-				"?x :vword \"@=@\"^^xsd:string.\n" +
-				"?x :relatedTo :@=@.\n" +
-				"?x :requires ?y\n" +
+			":@=@ :canBeFoundIn ?y\n" +
 			"}";
 
-	public GetVerbObjectParameterOntology(OntologyEngine oe, String verb, String obj)
+	public GetCanBeFoundInOntology(OntologyEngine oe, String verb) //TODO: test
 	{
 		this.oe = oe;
-		this.verb = verb;
-		this.obj = obj;
+		this.item = verb;
 	}
 
-	public String getVerbObjectParameter()
+	public String getCanBeFoundInOntology()
 	{
 		oe.prepareQuery(query);
 		oe.setParam(oe.ONTOLOGY_URI);
-		oe.setParam(verb);
-		oe.setParam(obj);
+		oe.setParam(item);
 
 		ResultSet result = oe.execute();
 

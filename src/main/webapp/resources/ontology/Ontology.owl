@@ -176,6 +176,7 @@
         <after rdf:resource="https://wlab.ddns.net/Ontology.owl#quando"/>
         <needs rdf:resource="https://wlab.ddns.net/Ontology.owl#get_to"/>
         <wants rdf:resource="https://wlab.ddns.net/Ontology.owl#location_house"/>
+        <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">tornare_casa</wword>
         <wword rdf:datatype="http://www.w3.org/2001/XMLSchema#string">torno_casa</wword>
     </owl:NamedIndividual>
     

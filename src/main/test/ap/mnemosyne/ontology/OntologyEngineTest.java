@@ -8,6 +8,6 @@ public class OntologyEngineTest
 	public void test()
 	{
 		OntologyEngine oe = new OntologyEngine();
-		System.out.println(new GetVerbObjectParameterOntology(oe, "prendere", "pane").getVerbObjectParameter());
+		System.out.println(new GetMarkerWordParameterOntology(oe, "quando", "torno_casa").getMarkerWordParameter());
 	}
 }

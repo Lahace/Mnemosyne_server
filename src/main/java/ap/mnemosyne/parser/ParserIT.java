@@ -217,7 +217,7 @@ public class ParserIT extends Parser
 				}
 			}
 		}
-		return new TextualTask(textAct, textConstr);
+		return new TextualTask(textAct, textConstr); //TODO: mettere i verbi all'infinito
 	}
 
 	private void resolveTask(TextualTask tt)
