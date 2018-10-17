@@ -61,6 +61,9 @@ public class ParserIT extends Parser
 			TextualTask tt = textualProcessing(sp);
 			System.out.println("Phase 2 results: " + tt.toString());
 
+			//==============phase 3: resolving
+
+
 			System.out.println("==================================");
 		}
 		catch(MalformedNLStringException mnlse)
@@ -215,6 +218,11 @@ public class ParserIT extends Parser
 			}
 		}
 		return new TextualTask(textAct, textConstr);
+	}
+
+	private void resolveTask(TextualTask tt)
+	{
+
 	}
 
 	private int matchesList(String toMatch, List<String> regexps)
