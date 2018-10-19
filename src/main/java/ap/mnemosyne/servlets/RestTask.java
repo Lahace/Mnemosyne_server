@@ -20,7 +20,7 @@ public class RestTask
 	}
 
 	@GET
-	@Path("task/{id}")
+	@Path("{id}")
 	public void getTaskByID(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("id") int id) throws IOException
 	{
 		new Task(new Integer(id).toString()).toJSON(res.getOutputStream());
