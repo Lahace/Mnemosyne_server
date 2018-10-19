@@ -119,13 +119,13 @@ public class Message extends Resource {
 	}
 
 	@Override
-	public final void toJSON(final OutputStream out) throws IOException
-	{
+	public final void toJSON(final OutputStream out) throws IOException {
+
 		final JsonGenerator jg = JSON_FACTORY.createGenerator(out);
 
 		jg.writeStartObject();
 
-		jg.writeFieldName("message");
+		jg.writeFieldName(Message.class.getSimpleName().toLowerCase());
 
 		jg.writeStartObject();
 
@@ -145,5 +145,4 @@ public class Message extends Resource {
 
 		jg.flush();
 	}
-
 }

@@ -3,21 +3,14 @@ package ap.mnemosyne.servlets;
 import ap.mnemosyne.resources.Auth;
 import ap.mnemosyne.resources.Message;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
+import javax.servlet.http.*;
 import java.io.IOException;
 
-@Path("auth")
-public class RestAuth
+public class AuthServlet extends HttpServlet
 {
 	Message m;
 
-	@GET
-	public void getCurrentAuth(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
+	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
 		if(!checkSessionValidity(req,res)) return;
 
@@ -28,10 +21,11 @@ public class RestAuth
 		return;
 	}
 
-	@POST
-	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
-	public void setCurrentAuth(@Context HttpServletRequest req, @Context HttpServletResponse res, @FormParam("email") String email, @FormParam("password") String pass) throws IOException
+	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
+		String email = req.getParameter("email");;
+		String pass = req.getParameter("password");;
+		//TODO maybe add device signature to avoid sessionID spoofing
 		if(email == null || pass == null)
 		{
 			m = new Message("Login failed", "401", "Email or password not specified");
@@ -57,22 +51,26 @@ public class RestAuth
 		return;
 	}
 
-	@DELETE
-	public void invalidateCurrentAuth(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
+	public void doDelete(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
 		if(!checkSessionValidity(req,res)) return;
+
 		req.getSession().invalidate();
+		res.setStatus(HttpServletResponse.SC_OK);
 	}
 
 	private boolean checkSessionValidity(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
+		Message m;
 		String JSESSIONID = null;
 		Cookie[] cookies = req.getCookies();
 		if(cookies != null)
 			for(Cookie c: cookies)
 				if(c.getName().equals("JSESSIONID")) JSESSIONID = c.getValue();
 
-		if(req.getSession().getAttribute("current") == null && JSESSIONID != null)
+		HttpSession session = req.getSession(false);
+
+		if(session == null && JSESSIONID != null)
 		{
 			m = new Message("No session Found", "401", "No session is available with ID: " + JSESSIONID);
 			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -80,9 +78,17 @@ public class RestAuth
 			m.toJSON(res.getOutputStream());
 			return false;
 		}
-		else if(req.getSession().getAttribute("current") == null && JSESSIONID == null)
+		else if(session == null && JSESSIONID == null)
 		{
 			m = new Message("No session Found", "401", "No JSESSIONID cookie found");
+			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			res.setHeader("Content-Type", "application/json");
+			m.toJSON(res.getOutputStream());
+			return false;
+		}
+		else if(session != null && session.getAttribute("current") == null)
+		{
+			m = new Message("No session Found", "401", "Corrupted session with ID: " + JSESSIONID);
 			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			res.setHeader("Content-Type", "application/json");
 			m.toJSON(res.getOutputStream());

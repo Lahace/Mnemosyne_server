@@ -7,9 +7,27 @@
 	<servlet>
 		<servlet-name>javax.ws.rs.core.Application</servlet-name>
 	</servlet>
+	<servlet>
+		<servlet-name>auth</servlet-name>
+		<servlet-class>ap.mnemosyne.servlets.AuthServlet</servlet-class>
+	</servlet>
 
 	<servlet-mapping>
 		<servlet-name>javax.ws.rs.core.Application</servlet-name>
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
+	<servlet-mapping>
+		<servlet-name>auth</servlet-name>
+		<url-pattern>/auth</url-pattern>
+	</servlet-mapping>
+
+	<!--Filters-->
+	<filter>
+		<filter-name>session</filter-name>
+		<filter-class>ap.mnemosyne.filters.SessionFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>session</filter-name>
+		<url-pattern>/rest/*</url-pattern>
+	</filter-mapping>
 </web-app>
