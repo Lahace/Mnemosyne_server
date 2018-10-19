@@ -17,6 +17,7 @@
 package ap.mnemosyne.resources;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+
 import java.io.*;
 
 /**
@@ -118,8 +119,8 @@ public class Message extends Resource {
 	}
 
 	@Override
-	public final void toJSON(final OutputStream out) throws IOException {
-
+	public final void toJSON(final OutputStream out) throws IOException
+	{
 		final JsonGenerator jg = JSON_FACTORY.createGenerator(out);
 
 		jg.writeStartObject();

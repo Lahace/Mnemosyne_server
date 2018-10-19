@@ -56,7 +56,7 @@
 		<directory>${basedir}/target</directory>
 		
 		<!-- name of the generated package -->
-		<finalName>${project.artifactId}-${project.version}</finalName>
+		<finalName>${project.artifactId}</finalName>
 
 		<!-- configuration of the plugins for the different goals -->
 		<plugins>
@@ -102,7 +102,7 @@
 			
 			<!--  copy JSP files to the target directory -->
 			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}-${project.version}/jsp</targetPath>
+				<targetPath>${basedir}/target/${project.artifactId}/jsp</targetPath>
 				<directory>${basedir}/src/main/webapp/jsp</directory>
 				<includes>
 					<include>**/*.*</include>
@@ -111,13 +111,20 @@
 			
 			<!--  copy configuration files to the target directory -->
 			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}-${project.version}/META-INF</targetPath>
+				<targetPath>${basedir}/target/${project.artifactId}/META-INF</targetPath>
 				<directory>${basedir}/src/main/webapp/META-INF</directory>
 				<includes>
 					<include>**/*.*</include>
 				</includes>
 			</resource>
-			
+			<!--  copy configuration files to the target directory -->
+			<resource>
+				<targetPath>${basedir}/target/${project.artifactId}/resources/ontology</targetPath>
+				<directory>${basedir}/src/main/webapp/resources/ontology</directory>
+				<includes>
+					<include>**/*.owl</include>
+				</includes>
+			</resource>
 		</resources>
 	</build>
 
@@ -134,7 +141,6 @@
 			<version>4.0.0</version>
 			<scope>provided</scope>
 		</dependency>
-		
 		<dependency>
 		    <groupId>org.apache.taglibs</groupId>
 		    <artifactId>taglibs-standard-spec</artifactId>
@@ -150,14 +156,12 @@
 		    <artifactId>taglibs-standard-jstlel</artifactId>
 		    <version>1.2.5</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
 			<artifactId>tomcat-jdbc</artifactId>
 			<version>9.0.7</version>
 			<scope>provided</scope>
 		</dependency>
-		
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
@@ -177,6 +181,16 @@
 			<groupId>org.apache.jena</groupId>
 			<artifactId>jena-arq</artifactId>
 			<version>3.9.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.containers</groupId>
+			<artifactId>jersey-container-servlet</artifactId>
+			<version>2.27</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish.jersey.inject</groupId>
+			<artifactId>jersey-hk2</artifactId>
+			<version>2.27</version>
 		</dependency>
 	</dependencies>
 
