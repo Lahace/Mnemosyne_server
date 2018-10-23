@@ -1,20 +1,30 @@
 package ap.mnemosyne.servlets;
 
-import ap.mnemosyne.resources.Auth;
+import ap.mnemosyne.database.SearchUserByEmailDatabase;
+import ap.mnemosyne.database.UpdateUserByIdDatabase;
+import ap.mnemosyne.listeners.SessionListener;
+import ap.mnemosyne.resources.User;
 import ap.mnemosyne.resources.Message;
+import ap.mnemosyne.util.ServletUtils;
 
 import javax.servlet.http.*;
+import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 
-public class AuthServlet extends HttpServlet
+public class AuthServlet extends AbstractDatabaseServlet
 {
-	Message m;
-
 	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
-		if(!checkSessionValidity(req,res)) return;
-
-		Auth a = (Auth) req.getSession().getAttribute("current");
+		if(SessionListener.map.get(req.getRequestedSessionId()) == null)
+		{
+			ServletUtils.sendMessage(new Message("No valid session found", "401", "Either the session was invalid or it does not exist"),
+					res, HttpServletResponse.SC_UNAUTHORIZED);
+			return;
+		}
+		User a = (User) req.getSession().getAttribute("current");
 		res.setStatus(HttpServletResponse.SC_OK);
 		res.setHeader("Content-Type", "application/json");
 		a.toJSON(res.getOutputStream());
@@ -23,78 +33,97 @@ public class AuthServlet extends HttpServlet
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
-		String email = req.getParameter("email");;
-		String pass = req.getParameter("password");;
+		if(!ServletUtils.checkContentType(MediaType.APPLICATION_FORM_URLENCODED, req, res)) return;
+		if(SessionListener.map.get(req.getRequestedSessionId()) != null)
+		{
+			ServletUtils.sendMessage(new Message("Valid session found", "403", "Your session is still valid"),
+					res, HttpServletResponse.SC_FORBIDDEN);
+			return;
+		}
+		String email = req.getParameter("email");
+		String password = req.getParameter("password");
 		//TODO maybe add device signature to avoid sessionID spoofing
-		if(email == null || pass == null)
+		if(email == null || password == null)
 		{
-			m = new Message("Login failed", "401", "Email or password not specified");
-			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			res.setHeader("Content-Type", "application/json");
-			m.toJSON(res.getOutputStream());
+			ServletUtils.sendMessage(new Message("Login failed", "401", "Email or password not specified"),
+					res, HttpServletResponse.SC_UNAUTHORIZED);
+			return;
 		}
-		else if(email.equals("lol") && pass.equals("lol"))
+
+		try
 		{
-			Auth a = new Auth(req.getSession().getId(), email);
-			req.getSession().setAttribute("current", a);
-			res.setStatus(HttpServletResponse.SC_OK);
-			res.setHeader("Content-Type", "application/json");
-			a.toJSON(res.getOutputStream());
+			User u = new SearchUserByEmailDatabase(getDataSource().getConnection(), email).searchUserByEmail();
+			if (u != null)
+			{
+				MessageDigest digest = MessageDigest.getInstance("SHA-256");
+				byte[] hash = digest.digest(password.getBytes());
+				StringBuffer hexString = new StringBuffer();
+				for (int i = 0; i < hash.length; i++) {
+					String hex = Integer.toHexString(0xff & hash[i]);
+					if(hex.length() == 1) hexString.append('0');
+					hexString.append(hex);
+				}
+				String hashString = hexString.toString();
+
+				if(hashString.equals(u.getPassword()))
+				{
+					if(u.getSessionID() != null && SessionListener.map.get(u.getSessionID()) != null)
+					{
+						res.setStatus(HttpServletResponse.SC_OK);
+						res.setHeader("Content-Type", "application/json");
+						u.toJSON(res.getOutputStream());
+					}
+					else
+					{
+						HttpSession s = req.getSession();
+						User newUser = new UpdateUserByIdDatabase(getDataSource().getConnection(),
+								new User(s.getId(), u.getEmail(), u.getPassword())).updateUserById();
+						if(newUser == null)
+						{
+							ServletUtils.sendMessage(new Message("Login failed", "500", "Something went wrong while updating database records"),
+									res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+							return;
+						}
+						s.setAttribute("current", newUser);
+						res.setStatus(HttpServletResponse.SC_OK);
+						res.setHeader("Content-Type", "application/json");
+						newUser.toJSON(res.getOutputStream());
+					}
+				}
+				else
+				{
+					ServletUtils.sendMessage(new Message("Login failed", "401", "Password do not match"),
+							res, HttpServletResponse.SC_UNAUTHORIZED);
+				}
+			}
+			else
+			{
+				ServletUtils.sendMessage(new Message("Login failed", "401", "Wrong email or password"),
+						res, HttpServletResponse.SC_UNAUTHORIZED);
+			}
 		}
-		else
+		catch(SQLException sqle)
 		{
-			m = new Message("Login failed", "401", "Wrong email or password");
-			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			res.setHeader("Content-Type", "application/json");
-			m.toJSON(res.getOutputStream());
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		} catch (NoSuchAlgorithmException e)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		return;
 	}
 
 	public void doDelete(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
-		if(!checkSessionValidity(req,res)) return;
-
+		if(SessionListener.map.get(req.getRequestedSessionId()) == null)
+		{
+			ServletUtils.sendMessage(new Message("No session Found", "401", "No session found")
+					, res, HttpServletResponse.SC_UNAUTHORIZED);
+			return;
+		}
 		req.getSession().invalidate();
 		res.setStatus(HttpServletResponse.SC_OK);
-	}
-
-	private boolean checkSessionValidity(HttpServletRequest req, HttpServletResponse res) throws IOException
-	{
-		Message m;
-		String JSESSIONID = null;
-		Cookie[] cookies = req.getCookies();
-		if(cookies != null)
-			for(Cookie c: cookies)
-				if(c.getName().equals("JSESSIONID")) JSESSIONID = c.getValue();
-
-		HttpSession session = req.getSession(false);
-
-		if(session == null && JSESSIONID != null)
-		{
-			m = new Message("No session Found", "401", "No session is available with ID: " + JSESSIONID);
-			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			res.setHeader("Content-Type", "application/json");
-			m.toJSON(res.getOutputStream());
-			return false;
-		}
-		else if(session == null && JSESSIONID == null)
-		{
-			m = new Message("No session Found", "401", "No JSESSIONID cookie found");
-			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			res.setHeader("Content-Type", "application/json");
-			m.toJSON(res.getOutputStream());
-			return false;
-		}
-		else if(session != null && session.getAttribute("current") == null)
-		{
-			m = new Message("No session Found", "401", "Corrupted session with ID: " + JSESSIONID);
-			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			res.setHeader("Content-Type", "application/json");
-			m.toJSON(res.getOutputStream());
-			return false;
-		}
-
-		return true;
+		ServletUtils.sendMessage(new Message("Session invalidated"), res, HttpServletResponse.SC_OK);
 	}
 }

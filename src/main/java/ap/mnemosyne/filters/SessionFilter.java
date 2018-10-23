@@ -11,10 +11,7 @@ public class SessionFilter implements Filter
 {
 	Message m;
 
-	public void init(FilterConfig conf)
-	{
-
-	}
+	public void init(FilterConfig conf) {}
 
 
 	@Override
@@ -25,7 +22,7 @@ public class SessionFilter implements Filter
 
 		if(hreq.getSession(false) == null || hreq.getSession(false).getAttribute("current")==null)
 		{
-			m = new Message("No session Found", "401", "No session is found in the server, either you have not set the JSESSIONID cookie or the session does not exists");
+			m = new Message("No ap.mnemosyne.session Found", "401", "No ap.mnemosyne.session is found in the server, either you have not set the JSESSIONID cookie or the ap.mnemosyne.session does not exists");
 			hres.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 			hres.setHeader("Content-Type", "application/json");
 			m.toJSON(hres.getOutputStream());
@@ -37,8 +34,5 @@ public class SessionFilter implements Filter
 		return;
 	}
 
-	public void destroy()
-	{
-
-	}
+	public void destroy() {}
 }

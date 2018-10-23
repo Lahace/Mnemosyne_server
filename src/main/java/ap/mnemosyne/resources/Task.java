@@ -1,9 +1,12 @@
 package ap.mnemosyne.resources;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 
 public class Task extends Resource
 {
@@ -22,21 +25,16 @@ public class Task extends Resource
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException
 	{
+		PrintWriter pw = new PrintWriter(out);
+		ObjectMapper om = new ObjectMapper();
+		pw.print("{\"task\":" + om.writeValueAsString(this) + "}");
+		pw.flush();
+		pw.close();
+	}
 
-		final JsonGenerator jg = JSON_FACTORY.createGenerator(out);
-
-		jg.writeStartObject();
-
-		jg.writeFieldName(Task.class.getSimpleName().toLowerCase());
-
-		jg.writeStartObject();
-
-		jg.writeStringField("name", name);
-
-		jg.writeEndObject();
-
-		jg.writeEndObject();
-
-		jg.flush();
+	public final String toJSON() throws JsonProcessingException
+	{
+		ObjectMapper om = new ObjectMapper();
+		return "{\"task\":" + om.writeValueAsString(this) + "}";
 	}
 }
