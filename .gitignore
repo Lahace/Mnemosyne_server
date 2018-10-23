@@ -18,3 +18,4 @@ buildNumber.properties
 *.iws
 
 src/main/webapp/resources/ontology/catalog-v001.xml
+src/main/webapp/META-INF/context.xml
