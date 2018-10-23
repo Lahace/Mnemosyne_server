@@ -1,0 +1,9 @@
+ap.mnemosyne.database
+ap.mnemosyne.filters
+ap.mnemosyne.listeners
+ap.mnemosyne.ontology
+ap.mnemosyne.parser
+ap.mnemosyne.parser.resources
+ap.mnemosyne.resources
+ap.mnemosyne.servlets
+ap.mnemosyne.util
