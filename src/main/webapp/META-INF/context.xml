@@ -5,8 +5,8 @@
 ***REMOVED***
 ***REMOVED***
 ***REMOVED***
-          driverClassName="com.mysql.jdbc.Driver"
-          url="jdbc:mysql://pintini.ddns.net:3306/mnemosyne?serverTimezone=UTC"
+***REMOVED***
+          url="jdbc:postgresql://pintini.ddns.net:5432/mnemosyne"
           username="mnemosyne"
           password="mn3m0syn3"
 ***REMOVED***

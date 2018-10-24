@@ -7,19 +7,22 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SearchUserByEmailDatabase
+public class CheckUserCredentialsDatabase
 {
-	private final String stmt = "SELECT * FROM mnemosyne.user WHERE email=?";
+	private final String stmt = "SELECT * FROM mnemosyne.user WHERE email=? AND password=crypt(?, password)";
 	private final Connection conn;
 	private final String email;
+	private final String password;
 
-	public SearchUserByEmailDatabase(Connection conn, String email)
+	public CheckUserCredentialsDatabase(Connection conn, String email, String password)
 	{
 		this.conn = conn;
 		this.email = email;
+		this.password = password;
+
 	}
 
-	public User searchUserByEmail() throws SQLException
+	public User checkUserCredentials() throws SQLException
 	{
 		PreparedStatement pstmt = null;
 		User u = null;
@@ -28,7 +31,7 @@ public class SearchUserByEmailDatabase
 		{
 			pstmt = conn.prepareStatement(stmt);
 			pstmt.setString(1, email);
-
+			pstmt.setString(2, password);
 			rs = pstmt.executeQuery();
 
 			while (rs.next()) {

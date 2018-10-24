@@ -4,13 +4,13 @@ import ap.mnemosyne.resources.User;
 
 import java.sql.*;
 
-public class UpdateUserByIdDatabase
+public class UpdateUserSessionByIdDatabase
 {
-	public final String stmt = "UPDATE mnemosyne.user SET password=?, sessionid=? WHERE email=?";
-	public final User u;
-	public final Connection conn;
+	private final String stmt = "UPDATE mnemosyne.user SET sessionid=? WHERE email=?";
+	private final User u;
+	private final Connection conn;
 
-	public UpdateUserByIdDatabase(Connection conn, User u)
+	public UpdateUserSessionByIdDatabase(Connection conn, User u)
 	{
 		this.u = u;
 		this.conn = conn;
@@ -24,13 +24,12 @@ public class UpdateUserByIdDatabase
 		PreparedStatement pstmt = null;
 		try {
 			pstmt = conn.prepareStatement(stmt);
-			pstmt.setString(1, u.getPassword());
-			pstmt.setString(2, u.getSessionID());
-			pstmt.setString(3, u.getEmail());
+			pstmt.setString(1, u.getSessionID());
+			pstmt.setString(2, u.getEmail());
 			int rows = pstmt.executeUpdate();
 
 			if(rows > 0)
-				ret = new User(u.getSessionID(), u.getEmail(),u.getPassword());
+				ret = new User(u.getSessionID(), u.getEmail(),null);
 
 		}
 		finally
