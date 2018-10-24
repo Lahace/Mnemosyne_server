@@ -19,3 +19,5 @@ buildNumber.properties
 
 src/main/webapp/resources/ontology/catalog-v001.xml
 src/main/webapp/META-INF/context.xml
+bfg-1.13.0.jar
+javadoc/

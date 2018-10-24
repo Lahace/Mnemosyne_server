@@ -5,6 +5,8 @@ import ap.mnemosyne.resources.Message;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class ServletUtils
 {
@@ -60,5 +62,18 @@ public class ServletUtils
 		res.setStatus(status);
 		res.setHeader("Content-Type", "application/json");
 		m.toJSON(res.getOutputStream());
+	}
+
+	public static String SHA256Hash(String toHash) throws NoSuchAlgorithmException
+	{
+		MessageDigest digest = MessageDigest.getInstance("SHA-256");
+		byte[] hash = digest.digest(toHash.getBytes());
+		StringBuffer hexString = new StringBuffer();
+		for (int i = 0; i < hash.length; i++) {
+			String hex = Integer.toHexString(0xff & hash[i]);
+			if(hex.length() == 1) hexString.append('0');
+			hexString.append(hex);
+		}
+		return hexString.toString();
 	}
 }
