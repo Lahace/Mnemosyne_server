@@ -55,15 +55,7 @@ public class AuthServlet extends AbstractDatabaseServlet
 			User u = new SearchUserByEmailDatabase(getDataSource().getConnection(), email).searchUserByEmail();
 			if (u != null)
 			{
-				MessageDigest digest = MessageDigest.getInstance("SHA-256");
-				byte[] hash = digest.digest(password.getBytes());
-				StringBuffer hexString = new StringBuffer();
-				for (int i = 0; i < hash.length; i++) {
-					String hex = Integer.toHexString(0xff & hash[i]);
-					if(hex.length() == 1) hexString.append('0');
-					hexString.append(hex);
-				}
-				String hashString = hexString.toString();
+				String hashString = ServletUtils.SHA256Hash(password);
 
 				if(hashString.equals(u.getPassword()))
 				{
