@@ -1,7 +1,7 @@
 package ap.mnemosyne.servlets;
 
-import ap.mnemosyne.database.SearchUserByEmailDatabase;
-import ap.mnemosyne.database.UpdateUserByIdDatabase;
+import ap.mnemosyne.database.CheckUserCredentialsDatabase;
+import ap.mnemosyne.database.UpdateUserSessionByIdDatabase;
 import ap.mnemosyne.listeners.SessionListener;
 import ap.mnemosyne.resources.User;
 import ap.mnemosyne.resources.Message;
@@ -10,8 +10,6 @@ import ap.mnemosyne.util.ServletUtils;
 import javax.servlet.http.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
 public class AuthServlet extends AbstractDatabaseServlet
@@ -52,40 +50,30 @@ public class AuthServlet extends AbstractDatabaseServlet
 
 		try
 		{
-			User u = new SearchUserByEmailDatabase(getDataSource().getConnection(), email).searchUserByEmail();
+			User u = new CheckUserCredentialsDatabase(getDataSource().getConnection(), email, password).checkUserCredentials();
 			if (u != null)
 			{
-				String hashString = ServletUtils.SHA256Hash(password);
-
-				if(hashString.equals(u.getPassword()))
+				if(u.getSessionID() != null && SessionListener.map.get(u.getSessionID()) != null)
 				{
-					if(u.getSessionID() != null && SessionListener.map.get(u.getSessionID()) != null)
-					{
-						res.setStatus(HttpServletResponse.SC_OK);
-						res.setHeader("Content-Type", "application/json");
-						u.toJSON(res.getOutputStream());
-					}
-					else
-					{
-						HttpSession s = req.getSession();
-						User newUser = new UpdateUserByIdDatabase(getDataSource().getConnection(),
-								new User(s.getId(), u.getEmail(), u.getPassword())).updateUserById();
-						if(newUser == null)
-						{
-							ServletUtils.sendMessage(new Message("Login failed", "500", "Something went wrong while updating database records"),
-									res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-							return;
-						}
-						s.setAttribute("current", newUser);
-						res.setStatus(HttpServletResponse.SC_OK);
-						res.setHeader("Content-Type", "application/json");
-						newUser.toJSON(res.getOutputStream());
-					}
+					res.setStatus(HttpServletResponse.SC_OK);
+					res.setHeader("Content-Type", "application/json");
+					u.toJSON(res.getOutputStream());
 				}
 				else
 				{
-					ServletUtils.sendMessage(new Message("Login failed", "401", "Password do not match"),
-							res, HttpServletResponse.SC_UNAUTHORIZED);
+					HttpSession s = req.getSession();
+					User newUser = new UpdateUserSessionByIdDatabase(getDataSource().getConnection(),
+							new User(s.getId(), u.getEmail(), u.getPassword())).updateUserById();
+					if(newUser == null)
+					{
+						ServletUtils.sendMessage(new Message("Login failed", "500", "Something went wrong while updating database records"),
+								res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+						return;
+					}
+					s.setAttribute("current", newUser);
+					res.setStatus(HttpServletResponse.SC_OK);
+					res.setHeader("Content-Type", "application/json");
+					newUser.toJSON(res.getOutputStream());
 				}
 			}
 			else
@@ -96,12 +84,10 @@ public class AuthServlet extends AbstractDatabaseServlet
 		}
 		catch(SQLException sqle)
 		{
+			//System.out.println(sqle.toString());
+			//sqle.printStackTrace();
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		} catch (NoSuchAlgorithmException e)
-		{
-			ServletUtils.sendMessage(new Message("Internal Server Error",
-					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		return;
 	}

@@ -1,16 +1,15 @@
 package ap.mnemosyne.database;
 
 import ap.mnemosyne.resources.User;
-import ap.mnemosyne.util.ServletUtils;
 
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 
 public class CreateUserDatabase
 {
-	public final String stmt = "INSERT INTO mnemosyne.user(email, password, sessionid) VALUES (?, ?, ?)";
-	public final User u;
-	public final Connection conn;
+	private final String stmt = "INSERT INTO mnemosyne.user(email, password, sessionid) VALUES (?, crypt(?, gen_salt('bf')), ?)";
+	private final User u;
+	private final Connection conn;
 
 	public CreateUserDatabase(Connection conn, User u)
 	{
@@ -27,7 +26,7 @@ public class CreateUserDatabase
 		try {
 			pstmt = conn.prepareStatement(stmt);
 			pstmt.setString(1, u.getEmail());
-			pstmt.setString(2, ServletUtils.SHA256Hash(u.getPassword()));
+			pstmt.setString(2, u.getPassword());
 			pstmt.setString(3, null);
 			int rows = pstmt.executeUpdate();
 

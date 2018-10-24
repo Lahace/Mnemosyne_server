@@ -9,10 +9,9 @@ import java.io.IOException;
 
 public class SessionFilter implements Filter
 {
-	Message m;
+	private Message m;
 
 	public void init(FilterConfig conf) {}
-
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException
