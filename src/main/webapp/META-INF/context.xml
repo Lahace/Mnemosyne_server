@@ -1,22 +1,22 @@
-***REMOVED***
+<?xml version='1.0' encoding='utf-8'?>
 
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-          url="jdbc:postgresql://pintini.ddns.net:5432/mnemosyne"
-          username="mnemosyne"
-          password="mn3m0syn3"
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
-***REMOVED***
+<Context>
+   <Resource name="jdbc/mnemosyne"
+          auth="Container"
+          type="javax.sql.DataSource"
+          factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+          driverClassName="org.postgresql.Driver"
+          url="jdbc:postgresql://URL"
+          username="user"
+          password="pass"
+          testOnBorrow="true"
+          validationQuery="SELECT 1"
+          timeBetweenEvictionRunsMillis="30000"
+          maxActive="2"
+          minIdle="1"
+          maxWait="10000"
+          initialSize="1"
+          removeAbandonedTimeout="60"
+          removeAbandoned="true"
+	/>
+</Context>
