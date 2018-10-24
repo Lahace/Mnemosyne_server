@@ -8,7 +8,7 @@
           driverClassName="org.postgresql.Driver"
           url="jdbc:postgresql://URL"
           username="user"
-          password="pass"
+          password="password"
           testOnBorrow="true"
           validationQuery="SELECT 1"
           timeBetweenEvictionRunsMillis="30000"
