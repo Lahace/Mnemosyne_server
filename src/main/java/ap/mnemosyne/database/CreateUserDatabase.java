@@ -2,7 +2,6 @@ package ap.mnemosyne.database;
 
 import ap.mnemosyne.resources.User;
 
-import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 
 public class CreateUserDatabase
@@ -17,7 +16,7 @@ public class CreateUserDatabase
 		this.conn = conn;
 	}
 
-	public User CreateUser() throws SQLException, NoSuchAlgorithmException
+	public User CreateUser() throws SQLException
 	{
 		User ret = null;
 		ResultSet rs = null;

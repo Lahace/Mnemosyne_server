@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 
 public class RegisterServlet extends AbstractDatabaseServlet
@@ -33,10 +32,5 @@ public class RegisterServlet extends AbstractDatabaseServlet
 		{
 			ServletUtils.sendMessage(new Message("IOException in RegisterServlet", "500", ioe.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		catch (NoSuchAlgorithmException nsae)
-		{
-			ServletUtils.sendMessage(new Message("NoSuchAlgorithmException in RegisterServlet", "500", nsae.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		}
-
 	}
 }
