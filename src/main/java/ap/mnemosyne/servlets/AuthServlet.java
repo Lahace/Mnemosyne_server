@@ -84,8 +84,6 @@ public class AuthServlet extends AbstractDatabaseServlet
 		}
 		catch(SQLException sqle)
 		{
-			//System.out.println(sqle.toString());
-			//sqle.printStackTrace();
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}

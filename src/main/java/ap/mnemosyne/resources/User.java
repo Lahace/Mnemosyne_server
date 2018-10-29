@@ -1,5 +1,7 @@
 package ap.mnemosyne.resources;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -7,6 +9,8 @@ import java.io.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@JsonTypeInfo(use= JsonTypeInfo.Id.NAME, include= JsonTypeInfo.As.WRAPPER_OBJECT)
+@JsonTypeName("user")
 public class User extends Resource
 {
 	private String sessionID;
@@ -50,18 +54,28 @@ public class User extends Resource
 		ObjectMapper om = new ObjectMapper();
 		String temp = this.password;
 		this.password = null;
-		pw.print("{\"user\":" + om.writeValueAsString(this) + "}"); //hashed password will not be sent via JSON
+		pw.print(om.writeValueAsString(this)); //hashed password will not be sent via JSON
 		this.password = temp;
 		pw.flush();
 		pw.close();
 	}
 
+	@Override
+	public final void toJSON(final PrintWriter pw) throws IOException
+	{
+		ObjectMapper om = new ObjectMapper();
+		pw.print(om.writeValueAsString(this));
+		pw.flush();
+	}
+
+	@Override
 	public final String toJSON() throws JsonProcessingException
 	{
 		ObjectMapper om = new ObjectMapper();
+		om.findAndRegisterModules();
 		String temp = this.password;
 		this.password = null;
-		String toRet = "{\"user\":" + om.writeValueAsString(this) + "}"; //hashed password will not be sent via JSON
+		String toRet = om.writeValueAsString(this); //hashed password will not be sent via JSON
 		this.password = temp;
 		return toRet;
 	}
@@ -84,7 +98,8 @@ public class User extends Resource
 		matcher.find();
 
 		ObjectMapper om = new ObjectMapper();
-		User u = om.readValue(matcher.group(1), User.class);
+		om.findAndRegisterModules();
+		User u = om.readValue(matcher.group(0), User.class);
 		return u;
 	}
 }

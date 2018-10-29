@@ -16,7 +16,11 @@
 
 package ap.mnemosyne.resources;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 
@@ -27,6 +31,9 @@ import java.io.*;
  * @version 1.00
  * @since 1.00
  */
+
+@JsonTypeInfo(use= JsonTypeInfo.Id.NAME, include= JsonTypeInfo.As.WRAPPER_OBJECT)
+@JsonTypeName("message")
 public class Message extends Resource {
 
 	/**
@@ -145,4 +152,21 @@ public class Message extends Resource {
 
 		jg.flush();
 	}
+
+	@Override
+	public final void toJSON(final PrintWriter pw) throws IOException
+	{
+		ObjectMapper om = new ObjectMapper();
+		pw.print(om.writeValueAsString(this));
+		pw.flush();
+	}
+
+	@Override
+	public final String toJSON() throws JsonProcessingException
+	{
+		ObjectMapper om = new ObjectMapper();
+		om.findAndRegisterModules();
+		return om.writeValueAsString(this);
+	}
+
 }

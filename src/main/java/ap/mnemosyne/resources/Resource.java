@@ -16,6 +16,8 @@
 
 package ap.mnemosyne.resources;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.*;
 
 import java.io.*;
@@ -27,6 +29,15 @@ import java.io.*;
  * @version 1.00
  * @since 1.00
  */
+
+@JsonTypeInfo(use= JsonTypeInfo.Id.NAME, include= JsonTypeInfo.As.WRAPPER_OBJECT)
+@JsonSubTypes({
+		@JsonSubTypes.Type(value = Task.class),
+		@JsonSubTypes.Type(value = User.class),
+		@JsonSubTypes.Type(value = Message.class),
+		@JsonSubTypes.Type(value = TaskConstraint.class),
+		@JsonSubTypes.Type(value = Point.class)
+})
 public abstract class Resource {
 
 	/**
@@ -50,4 +61,8 @@ public abstract class Resource {
 	 * @throws IOException if something goes wrong during the parsing.
 	 */
 	public abstract void toJSON(final OutputStream out) throws IOException;
+
+	public abstract String toJSON() throws IOException;
+
+	public abstract void toJSON(final PrintWriter pw) throws IOException;
 }

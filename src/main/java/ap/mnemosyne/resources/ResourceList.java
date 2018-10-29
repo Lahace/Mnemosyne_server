@@ -16,7 +16,8 @@
 
 package ap.mnemosyne.resources;
 
-import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.*;
 
 /**
@@ -45,6 +46,7 @@ public final class ResourceList<T extends Resource> extends Resource {
         this.list = list;
     }
 
+    /*
     @Override
     public final void toJSON(final OutputStream out) throws IOException {
 
@@ -84,6 +86,35 @@ public final class ResourceList<T extends Resource> extends Resource {
         jg.flush();
 
         jg.close();
+    }*/
+
+    @Override
+    public final void toJSON(final OutputStream out) throws IOException
+    {
+        PrintWriter pw = new PrintWriter(out);
+        pw.print(this.toJSON());
+        pw.flush();
+        pw.close();
     }
 
+    @Override
+    public final void toJSON(final PrintWriter pw) throws IOException
+    {
+        pw.print(this.toJSON());
+        pw.flush();
+    }
+
+    @Override
+    public final String toJSON() throws IOException
+    {
+        String toRet="";
+        toRet += ("{\"resource-list\":[");
+        for(Resource r: list)
+        {
+            toRet += r.toJSON() + ",";
+        }
+        toRet = toRet.substring(0,toRet.length()-1);
+        toRet += "]}";
+        return toRet;
+    }
 }
