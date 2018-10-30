@@ -16,13 +16,13 @@
 
 package ap.mnemosyne.resources;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Represents a message or an error message.
@@ -32,7 +32,6 @@ import java.io.*;
  * @since 1.00
  */
 
-@JsonTypeInfo(use= JsonTypeInfo.Id.NAME, include= JsonTypeInfo.As.WRAPPER_OBJECT)
 @JsonTypeName("message")
 public class Message extends Resource {
 
@@ -128,7 +127,7 @@ public class Message extends Resource {
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException {
 
-		final JsonGenerator jg = JSON_FACTORY.createGenerator(out);
+		final JsonGenerator jg = JSON_FACTORY.createGenerator(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 
 		jg.writeStartObject();
 

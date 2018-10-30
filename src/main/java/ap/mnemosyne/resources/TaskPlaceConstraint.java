@@ -10,21 +10,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 
 @JsonTypeName("task-place-constraint")
 public class TaskPlaceConstraint extends TaskConstraint
 {
-	private Point constraintPlace;
+	private Place constraintPlace;
 
 	@JsonCreator
-	public TaskPlaceConstraint(@JsonProperty("constraintPlace") Point constraintPlace, @JsonProperty("paramName") ParamsName paramName , @JsonProperty("type") ConstraintTemporalType type)
+	public TaskPlaceConstraint(@JsonProperty("constraintPlace") Place constraintPlace, @JsonProperty("paramName") ParamsName paramName , @JsonProperty("type") ConstraintTemporalType type)
 	{
 		super(paramName, type);
 		this.constraintPlace = constraintPlace;
 	}
 
-	public Point getConstraintPlace()
+	public Place getConstraintPlace()
 	{
 		return constraintPlace;
 	}
@@ -32,7 +34,7 @@ public class TaskPlaceConstraint extends TaskConstraint
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException
 	{
-		PrintWriter pw = new PrintWriter(out);
+		PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 		ObjectMapper om = new ObjectMapper();
 		om.findAndRegisterModules();
 		pw.print(om.writeValueAsString(this));

@@ -37,7 +37,7 @@ public class GetTaskByIDDatabase
 
 			while (rs.next()) {
 				ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rs.getBytes("placesToSatisfy")));
-				List<Point> list = (List<Point>) in.readObject();
+				List<Place> list = (List<Place>) in.readObject();
 				in.close();
 
 				in = new ObjectInputStream(new ByteArrayInputStream(rs.getBytes("constr")));

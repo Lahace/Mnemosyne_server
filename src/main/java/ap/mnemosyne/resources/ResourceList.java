@@ -16,9 +16,8 @@
 
 package ap.mnemosyne.resources;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Represents a list of {@link Resource} objects.
@@ -91,7 +90,7 @@ public final class ResourceList<T extends Resource> extends Resource {
     @Override
     public final void toJSON(final OutputStream out) throws IOException
     {
-        PrintWriter pw = new PrintWriter(out);
+        PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
         pw.print(this.toJSON());
         pw.flush();
         pw.close();
@@ -107,6 +106,7 @@ public final class ResourceList<T extends Resource> extends Resource {
     @Override
     public final String toJSON() throws IOException
     {
+        //TODO: change with latest implementation
         String toRet="";
         toRet += ("{\"resource-list\":[");
         for(Resource r: list)

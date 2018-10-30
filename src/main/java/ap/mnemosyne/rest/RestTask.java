@@ -36,6 +36,7 @@ public class RestTask
 			if(tl != null)
 			{
 				res.setStatus(HttpServletResponse.SC_OK);
+				res.setHeader("Content-Type", "application/json; charset=utf-8");
 				new ResourceList<>(tl).toJSON(res.getOutputStream());
 			}
 			else
@@ -66,6 +67,7 @@ public class RestTask
 			if(t != null)
 			{
 				res.setStatus(HttpServletResponse.SC_OK);
+				res.setHeader("Content-Type", "application/json; charset=utf-8");
 				t.toJSON(res.getOutputStream());
 			}
 			else
@@ -95,6 +97,7 @@ public class RestTask
 			Task t = Task.fromJSON(req.getInputStream());
 			Task ret = new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);
+			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			ret.toJSON(res.getOutputStream());
 
 		}
@@ -115,13 +118,16 @@ public class RestTask
 		//Class to serialize and create example tasks
 		try
 		{
-			ArrayList<Point> plist = new ArrayList<>();
-			plist.add(new Point(48.44, -123.37));
+			ArrayList<Place> plist = new ArrayList<>();
+			plist.add(new Place("italy", "veneto", "schio", "magré", 2, "Famila",
+					"supermarket", new Point(45.714012, 11.353281), LocalTime.of(9,0), LocalTime.of(20,30)));
 			new CreateTaskDatabase(getDataSource().getConnection(),
 					new Task(12,"asd@asd.it" , "Nome", new TaskTimeConstraint(LocalTime.of(16,0), ParamsName.time_bed, ConstraintTemporalType.dopo),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Nome", new TaskPlaceConstraint(new Point(12,54), ParamsName.location_house, ConstraintTemporalType.prima),
+					new Task(12,"asd@asd.it" , "Nome", new TaskPlaceConstraint(
+							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",
+									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.prima),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 		}
 		catch(SQLException sqle)
