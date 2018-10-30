@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,12 +21,12 @@ public class Task extends Resource
 	private boolean repeatable;
 	private boolean doneToday;
 	private boolean failed;
-	private List<Point> placesToSatisfy;
+	private List<Place> placesToSatisfy;
 
 	@JsonCreator
 	public Task(@JsonProperty("id") int id,@JsonProperty("user") String user, @JsonProperty("name") String name, @JsonProperty("constr") TaskConstraint constr,
 	            @JsonProperty("possibleAtWork") boolean possibleAtWork, @JsonProperty("repeatable") boolean repeatable, @JsonProperty("doneToday") boolean doneToday,
-	            @JsonProperty("failed") boolean failed, @JsonProperty("placesToSatisfy") List<Point> placesToSatisfy)
+	            @JsonProperty("failed") boolean failed, @JsonProperty("placesToSatisfy") List<Place> placesToSatisfy)
 	{
 		this.user = user;
 		this.name = name;
@@ -78,7 +79,7 @@ public class Task extends Resource
 		return failed;
 	}
 
-	public List<Point> getPlacesToSatisfy()
+	public List<Place> getPlacesToSatisfy()
 	{
 		return placesToSatisfy;
 	}
@@ -101,7 +102,7 @@ public class Task extends Resource
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException
 	{
-		PrintWriter pw = new PrintWriter(out);
+		PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 		ObjectMapper om = new ObjectMapper();
 		om.findAndRegisterModules();
 		pw.print(om.writeValueAsString(this));

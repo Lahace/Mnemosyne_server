@@ -21,6 +21,7 @@ public class RegisterServlet extends AbstractDatabaseServlet
 			User u = User.fromJSON(req.getInputStream());
 			User created = new CreateUserDatabase(getDataSource().getConnection(), u).CreateUser();
 			res.setStatus(HttpServletResponse.SC_OK);
+			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			created.toJSON(res.getOutputStream());
 		}
 		catch(SQLException sqle)

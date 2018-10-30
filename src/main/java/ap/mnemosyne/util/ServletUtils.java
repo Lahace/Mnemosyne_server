@@ -60,7 +60,7 @@ public class ServletUtils
 	public static void sendMessage(Message m, HttpServletResponse res, int status) throws IOException
 	{
 		res.setStatus(status);
-		res.setHeader("Content-Type", "application/json");
+		res.setHeader("Content-Type", "application/json; charset=utf-8");
 		m.toJSON(res.getOutputStream());
 	}
 

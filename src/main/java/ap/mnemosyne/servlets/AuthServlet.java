@@ -24,7 +24,7 @@ public class AuthServlet extends AbstractDatabaseServlet
 		}
 		User a = (User) req.getSession().getAttribute("current");
 		res.setStatus(HttpServletResponse.SC_OK);
-		res.setHeader("Content-Type", "application/json");
+		res.setHeader("Content-Type", "application/json; charset=utf-8");
 		a.toJSON(res.getOutputStream());
 		return;
 	}
@@ -56,7 +56,7 @@ public class AuthServlet extends AbstractDatabaseServlet
 				if(u.getSessionID() != null && SessionListener.map.get(u.getSessionID()) != null)
 				{
 					res.setStatus(HttpServletResponse.SC_OK);
-					res.setHeader("Content-Type", "application/json");
+					res.setHeader("Content-Type", "application/json; charset=utf-8");
 					u.toJSON(res.getOutputStream());
 				}
 				else
@@ -72,7 +72,7 @@ public class AuthServlet extends AbstractDatabaseServlet
 					}
 					s.setAttribute("current", newUser);
 					res.setStatus(HttpServletResponse.SC_OK);
-					res.setHeader("Content-Type", "application/json");
+					res.setHeader("Content-Type", "application/json; charset=utf-8");
 					newUser.toJSON(res.getOutputStream());
 				}
 			}

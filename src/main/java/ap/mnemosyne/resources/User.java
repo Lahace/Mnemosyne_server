@@ -1,15 +1,14 @@
 package ap.mnemosyne.resources;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@JsonTypeInfo(use= JsonTypeInfo.Id.NAME, include= JsonTypeInfo.As.WRAPPER_OBJECT)
 @JsonTypeName("user")
 public class User extends Resource
 {
@@ -50,7 +49,7 @@ public class User extends Resource
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException
 	{
-		PrintWriter pw = new PrintWriter(out);
+		PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 		ObjectMapper om = new ObjectMapper();
 		String temp = this.password;
 		this.password = null;

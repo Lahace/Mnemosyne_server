@@ -10,7 +10,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
 
 @JsonTypeName("task-time-constraint")
@@ -33,7 +35,7 @@ public class TaskTimeConstraint extends TaskConstraint
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException
 	{
-		PrintWriter pw = new PrintWriter(out);
+		PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
 		ObjectMapper om = new ObjectMapper();
 		om.findAndRegisterModules();
 		pw.print(om.writeValueAsString(this));

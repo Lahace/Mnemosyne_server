@@ -1,3 +1,5 @@
+package ap.mnemosyne.parser;
+
 import org.junit.Test;
 import ap.mnemosyne.parser.ParserIT;
 
