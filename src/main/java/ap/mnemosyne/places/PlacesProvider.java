@@ -10,6 +10,6 @@ import java.util.List;
 
 public interface PlacesProvider
 {
-	List<Point> getPointsFromQuery(String query) throws RuntimeException;
-	Place getPlaceFromLatLon(double lat, double lon);
+	List<Place> getPlacesFromQuery(String query) throws RuntimeException;
+	Place getPlaceFromLatLon(Point point);
 }

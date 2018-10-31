@@ -1,28 +1,27 @@
 package ap.mnemosyne.places;
 
+import ap.mnemosyne.exceptions.NoDataReceivedException;
 import ap.mnemosyne.resources.Place;
 import ap.mnemosyne.resources.Point;
-import org.apache.http.HttpResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
-import org.apache.http.ssl.SSLContexts;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OpenStreetMapPlaces implements PlacesProvider
@@ -31,9 +30,10 @@ public class OpenStreetMapPlaces implements PlacesProvider
 	private static long lastRequest = 0;
 	private final static long msTimeBetweenRequests = 1000;
 	private final String requestUrl = "https://nominatim.openstreetmap.org/search";
+	private final String requestUrlReverse = "https://nominatim.openstreetmap.org/reverse";
 
 	@Override
-	public List<Point> getPointsFromQuery(String query) throws RuntimeException
+	public List<Place> getPlacesFromQuery(String query) throws RuntimeException
 	{
 		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
 
@@ -48,24 +48,48 @@ public class OpenStreetMapPlaces implements PlacesProvider
 				//ignored
 			}
 		}
-
+		List<Place> toRet = new ArrayList<>();
 		try
 		{
-			SSLContextBuilder builder = new SSLContextBuilder();
-			builder.loadTrustMaterial(null, (chain, authType) -> true);
-			SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);
-			CloseableHttpClient httpclient =  HttpClients.custom().setSSLSocketFactory(sslsf).build();
+
+			CloseableHttpClient httpclient = getHttpClient();
 			
 			URIBuilder uri = new URIBuilder(requestUrl)
 					.addParameter("q", query)
-					.addParameter("format", "json")
+					.addParameter("format", "jsonv2")
 					.addParameter("limit", "400")
-					.addParameter("addressdetails", "1");
+					.addParameter("addressdetails", "1")
+					.addParameter("extratags", "1");
 
 			HttpGet httpGet = new HttpGet(uri.toString());
 			CloseableHttpResponse resp = httpclient.execute(httpGet);
+			ResponseHandler<String> handler = new BasicResponseHandler();
 
-			System.out.println(resp.getStatusLine());
+			String body = handler.handleResponse(resp);
+			ObjectMapper map = new ObjectMapper();
+			JsonNode obj = map.readTree(body);
+			for(JsonNode node : obj)
+			{
+				JsonNode address = node.get("address");
+				String name = null;
+				if(node.get("type") != null)
+				{
+					name = address.get(node.get("type").asText()) != null ? address.get(node.get("type").asText()).asText() : null;
+				}
+				int houseNumber = -1;
+				try{ houseNumber = address.get("house_number").asInt();}catch (NullPointerException npe){} //Ignore
+				Place p = new Place(address.get("country")!=null ? address.get("country").asText() : null,
+						address.get("state")!=null ? address.get("state").asText() : null,
+						address.get("town")!=null ? address.get("town").asText() : null,
+						address.get("suburb")!=null ? address.get("suburb").asText() : null,
+						houseNumber,
+						name,
+						node.get("type")!=null ? node.get("type").asText() : null,
+						new Point(node.get("lat").asDouble(), node.get("lon").asDouble()),
+						null,
+						null);
+				toRet.add(p);
+			}
 		}
 		catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException | IOException | URISyntaxException e)
 		{
@@ -73,11 +97,11 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		}
 
 		lastRequest = System.currentTimeMillis();
-		return null;
+		return toRet;
 	}
 
 	@Override
-	public Place getPlaceFromLatLon(double lat, double lon)
+	public Place getPlaceFromLatLon(Point point)
 	{
 		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
 
@@ -93,7 +117,64 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			}
 		}
 
+		Place p = null;
+		try {
+
+			CloseableHttpClient httpclient = getHttpClient();
+			URIBuilder uri = new URIBuilder(requestUrlReverse)
+					.addParameter("format", "jsonv2")
+					.addParameter("lat", Double.toString(point.getLat()))
+					.addParameter("lon", Double.toString(point.getLon()))
+					.addParameter("addressdetails", "1")
+					.addParameter("extratags", "1");
+
+			HttpGet httpGet = new HttpGet(uri.toString());
+			CloseableHttpResponse resp = httpclient.execute(httpGet);
+			ResponseHandler<String> handler = new BasicResponseHandler();
+
+			String body = handler.handleResponse(resp);
+			ObjectMapper map = new ObjectMapper();
+			JsonNode node = map.readTree(body);
+			if(node == null) throw new NoDataReceivedException();
+
+			JsonNode address = node.get("address");
+			if(address == null) throw new NoDataReceivedException();
+
+			String name = null;
+			if(node.get("type") != null)
+			{
+				name = address.get(node.get("type").asText()) != null ? address.get(node.get("type").asText()).asText() : null;
+			}
+			int houseNumber = -1;
+			try{ houseNumber = address.get("house_number").asInt();}catch (NullPointerException npe){}
+			p = new Place(address.get("country")!=null ? address.get("country").asText() : null,
+					address.get("state")!=null ? address.get("state").asText() : null,
+					address.get("town")!=null ? address.get("town").asText() : null,
+					address.get("suburb")!=null ? address.get("suburb").asText() : null,
+					houseNumber,
+					name,
+					node.get("type")!=null ? node.get("type").asText() : null,
+					new Point(node.get("lat").asDouble(), node.get("lon").asDouble()),
+					null,
+					null);
+
+		}
+		catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException | IOException | URISyntaxException e)
+		{
+			throw new RuntimeException(e);
+		}
+
 		lastRequest = System.currentTimeMillis();
-		return null;
+		return p;
+	}
+
+	private CloseableHttpClient getHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException
+	{
+		//allowing every certificate without verification
+		//TODO: improve certificate management
+		SSLContextBuilder builder = new SSLContextBuilder();
+		builder.loadTrustMaterial(null, (chain, authType) -> true);
+		SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build(), NoopHostnameVerifier.INSTANCE);
+		return HttpClients.custom().setSSLSocketFactory(sslsf).build();
 	}
 }

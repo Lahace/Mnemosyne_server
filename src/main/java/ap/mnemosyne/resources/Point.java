@@ -1,6 +1,5 @@
 package ap.mnemosyne.resources;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,39 +13,39 @@ import java.util.Objects;
 @JsonTypeName("point")
 public class Point extends Resource implements Serializable
 {
-	private double x;
-	private double y;
+	private double lat;
+	private double lon;
 
 	public Point(){}
 
-	public Point(double x, double y)
+	public Point(double lat, double lon)
 	{
-		this.x = x;
-		this.y = y;
+		this.lat = lat;
+		this.lon = lon;
 	}
 
-	public double getX()
+	public double getLat()
 	{
-		return x;
+		return lat;
 	}
 
-	public double getY()
+	public double getLon()
 	{
-		return y;
+		return lon;
 	}
 
 	public org.opengis.geometry.primitive.Point toGISPoint()
 	{
 		GeometryBuilder builder = new GeometryBuilder( DefaultGeographicCRS.WGS84 );
-		return builder.createPoint(getX(), getY());
+		return builder.createPoint(getLat(), getLon());
 	}
 
 	@Override
 	public String toString()
 	{
 		return "Point{" +
-				"x=" + x +
-				", y=" + y +
+				"lat=" + lat +
+				", lon=" + lon +
 				'}';
 	}
 
@@ -83,14 +82,14 @@ public class Point extends Resource implements Serializable
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		Point point = (Point) o;
-		return Double.compare(point.x, x) == 0 &&
-				Double.compare(point.y, y) == 0;
+		return Double.compare(point.lat, lat) == 0 &&
+				Double.compare(point.lon, lon) == 0;
 	}
 
 	@Override
 	public int hashCode()
 	{
-		return Objects.hash(x, y);
+		return Objects.hash(lat, lon);
 	}
 
 }

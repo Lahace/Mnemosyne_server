@@ -24,11 +24,9 @@ public class ServletUtils
 	public static boolean checkContentType(String admitted, HttpServletRequest req)
 	{
 		String reqtype = req.getHeader("Content-Type");
-		if(admitted.equals(reqtype))
-			return true;
+        return admitted.equals(reqtype);
 
-		return false;
-	}
+    }
 
 	public static String checkContentType(String[] admitted, HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
