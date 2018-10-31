@@ -23,7 +23,8 @@ public class Place extends Resource implements Serializable
 	private LocalTime opening;
 	private LocalTime closing;
 
-	public Place(String country, String state, String town, String suburb, int houseNumber, String name, String placeType, Point coordinates, LocalTime opening, LocalTime closing)
+	public Place(String country, String state, String town, String suburb, int houseNumber, String name,
+				 String placeType, Point coordinates, LocalTime opening, LocalTime closing)
 	{
 		this.country = country;
 		this.state = state;
