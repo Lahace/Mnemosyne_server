@@ -1,6 +1,9 @@
 package ap.mnemosyne.parser;
 
+import ap.mnemosyne.parser.resources.TextualAction;
+import ap.mnemosyne.parser.resources.TextualConstraint;
 import ap.mnemosyne.parser.resources.TextualTask;
+import ap.mnemosyne.resources.Task;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -39,17 +42,16 @@ public class ParserITv2
 		System.out.println("Loaded.");
 	}
 
-	public String parseString(String text)
+	public TextualTask parseString(String text)
 	{
+		//Phase 1
 		String pre = this.preProcessString(text);
-		Annotation a = pipeline.runRaw(pre);
-		List<CoreMap> sentences = a.get(CoreAnnotations.SentencesAnnotation.class);
-		CoreMap sentence = sentences.get(0);
-		SemanticGraph sg = sentence.get(BasicDependenciesAnnotation.class);
 
-		this.retrieveTextualTask(sg);
+		//Phase 2
+		TextualTask tt = this.retrieveTextualTask(pre);
+		System.out.println(tt);
 
-		return null;
+		return tt;
 	}
 
 	private String preProcessString(String string)
@@ -73,24 +75,49 @@ public class ParserITv2
 	}
 
 
-	private TextualTask retrieveTextualTask(SemanticGraph sg)
+	private TextualTask retrieveTextualTask(String text)
 	{
+		Annotation a = pipeline.runRaw(text);
+		List<CoreMap> sentences = a.get(CoreAnnotations.SentencesAnnotation.class);
+		CoreMap sentence = sentences.get(0);
+		SemanticGraph sg = sentence.get(BasicDependenciesAnnotation.class);
+
 		IndexedWord root = sg.getFirstRoot();
 		String rootValue = root.value();
 		System.out.println(sg.toCompactString(true));
+		TextualAction tact = null;
+		List<TextualConstraint> tconstr = new ArrayList<>();
 		for(SemanticGraphEdge sge : sg.outgoingEdgeList(root))
 		{
 			switch(sge.getRelation().toString())
 			{
 				case "dobj":
+					tact = new TextualAction(rootValue,sge.getTarget().value());
 					break;
 
-				case "":
+				case "advcl":
+					String marker = null;
+					String word = null;
+					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+					{
+						switch(sge2.getRelation().toString())
+						{
+							case "mark":
+								marker = sge2.getTarget().value();
+								break;
+
+							case "nmod":
+								word = sge2.getTarget().value();
+								break;
+						}
+					}
+					tconstr.add(new TextualConstraint(marker, word));
 					break;
+
 			}
 		}
 
-		return null;
+		return new TextualTask(tact, tconstr, text);
 	}
 
 	private int matchesList(String toMatch, List<String> regexps)
