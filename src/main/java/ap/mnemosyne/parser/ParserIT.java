@@ -7,10 +7,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ap.mnemosyne.parser.resources.Marker;
-import ap.mnemosyne.parser.resources.TextualAction;
-import ap.mnemosyne.parser.resources.TextualConstraint;
-import ap.mnemosyne.parser.resources.TextualTask;
+import ap.mnemosyne.parser.resources.*;
 import com.google.common.collect.Iterables;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;

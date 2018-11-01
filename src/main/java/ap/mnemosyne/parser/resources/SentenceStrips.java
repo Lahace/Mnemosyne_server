@@ -1,8 +1,8 @@
-package ap.mnemosyne.parser;
+package ap.mnemosyne.parser.resources;
 
 import java.util.List;
 
-class SentenceStrips
+public class SentenceStrips
 {
 	private String fullSentence, action;
 	private List<String> constraints;

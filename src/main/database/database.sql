@@ -1,7 +1,15 @@
 DROP TABLE IF EXISTS mnemosyne.defines;
-DROP TABLE IF EXISTS mnemosyne.parameter;
 DROP TABLE IF EXISTS mnemosyne.task;
 DROP TABLE IF EXISTS mnemosyne.user;
+DROP TABLE IF EXISTS mnemosyne.found_in;
+DROP TABLE IF EXISTS mnemosyne.requires;
+DROP TABLE IF EXISTS mnemosyne.wants;
+DROP TABLE IF EXISTS mnemosyne.constraint_marker;
+DROP TABLE IF EXISTS mnemosyne.constraint_word;
+DROP TABLE IF EXISTS mnemosyne.item;
+DROP TABLE IF EXISTS mnemosyne.parameter;
+DROP TABLE IF EXISTS mnemosyne.verb;
+DROP TABLE IF EXISTS mnemosyne.place_type;
 DROP TYPE IF EXISTS paramType;
 
 CREATE TYPE paramType AS ENUM('time','location');
@@ -45,4 +53,61 @@ CREATE TABLE mnemosyne.task(
     FOREIGN KEY (useremail) REFERENCES mnemosyne.user(email)
         ON DELETE CASCADE ON UPDATE CASCADE
     --N.B. for future developement, add extra tables to avoid serialization
+);
+
+CREATE TABLE mnemosyne.verb(
+    word VARCHAR(50) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE mnemosyne.item(
+    name varchar(50) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE mnemosyne.requires(
+    word VARCHAR(50) NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    pname VARCHAR(30) NOT NULL,
+    PRIMARY KEY (word,name),
+    FOREIGN KEY (word) REFERENCES mnemosyne.verb(word)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (name) REFERENCES mnemosyne.item(name)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (pname) REFERENCES mnemosyne.parameter(pname)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE mnemosyne.place_type(
+    type VARCHAR(50) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE mnemosyne.found_in(
+    name VARCHAR(50) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    PRIMARY KEY(name,type),
+    FOREIGN KEY (name) REFERENCES mnemosyne.item(name)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (type) REFERENCES mnemosyne.place_type(type)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE mnemosyne.constraint_marker(
+    marker VARCHAR(20) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE mnemosyne.constraint_word(
+    word VARCHAR(50) NOT NULL PRIMARY KEY
+);
+
+CREATE TABLE mnemosyne.wants(
+    pname VARCHAR(30) NOT NULL,
+    marker VARCHAR(20) NOT NULL,
+    word VARCHAR(50) NOT NULL,
+    PRIMARY KEY (pname, marker, word),
+    FOREIGN KEY (pname) REFERENCES mnemosyne.parameter(pname)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (marker) REFERENCES mnemosyne.constraint_marker(marker)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (word) REFERENCES mnemosyne.constraint_word(word)
+            ON DELETE CASCADE ON UPDATE CASCADE
+
 );
