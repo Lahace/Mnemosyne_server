@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import ap.mnemosyne.exceptions.MalformedNLStringException;
 import ap.mnemosyne.parser.resources.*;
 import com.google.common.collect.Iterables;
 import edu.stanford.nlp.ling.CoreAnnotations;
@@ -214,7 +215,7 @@ public class ParserIT extends Parser
 				}
 			}
 		}
-		return new TextualTask(textAct, textConstr); //TODO: mettere i verbi all'infinito
+		return new TextualTask(textAct, textConstr, sp.getFullSentence()); //TODO: mettere i verbi all'infinito
 	}
 
 	private void resolveTask(TextualTask tt)

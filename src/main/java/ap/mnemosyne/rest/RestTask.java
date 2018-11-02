@@ -2,11 +2,10 @@ package ap.mnemosyne.rest;
 
 import ap.mnemosyne.database.CreateTaskDatabase;
 import ap.mnemosyne.database.GetTaskByIDDatabase;
-import ap.mnemosyne.database.GetTaskByUserDatabase;
+import ap.mnemosyne.database.SearchTaskByUserDatabase;
 import ap.mnemosyne.enums.ConstraintTemporalType;
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.resources.*;
-import ap.mnemosyne.servlets.AbstractDatabaseServlet;
 import ap.mnemosyne.util.ServletUtils;
 
 import javax.naming.InitialContext;
@@ -32,7 +31,7 @@ public class RestTask
 	{
 		try
 		{
-			List<Task> tl = new GetTaskByUserDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current")).getTaskByUser();
+			List<Task> tl = new SearchTaskByUserDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current")).searchTaskByUser();
 			if(tl != null)
 			{
 				res.setStatus(HttpServletResponse.SC_OK);

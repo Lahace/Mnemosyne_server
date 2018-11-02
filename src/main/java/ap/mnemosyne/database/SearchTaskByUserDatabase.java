@@ -12,19 +12,19 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GetTaskByUserDatabase
+public class SearchTaskByUserDatabase
 {
 	private final String stmt = "SELECT * FROM mnemosyne.task WHERE useremail=?";
 	private final Connection conn;
 	private final User u;
 
-	public GetTaskByUserDatabase(Connection conn, User u)
+	public SearchTaskByUserDatabase(Connection conn, User u)
 	{
 		this.conn = conn;
 		this.u = u;
 	}
 
-	public List<Task> getTaskByUser() throws SQLException, IOException, ClassNotFoundException
+	public List<Task> searchTaskByUser() throws SQLException, IOException, ClassNotFoundException
 	{
 		PreparedStatement pstmt = null;
 		List<Task> l = new ArrayList<>();

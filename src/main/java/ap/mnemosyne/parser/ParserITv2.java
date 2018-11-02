@@ -3,7 +3,6 @@ package ap.mnemosyne.parser;
 import ap.mnemosyne.parser.resources.TextualAction;
 import ap.mnemosyne.parser.resources.TextualConstraint;
 import ap.mnemosyne.parser.resources.TextualTask;
-import ap.mnemosyne.resources.Task;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -87,6 +86,9 @@ public class ParserITv2
 		System.out.println(sg.toCompactString(true));
 		TextualAction tact = null;
 		List<TextualConstraint> tconstr = new ArrayList<>();
+
+		String marker = null;
+		String word = null;
 		for(SemanticGraphEdge sge : sg.outgoingEdgeList(root))
 		{
 			switch(sge.getRelation().toString())
@@ -95,9 +97,24 @@ public class ParserITv2
 					tact = new TextualAction(rootValue,sge.getTarget().value());
 					break;
 
+				case "nmod":
+					marker = null;
+					word = sge.getTarget().value();
+					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+					{
+						switch(sge2.getRelation().toString())
+						{
+							case "case":
+								marker = sge2.getTarget().value();
+								break;
+						}
+					}
+					tconstr.add(new TextualConstraint(marker,word));
+					break;
+
 				case "advcl":
-					String marker = null;
-					String word = null;
+					marker = null;
+					word = null;
 					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 					{
 						switch(sge2.getRelation().toString())

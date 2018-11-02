@@ -33,7 +33,7 @@ public class OpenStreetMapPlaces implements PlacesProvider
 	private final String requestUrlReverse = "https://nominatim.openstreetmap.org/reverse";
 
 	@Override
-	public List<Place> getPlacesFromQuery(String query) throws RuntimeException
+	public List<Place> getPlacesFromQuery(String query) throws RuntimeException, NoDataReceivedException
 	{
 		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
 
@@ -68,6 +68,8 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			String body = handler.handleResponse(resp);
 			ObjectMapper map = new ObjectMapper();
 			JsonNode obj = map.readTree(body);
+			if(obj.size() == 0) throw new NoDataReceivedException("No data received with this query");
+
 			for(JsonNode node : obj)
 			{
 				JsonNode address = node.get("address");
@@ -101,7 +103,7 @@ public class OpenStreetMapPlaces implements PlacesProvider
 	}
 
 	@Override
-	public Place getPlaceFromLatLon(Point point)
+	public Place getPlaceFromPoint(Point point) throws NoDataReceivedException
 	{
 		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
 
@@ -135,21 +137,33 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			String body = handler.handleResponse(resp);
 			ObjectMapper map = new ObjectMapper();
 			JsonNode node = map.readTree(body);
-			if(node == null) throw new NoDataReceivedException();
+			if(node.size() == 0) throw new NoDataReceivedException("No data received with this lat/lon");
 
 			JsonNode address = node.get("address");
-			if(address == null) throw new NoDataReceivedException();
-
 			String name = null;
 			if(node.get("type") != null)
 			{
 				name = address.get(node.get("type").asText()) != null ? address.get(node.get("type").asText()).asText() : null;
 			}
 			int houseNumber = -1;
+			String town = null;
+
+			if(address.get("town") == null)
+			{
+				if(address.get("village") != null)
+				{
+					town = address.get("village").asText();
+				}
+			}
+			else
+			{
+				town = address.get("town").asText();
+			}
+
 			try{ houseNumber = address.get("house_number").asInt();}catch (NullPointerException npe){}
 			p = new Place(address.get("country")!=null ? address.get("country").asText() : null,
 					address.get("state")!=null ? address.get("state").asText() : null,
-					address.get("town")!=null ? address.get("town").asText() : null,
+					town,
 					address.get("suburb")!=null ? address.get("suburb").asText() : null,
 					houseNumber,
 					name,
@@ -165,6 +179,12 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		}
 
 		lastRequest = System.currentTimeMillis();
+
+		if(p.getTown() == null)
+		{
+			//If coordinates are off, no town is returned
+			throw new NoDataReceivedException("Invalid data received");
+		}
 		return p;
 	}
 

@@ -1,4 +1,4 @@
-package ap.mnemosyne.parser;
+package ap.mnemosyne.exceptions;
 
 public class MalformedNLStringException extends Exception
 {
