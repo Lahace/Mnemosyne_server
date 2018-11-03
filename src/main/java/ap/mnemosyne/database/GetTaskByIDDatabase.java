@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 
 public class GetTaskByIDDatabase
 {
@@ -37,7 +38,7 @@ public class GetTaskByIDDatabase
 
 			while (rs.next()) {
 				ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rs.getBytes("placesToSatisfy")));
-				List<Place> list = (List<Place>) in.readObject();
+				Set<Place> set = (Set<Place>) in.readObject();
 				in.close();
 
 				in = new ObjectInputStream(new ByteArrayInputStream(rs.getBytes("constr")));
@@ -48,22 +49,21 @@ public class GetTaskByIDDatabase
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), (TaskPlaceConstraint) read,
 							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-							rs.getBoolean("failed"), list);
+							rs.getBoolean("failed"), set);
 				}
 				else if(read instanceof TaskTimeConstraint)
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), (TaskTimeConstraint) read,
 							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-							rs.getBoolean("failed"), list);
+							rs.getBoolean("failed"), set);
 				}
 				else
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), null,
 							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-							rs.getBoolean("failed"), list);
+							rs.getBoolean("failed"), set);
 				}
 			}
-
 		}
 		finally
 		{
@@ -82,5 +82,4 @@ public class GetTaskByIDDatabase
 
 		return t;
 	}
-
 }

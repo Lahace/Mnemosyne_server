@@ -2,12 +2,13 @@ package ap.mnemosyne.parser.resources;
 
 public class TextualConstraint
 {
-	String constraintMarker, constraintWord;
+	private String constraintMarker, constraintWord, verb;
 
-	public TextualConstraint(String constraintMarker, String constraintWord)
+	public TextualConstraint(String constraintMarker, String constraintWord, String verb)
 	{
 		this.constraintMarker = constraintMarker;
 		this.constraintWord = constraintWord;
+		this.verb = verb;
 	}
 
 	public String getConstraintMarker()
@@ -15,19 +16,14 @@ public class TextualConstraint
 		return constraintMarker;
 	}
 
-	public void setConstraintMarker(String constraintMarker)
-	{
-		this.constraintMarker = constraintMarker;
-	}
-
 	public String getConstraintWord()
 	{
 		return constraintWord;
 	}
 
-	public void setConstraintWord(String constraintWord)
+	public String getVerb()
 	{
-		this.constraintWord = constraintWord;
+		return verb;
 	}
 
 	@Override
@@ -36,6 +32,7 @@ public class TextualConstraint
 		return "TextualConstraint{" +
 				"constraintMarker='" + constraintMarker + '\'' +
 				", constraintWord='" + constraintWord + '\'' +
+				", verb='" + verb + '\'' +
 				'}';
 	}
 

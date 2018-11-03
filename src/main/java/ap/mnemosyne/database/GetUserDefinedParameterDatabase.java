@@ -14,7 +14,7 @@ import java.time.LocalTime;
 
 public class GetUserDefinedParameterDatabase
 {
-	private final String stmt = "SELECT * FROM mnemosyne.defines WHERE email=? AND pname=?";
+	private final String stmt = "SELECT * FROM mnemosyne.defines WHERE email=? AND parameter=?";
 	private final Connection conn;
 	private final User user;
 	private final ParamsName param;
@@ -53,6 +53,7 @@ public class GetUserDefinedParameterDatabase
 				}
 				else
 				{
+					//should never happen
 					throw new SQLException("Parameter type " + rs.getString("type") + "not known");
 				}
 

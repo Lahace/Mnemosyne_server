@@ -11,7 +11,7 @@ import java.util.List;
 
 public class SearchPlacesByItemDatabase
 {
-	private final String stmt = "SELECT * FROM mnemosyne.found_in WHERE name=?";
+	private final String stmt = "SELECT * FROM mnemosyne.found_in WHERE item=?";
 	private final Connection conn;
 	private final String item;
 
@@ -35,7 +35,7 @@ public class SearchPlacesByItemDatabase
 
 			while (rs.next())
 			{
-				l.add(rs.getString("type"));
+				l.add(rs.getString("place_type"));
 			}
 		}
 		finally

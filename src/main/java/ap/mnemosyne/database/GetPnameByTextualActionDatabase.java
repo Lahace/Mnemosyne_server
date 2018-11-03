@@ -12,7 +12,7 @@ import java.sql.SQLException;
 
 public class GetPnameByTextualActionDatabase
 {
-	private final String stmt = "SELECT * FROM mnemosyne.requires WHERE word=? AND name=?";
+	private final String stmt = "SELECT * FROM mnemosyne.requires WHERE verb=? AND item=?";
 	private final Connection conn;
 	private final TextualAction ta;
 
@@ -37,7 +37,7 @@ public class GetPnameByTextualActionDatabase
 			rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				ret = ParamsName.valueOf(rs.getString("pname"));
+				ret = ParamsName.valueOf(rs.getString("parameter"));
 			}
 
 		}

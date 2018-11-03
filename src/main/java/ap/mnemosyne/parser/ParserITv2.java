@@ -11,9 +11,13 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesA
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import eu.fbk.dh.tint.runner.TintPipeline;
+import eu.fbk.dh.tint.runner.TintRunner;
 
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -82,7 +86,7 @@ public class ParserITv2
 		SemanticGraph sg = sentence.get(BasicDependenciesAnnotation.class);
 
 		IndexedWord root = sg.getFirstRoot();
-		String rootValue = root.value();
+		String rootValue = root.getString(CoreAnnotations.LemmaAnnotation.class);
 		System.out.println(sg.toCompactString(true));
 		TextualAction tact = null;
 		List<TextualConstraint> tconstr = new ArrayList<>();
@@ -109,7 +113,7 @@ public class ParserITv2
 								break;
 						}
 					}
-					tconstr.add(new TextualConstraint(marker,word));
+					tconstr.add(new TextualConstraint(marker,word, "verb")); //TODO: resolve placeholder
 					break;
 
 				case "advcl":
@@ -124,11 +128,11 @@ public class ParserITv2
 								break;
 
 							case "nmod":
-								word = sge2.getTarget().value();
+								word = sge2.getTarget().getString(CoreAnnotations.LemmaAnnotation.class);
 								break;
 						}
 					}
-					tconstr.add(new TextualConstraint(marker, word));
+					tconstr.add(new TextualConstraint(marker, word, "verb")); //TODO resolve placeholder
 					break;
 
 			}

@@ -1,6 +1,7 @@
 package ap.mnemosyne.resources;
 
 import ap.mnemosyne.enums.ConstraintTemporalType;
+import ap.mnemosyne.enums.NormalizedActions;
 import ap.mnemosyne.enums.ParamsName;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -18,17 +19,25 @@ import java.nio.charset.StandardCharsets;
 public class TaskPlaceConstraint extends TaskConstraint
 {
 	private Place constraintPlace;
+	private NormalizedActions normalizedAction;
 
 	@JsonCreator
-	public TaskPlaceConstraint(@JsonProperty("constraintPlace") Place constraintPlace, @JsonProperty("paramName") ParamsName paramName , @JsonProperty("type") ConstraintTemporalType type)
+	public TaskPlaceConstraint(@JsonProperty("constraint-place") Place constraintPlace, @JsonProperty("param-name") ParamsName paramName ,
+	                           @JsonProperty("tamporal-type") ConstraintTemporalType type, @JsonProperty("normalized-action") NormalizedActions normalizedAction)
 	{
 		super(paramName, type);
 		this.constraintPlace = constraintPlace;
+		this.normalizedAction = normalizedAction;
 	}
 
 	public Place getConstraintPlace()
 	{
 		return constraintPlace;
+	}
+
+	public NormalizedActions getNormalizedAction()
+	{
+		return normalizedAction;
 	}
 
 	@Override

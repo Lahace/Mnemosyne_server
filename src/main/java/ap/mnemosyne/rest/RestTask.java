@@ -21,7 +21,9 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Path("task")
 public class RestTask
@@ -117,16 +119,16 @@ public class RestTask
 		//Class to serialize and create example tasks
 		try
 		{
-			ArrayList<Place> plist = new ArrayList<>();
+			Set<Place> plist = new HashSet<>();
 			plist.add(new Place("italy", "veneto", "schio", "magré", 2, "Famila",
 					"supermarket", new Point(45.714012, 11.353281), LocalTime.of(9,0), LocalTime.of(20,30)));
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Nome", new TaskTimeConstraint(LocalTime.of(16,0), ParamsName.time_bed, ConstraintTemporalType.dopo),
+					new Task(12,"asd@asd.it" , "Nome", new TaskTimeConstraint(LocalTime.of(16,0), ParamsName.time_bed, ConstraintTemporalType.after),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 			new CreateTaskDatabase(getDataSource().getConnection(),
 					new Task(12,"asd@asd.it" , "Nome", new TaskPlaceConstraint(
 							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",
-									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.prima),
+									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 		}
 		catch(SQLException sqle)

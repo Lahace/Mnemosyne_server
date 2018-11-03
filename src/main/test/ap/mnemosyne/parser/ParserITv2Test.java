@@ -11,6 +11,7 @@ public class ParserITv2Test
 	{
 		ParserITv2 p = new ParserITv2();
 		p.parseString("devo prendere il pane prima di arrivare a casa");
+		p.parseString("devo prendere il pane quando esco di casa");
 		p.parseString("ricordami che prima di arrivare a casa devo prendere il pane");
 		p.parseString("devo prendere le medicine dopo pranzo");
 		p.parseString("ricordami di mettere la crema prima di andare a letto");

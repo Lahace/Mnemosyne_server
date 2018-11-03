@@ -21,7 +21,7 @@ public class TaskTimeConstraint extends TaskConstraint
 	private LocalTime constraintTime;
 
 	@JsonCreator
-	public TaskTimeConstraint(@JsonProperty("constraintTime") LocalTime constraintTime, @JsonProperty("paramName") ParamsName paramsName , @JsonProperty("type") ConstraintTemporalType type)
+	public TaskTimeConstraint(@JsonProperty("constraint-time") LocalTime constraintTime, @JsonProperty("param-name") ParamsName paramsName , @JsonProperty("type") ConstraintTemporalType type)
 	{
 		super(paramsName, type);
 		this.constraintTime = constraintTime;
