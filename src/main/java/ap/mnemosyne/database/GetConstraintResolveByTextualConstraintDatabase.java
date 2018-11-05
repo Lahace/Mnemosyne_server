@@ -1,10 +1,6 @@
 package ap.mnemosyne.database;
 
-import ap.mnemosyne.enums.ParamsName;
-import ap.mnemosyne.parser.resources.TextualAction;
 import ap.mnemosyne.parser.resources.TextualConstraint;
-import ap.mnemosyne.parser.resources.TextualTask;
-import ap.mnemosyne.resources.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,11 +11,11 @@ import java.util.Map;
 
 public class GetConstraintResolveByTextualConstraintDatabase
 {
-	private final String stmt = "SELECT constraint_marker, timing, verb, normalized_action, constraint_word, parameter" +
-			"FROM mnemosyne.wants" +
-			"LEFT JOIN verb ON wants.verb=verb.word" +
-			"LEFT JOIN constraint_marker ON wants.constraint_marker=constraint_marker.marker" +
-			"WHERE constraint_marker=?, verb=?, constraint_word=?";
+	private final String stmt = "SELECT constraint_marker, timing, verb, normalized_action, constraint_word, parameter " +
+			"FROM mnemosyne.wants " +
+			"LEFT JOIN verb ON wants.verb=verb.word " +
+			"LEFT JOIN constraint_marker ON wants.constraint_marker=constraint_marker.marker " +
+			"WHERE constraint_marker=? AND verb=? AND constraint_word=?";
 	private final Connection conn;
 	private final TextualConstraint tc;
 

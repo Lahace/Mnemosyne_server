@@ -11,13 +11,10 @@ import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations.BasicDependenciesA
 import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import eu.fbk.dh.tint.runner.TintPipeline;
-import eu.fbk.dh.tint.runner.TintRunner;
 
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +32,8 @@ public class ParserITv2
 		try
 		{
 			pipeline.loadDefaultProperties();
+			pipeline.setProperty("annotators", "ita_toksent,pos,ita_morpho,ita_lemma,depparse");
+
 		}
 		catch(IOException ioe)
 		{
@@ -93,12 +92,30 @@ public class ParserITv2
 
 		String marker = null;
 		String word = null;
+		String verb = "null";
+		String actionVerb = null;
+		String actionSubject = null;
 		for(SemanticGraphEdge sge : sg.outgoingEdgeList(root))
 		{
 			switch(sge.getRelation().toString())
 			{
 				case "dobj":
 					tact = new TextualAction(rootValue,sge.getTarget().value());
+					break;
+
+				case "advmod":
+					marker = null;
+					word = sge.getTarget().value();
+					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+					{
+						switch(sge2.getRelation().toString())
+						{
+							case "case":
+								marker = sge2.getTarget().value();
+								break;
+						}
+					}
+					tconstr.add(new TextualConstraint(marker,word, "null"));
 					break;
 
 				case "nmod":
@@ -113,12 +130,73 @@ public class ParserITv2
 								break;
 						}
 					}
-					tconstr.add(new TextualConstraint(marker,word, "verb")); //TODO: resolve placeholder
+					tconstr.add(new TextualConstraint(marker,word, "null"));
 					break;
+
+				case "nummod":
+					marker = null;
+					word = null;
+					try
+					{
+						//Gotta do this little hack, because docs on how to extract timestamps is scarce
+						word = text.substring(sge.getTarget().beginPosition(), sge.getTarget().endPosition() + 3);
+						LocalTime.parse(word);
+					}
+					catch (StringIndexOutOfBoundsException | DateTimeParseException e)
+					{
+						word = sge.getTarget().value();
+					}
+					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+					{
+						switch(sge2.getRelation().toString())
+						{
+							case "case":
+								marker = sge2.getTarget().value();
+								break;
+						}
+					}
+					tconstr.add(new TextualConstraint(marker,word, "null"));
+					break;
+
+				case "ccomp":
+					actionVerb = rootValue + "_" + sge.getTarget().value();
+					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+					{
+						switch(sge2.getRelation().toString())
+						{
+							case "nmod":
+								actionSubject = sge2.getTarget().value();
+								break;
+
+							case "advcl":
+								marker = null;
+								word = null;
+								verb = sge2.getTarget().get(CoreAnnotations.LemmaAnnotation.class);
+								for(SemanticGraphEdge sge3 : sg.outgoingEdgeList(sge2.getTarget()))
+								{
+									switch(sge3.getRelation().toString())
+									{
+										case "mark":
+											marker = sge3.getTarget().value();
+											break;
+
+										case "nmod":
+											word = sge3.getTarget().getString(CoreAnnotations.LemmaAnnotation.class);
+											break;
+									}
+								}
+								tconstr.add(new TextualConstraint(marker, word,  verb));
+								break;
+						}
+					}
+					tact = new TextualAction(actionVerb, actionSubject);
+					break;
+
 
 				case "advcl":
 					marker = null;
 					word = null;
+					verb = sge.getTarget().get(CoreAnnotations.LemmaAnnotation.class);
 					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 					{
 						switch(sge2.getRelation().toString())
@@ -132,7 +210,7 @@ public class ParserITv2
 								break;
 						}
 					}
-					tconstr.add(new TextualConstraint(marker, word, "verb")); //TODO resolve placeholder
+					tconstr.add(new TextualConstraint(marker, word,  verb));
 					break;
 
 			}

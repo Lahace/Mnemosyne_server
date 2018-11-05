@@ -4,6 +4,7 @@ import ap.mnemosyne.database.CreateTaskDatabase;
 import ap.mnemosyne.database.GetTaskByIDDatabase;
 import ap.mnemosyne.database.SearchTaskByUserDatabase;
 import ap.mnemosyne.enums.ConstraintTemporalType;
+import ap.mnemosyne.enums.NormalizedActions;
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.resources.*;
 import ap.mnemosyne.util.ServletUtils;
@@ -123,12 +124,12 @@ public class RestTask
 			plist.add(new Place("italy", "veneto", "schio", "magré", 2, "Famila",
 					"supermarket", new Point(45.714012, 11.353281), LocalTime.of(9,0), LocalTime.of(20,30)));
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Nome", new TaskTimeConstraint(LocalTime.of(16,0), ParamsName.time_bed, ConstraintTemporalType.after),
+					new Task(12,"asd@asd.it" , "Prova task time", new TaskTimeConstraint(LocalTime.of(16,0), ParamsName.time_bed, ConstraintTemporalType.after),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Nome", new TaskPlaceConstraint(
+					new Task(12,"asd@asd.it" , "prova task place", new TaskPlaceConstraint(
 							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",
-									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before),
+									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before, NormalizedActions.get),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 		}
 		catch(SQLException sqle)

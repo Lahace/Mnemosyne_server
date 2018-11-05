@@ -16,6 +16,7 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.util.CoreMap;
 import eu.fbk.dh.tint.runner.TintPipeline;
 
+@Deprecated
 public class ParserIT extends Parser
 {
 	private TintPipeline pipeline;

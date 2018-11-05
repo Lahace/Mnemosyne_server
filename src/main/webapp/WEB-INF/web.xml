@@ -21,7 +21,7 @@
 	</servlet>
 	<servlet>
 		<servlet-name>parse</servlet-name>
-		<servlet-class>ap.mnemosyne.rest.ParseServlet</servlet-class>
+		<servlet-class>ap.mnemosyne.servlets.ParseServlet</servlet-class>
 	</servlet>
 
 	<servlet-mapping>

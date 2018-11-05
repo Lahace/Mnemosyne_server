@@ -1,10 +1,10 @@
 package ap.mnemosyne.parser;
 
-import ap.mnemosyne.ontology.OntologyEngine;
 import ap.mnemosyne.parser.resources.Marker;
 
 import java.util.List;
 
+@Deprecated
 public abstract class Parser //extends OntologyEngine
 {
 	public final List<Marker> CONSTRAINT_MARKERS;

@@ -84,6 +84,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		//Resolving Action
 		try
 		{
+			System.out.println("Resolving action..");
 			ParamsName p = new GetPnameByTextualActionDatabase(getDataSource().getConnection(), tt.getTextualAction()).getPnameByTextualAction();
 			if(p == null)
 			{
@@ -95,6 +96,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 			Pair<Class, Object> param;
 			Place my;
 			Point point;
+			System.out.println("Resolving parameter " + p.toString() + " for actions");
 			switch (p)
 			{
 				case location_item:
@@ -110,7 +112,9 @@ public class ParseServlet extends AbstractDatabaseServlet
 					{
 						for (Place place : pman.getPlacesFromQuery(s + " in " + my.getTown()))
 						{
-							placesToSatisfy.add(place);
+							//TODO: add check for closing/opening time
+							placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+															place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
 						}
 					}
 					break;
@@ -137,6 +141,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					break;
 
 				case location_work:
+					possibleAtWork = true;
 					param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p)
 							.getUserDefinedParameter();
 					if(param == null)
@@ -156,9 +161,16 @@ public class ParseServlet extends AbstractDatabaseServlet
 						throw new ServletException("Unexpected parameter declaration, needed time parameter, found " + param.getKey());
 					}
 					break;
-				default:
+
+				case location_any:
+					//ignore, empty list means that every place is possible
 					break;
+
+				default:
+					throw new ServletException("Could not find parameter " + p);
 			}
+
+			System.out.println("Resolving constraints.. ");
 
 			//Resolving Constraint
 			//Getting only the first constraint
@@ -168,16 +180,21 @@ public class ParseServlet extends AbstractDatabaseServlet
 			LocalTime specifiedtime = null;
 			try
 			{
-				specifiedtime = LocalTime.parse(current.getConstraintWord());
+				String toParse;
+				if(current.getConstraintWord().length() == 2) toParse = current.getConstraintWord() + ":00";
+				else toParse = current.getConstraintWord();
+				specifiedtime = LocalTime.parse(toParse);
 				parsed = true;
 			}
 			catch (DateTimeParseException dtpe)
 			{
+				dtpe.printStackTrace();
 				parsed = false;
 			}
 
 			if(parsed)
 			{
+				System.out.println("Found specific time in constraint: " + specifiedtime);
 				Pair<String, ConstraintTemporalType> pair = new GetConstraintMarkerFromMarkerDatabase(getDataSource().getConnection(), current.getConstraintMarker()).getConstraintFromMarker();
 				if(pair.getValue() == null)
 				{
@@ -190,19 +207,22 @@ public class ParseServlet extends AbstractDatabaseServlet
 			}
 			else
 			{
+				System.out.println("Getting resolver record..");
 				Map<String, String> map = new GetConstraintResolveByTextualConstraintDatabase(getDataSource().getConnection(), current).getConstraintResolvesByTextualAction();
 				if (map.isEmpty())
 				{
 					ServletUtils.sendMessage(new Message("Not implemented",
-							"501", "Could not find a definition for constraint '" + tt.getTextualConstraints().get(0).getConstraintMarker()
-							+ " " + tt.getTextualConstraints().get(0).getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
+							"501", "Could not find a definition for constraint '" + current.getConstraintMarker()
+							+ " " + current.getVerb()+ " " + current.getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 					return;
 				}
 				else
 				{
+					System.out.println("Resolving " + ParamsName.valueOf(map.get("parameter")));
 					switch (ParamsName.valueOf(map.get("parameter")))
 					{
 						case location_work:
+							possibleAtWork = true;
 							constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
 							break;
 
@@ -217,7 +237,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 							throw new ParameterNotDefinedException(p.toString());
 
 						case time_bed:
-
+							constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
 							break;
 
 						case time_work:
@@ -238,10 +258,13 @@ public class ParseServlet extends AbstractDatabaseServlet
 				}
 			}
 
+			System.out.println("Creating task..");
+
 			Task t = new Task(-1, user, name ,constr, possibleAtWork, repeatable, doneToday, failed, placesToSatisfy);
 			res.setStatus(HttpServletResponse.SC_OK);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			t.toJSON(res.getOutputStream());
+			System.out.println("Done");
 
 		}
 		catch (SQLException sqle)

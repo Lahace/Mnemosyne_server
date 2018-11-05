@@ -12,6 +12,7 @@ import java.io.Reader;
 import java.net.URISyntaxException;
 import java.net.URL;
 
+@Deprecated
 public class OntologyEngine
 {
 	public final URL ONTOLOGY_LOCATION = getClass().getResource("/ontology/Ontology.owl");
