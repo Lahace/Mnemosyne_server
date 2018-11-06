@@ -12,7 +12,7 @@ import ap.mnemosyne.parser.resources.TextualTask;
 import ap.mnemosyne.places.PlacesManager;
 import ap.mnemosyne.resources.*;
 import ap.mnemosyne.util.ServletUtils;
-import javafx.util.Pair;
+import ap.mnemosyne.util.Tuple;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -109,7 +109,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 						+ " with subject " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 				return;
 			}
-			Pair<Class, Object> param;
+			Parameter param;
 			Place my;
 			Point point;
 			LOGGER.info("Resolving parameter " + p.toString() + " for actions");
@@ -144,16 +144,16 @@ public class ParseServlet extends AbstractDatabaseServlet
 						throw new ParameterNotDefinedException(p.toString());
 					}
 
-					if(param.getKey() == Point.class)
+					if(param instanceof LocationParameter)
 					{
-						point = (Point) param.getValue();
+						point = ((LocationParameter) param).getLocation();
 						my = pman.getPlacesFromPoint(point);
 						if(my == null) throw new NoDataReceivedException("No data received with lat/lon for parameter" + p.toString());
 						placesToSatisfy.add(my);
 					}
 					else
 					{
-						throw new ServletException("Unexpected parameter declaration, needed place parameter, found " + param.getKey());
+						throw new ServletException("Unexpected parameter declaration, needed place parameter, found " + param.getClass());
 					}
 					break;
 
@@ -166,16 +166,16 @@ public class ParseServlet extends AbstractDatabaseServlet
 						throw new ParameterNotDefinedException(p.toString());
 					}
 
-					if(param.getKey() == Point.class)
+					if(param instanceof LocationParameter)
 					{
-						point = (Point) param.getValue();
+						point = ((LocationParameter) param).getLocation();
 						my = pman.getPlacesFromPoint(point);
 						if(my == null) throw new NoDataReceivedException("No data received with lat/lon for parameter" + p.toString());
 						placesToSatisfy.add(my);
 					}
 					else
 					{
-						throw new ServletException("Unexpected parameter declaration, needed place parameter, found " + param.getKey());
+						throw new ServletException("Unexpected parameter declaration, needed place parameter, found " + param.getClass());
 					}
 					break;
 
@@ -213,8 +213,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 			if(parsed)
 			{
 				LOGGER.info("Found specific time in constraint: " + specifiedtime);
-				Pair<String, ConstraintTemporalType> pair = new GetConstraintMarkerFromMarkerDatabase(getDataSource().getConnection(), current.getConstraintMarker()).getConstraintFromMarker();
-				if(pair.getValue() == null)
+				Tuple<String, ConstraintTemporalType> pair = new GetConstraintMarkerFromMarkerDatabase(getDataSource().getConnection(), current.getConstraintMarker()).getConstraintFromMarker();
+				if(pair.getRight() == null)
 				{
 					LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintMarker());
 					ServletUtils.sendMessage(new Message("Not implemented",
@@ -222,7 +222,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 							+ " " + tt.getTextualConstraints().get(0).getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 					return;
 				}
-				constr = new TaskTimeConstraint(specifiedtime, null ,ParamsName.time_specified, pair.getValue());
+				constr = new TaskTimeConstraint(specifiedtime, null ,ParamsName.time_specified, pair.getRight());
 			}
 			else
 			{
@@ -320,16 +320,16 @@ public class ParseServlet extends AbstractDatabaseServlet
 	private TaskConstraint solveLocationConstraint(ParamsName location, Map<String, String> resolveMap, HttpServletRequest req) throws ServletException, SQLException, NoDataReceivedException
 	{
 		TaskConstraint toRet = null;
-		Pair<Class, Object> param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(),
+		Parameter param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(),
 				(User) req.getSession().getAttribute("current"), location).getUserDefinedParameter();
 		if(param == null)
 		{
 			throw new ParameterNotDefinedException(location.toString());
 		}
 
-		if(param.getKey() == Point.class)
+		if(param instanceof LocationParameter)
 		{
-			Point point = (Point) param.getValue();
+			Point point = ((LocationParameter) param).getLocation();
 			Place my = pman.getPlacesFromPoint(point);
 			if(my == null) throw new NoDataReceivedException("No data received with lat/lon for parameter" + location.toString());
 			toRet = new TaskPlaceConstraint(my, location,
@@ -337,7 +337,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		}
 		else
 		{
-			throw new ServletException("Unexpected parameter declaration, needed time parameter, found " + param.getKey());
+			throw new ServletException("Unexpected parameter declaration, needed time parameter, found " + param.getClass());
 		}
 		return toRet;
 	}
@@ -345,21 +345,21 @@ public class ParseServlet extends AbstractDatabaseServlet
 	private TaskConstraint solveTimeConstraint(ParamsName timing, Map<String, String> resolveMap, HttpServletRequest req) throws ServletException, SQLException
 	{
 		TaskConstraint toRet = null;
-		Pair<Class, Object> param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(),
+		Parameter param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(),
 				(User) req.getSession().getAttribute("current"), timing).getUserDefinedParameter();
 		if(param == null)
 		{
 			throw new ParameterNotDefinedException(timing.toString());
 		}
 
-		if(param.getKey() == LocalTime.class)
+		if(param instanceof TimeParameter)
 		{
-			List<LocalTime> time = (List<LocalTime>) param.getValue();
-			toRet = new TaskTimeConstraint(time.get(0), time.get(1), timing, ConstraintTemporalType.valueOf(resolveMap.get("timing")));
+			TimeParameter time = (TimeParameter) param;
+			toRet = new TaskTimeConstraint(time.getFromTime(), time.getToTime(), timing, ConstraintTemporalType.valueOf(resolveMap.get("timing")));
 		}
 		else
 		{
-			throw new ServletException("Unexpected parameter declaration, needed time parameter, found " + param.getKey());
+			throw new ServletException("Unexpected parameter declaration, needed time parameter, found " + param.getClass());
 		}
 
 		return toRet;

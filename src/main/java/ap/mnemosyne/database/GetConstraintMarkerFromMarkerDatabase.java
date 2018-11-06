@@ -1,7 +1,7 @@
 package ap.mnemosyne.database;
 
 import ap.mnemosyne.enums.ConstraintTemporalType;
-import javafx.util.Pair;
+import ap.mnemosyne.util.Tuple;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,11 +20,11 @@ public class GetConstraintMarkerFromMarkerDatabase
 		this.marker = marker;
 	}
 
-	public Pair<String, ConstraintTemporalType> getConstraintFromMarker() throws SQLException
+	public Tuple<String, ConstraintTemporalType> getConstraintFromMarker() throws SQLException
 	{
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		Pair<String, ConstraintTemporalType> ret = null;
+		Tuple<String, ConstraintTemporalType> ret = null;
 
 		try
 		{
@@ -34,7 +34,7 @@ public class GetConstraintMarkerFromMarkerDatabase
 			rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				ret = new Pair<>(rs.getString("marker"), ConstraintTemporalType.valueOf(rs.getString("timing")));
+				ret = new Tuple<>(rs.getString("marker"), ConstraintTemporalType.valueOf(rs.getString("timing")));
 			}
 
 		}

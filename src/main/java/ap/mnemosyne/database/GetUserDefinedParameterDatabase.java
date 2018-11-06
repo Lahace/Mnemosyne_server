@@ -1,9 +1,7 @@
 package ap.mnemosyne.database;
 
 import ap.mnemosyne.enums.ParamsName;
-import ap.mnemosyne.resources.Point;
-import ap.mnemosyne.resources.User;
-import javafx.util.Pair;
+import ap.mnemosyne.resources.*;
 import org.postgresql.geometric.PGpoint;
 
 import java.sql.Connection;
@@ -12,8 +10,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class GetUserDefinedParameterDatabase
 {
@@ -29,11 +25,11 @@ public class GetUserDefinedParameterDatabase
 		this.param = param;
 	}
 
-	public Pair<Class, Object> getUserDefinedParameter() throws SQLException
+	public Parameter getUserDefinedParameter() throws SQLException
 	{
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		Pair<Class, Object> ret = null;
+		Parameter ret = null;
 
 		try
 		{
@@ -48,21 +44,20 @@ public class GetUserDefinedParameterDatabase
 				if(rs.getString("type").equals("location"))
 				{
 					PGpoint point = (PGpoint) rs.getObject("location");
-					ret = new Pair<>(Point.class, new Point(point.x, point.y));
+					ret = new LocationParameter(param, user.getEmail(), new Point(point.x, point.y), rs.getInt("location_cellID"), rs.getString("location_SSID"));
 				}
 				else if(rs.getString("type").equals("time"))
 				{
-					List<LocalTime> retList = new ArrayList<>();
-					retList.add(rs.getTime("from_time").toLocalTime());
+					LocalTime to = null;
 					try
 					{
-						retList.add(rs.getTime("to_time").toLocalTime());
+						to = rs.getTime("to_time").toLocalTime();
 					}
 					catch (DateTimeParseException dtpe)
 					{
-						retList.add(null);
+						//ignore
 					}
-					ret = new Pair<>(LocalTime.class, retList);
+					ret = new TimeParameter(param, user.getEmail(), rs.getTime("from_time").toLocalTime(), to);
 				}
 				else
 				{
