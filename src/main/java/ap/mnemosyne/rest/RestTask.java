@@ -3,6 +3,7 @@ package ap.mnemosyne.rest;
 import ap.mnemosyne.database.CreateTaskDatabase;
 import ap.mnemosyne.database.GetTaskByIDDatabase;
 import ap.mnemosyne.database.SearchTaskByUserDatabase;
+import ap.mnemosyne.database.UpdateTaskDatabase;
 import ap.mnemosyne.enums.ConstraintTemporalType;
 import ap.mnemosyne.enums.NormalizedActions;
 import ap.mnemosyne.enums.ParamsName;
@@ -114,9 +115,34 @@ public class RestTask
 	}
 
 	@PUT
-	public void updateTask(@Context HttpServletRequest req, @Context HttpServletResponse res)
+	public void updateTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException, ServletException
 	{
-		//TODO
+		try
+		{
+			if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+			Task t = Task.fromJSON(req.getInputStream());
+			Task ret = new UpdateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).updateTask();
+			if(ret == null)
+			{
+				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			}
+			else
+			{
+				res.setStatus(HttpServletResponse.SC_OK);
+				res.setHeader("Content-Type", "application/json; charset=utf-8");
+				ret.toJSON(res.getOutputStream());
+			}
+
+		}
+		catch (IOException ioe)
+		{
+			ServletUtils.sendMessage(new Message("IOException in RestTask", "500", ioe.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@PUT
@@ -131,11 +157,11 @@ public class RestTask
 					"supermarket", new Point(45.714012, 11.353281), LocalTime.of(9,0), LocalTime.of(20,30)));
 
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Prova task time", new TaskTimeConstraint(LocalTime.of(16,0), null, ParamsName.time_bed, ConstraintTemporalType.after),
+					new Task(12,((User)req.getSession().getAttribute("current")).getEmail() , "Prova task time", new TaskTimeConstraint(LocalTime.of(16,0), null, ParamsName.time_bed, ConstraintTemporalType.after),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "prova task place", new TaskPlaceConstraint(
+					new Task(12,((User)req.getSession().getAttribute("current")).getEmail() , "prova task place", new TaskPlaceConstraint(
 							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",
 									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before, NormalizedActions.get),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();

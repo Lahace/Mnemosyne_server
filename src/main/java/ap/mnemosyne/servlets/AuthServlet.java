@@ -14,21 +14,6 @@ import java.sql.SQLException;
 
 public class AuthServlet extends AbstractDatabaseServlet
 {
-	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
-	{
-		if(SessionListener.map.get(req.getRequestedSessionId()) == null)
-		{
-			ServletUtils.sendMessage(new Message("No valid session found", "401", "Either the session was invalid or it does not exist"),
-					res, HttpServletResponse.SC_UNAUTHORIZED);
-			return;
-		}
-		User a = (User) req.getSession().getAttribute("current");
-		res.setStatus(HttpServletResponse.SC_OK);
-		res.setHeader("Content-Type", "application/json; charset=utf-8");
-		a.toJSON(res.getOutputStream());
-		return;
-	}
-
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
 		if(!ServletUtils.checkContentType(MediaType.APPLICATION_FORM_URLENCODED, req, res)) return;

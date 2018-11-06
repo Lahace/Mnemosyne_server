@@ -21,18 +21,12 @@ import java.sql.SQLException;
 public class RestUser
 {
 	@GET
-	@Path("{email}")
-	public void getUser(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("email") String email) throws IOException
+	public void getUser(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
-		if(!email.equals(((User) req.getSession().getAttribute("current")).getEmail()))
-		{
-			ServletUtils.sendMessage(new Message("Unauthorized",
-					"401", "You cannot get other users' profile"), res, HttpServletResponse.SC_UNAUTHORIZED);
-			return;
-		}
 		try
 		{
-			User u = new SearchUserByEmailDatabase(getDataSource().getConnection(), email).searchUserByEmail();
+			User session = ((User) req.getSession().getAttribute("current"));
+			User u = new SearchUserByEmailDatabase(getDataSource().getConnection(), session.getEmail()).searchUserByEmail();
 			if(u == null)
 			{
 				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -70,7 +64,7 @@ public class RestUser
 						"401", "Wrong email/password"), res, HttpServletResponse.SC_UNAUTHORIZED);
 				return;
 			}
-			else if(!u.getEmail().equals(((User) req.getSession().getAttribute("current")).getEmail()))
+			else if(!u.getEmail().equals(((User) req.getSession(false).getAttribute("current")).getEmail()))
 			{
 				ServletUtils.sendMessage(new Message("Unauthorized",
 						"401", "You cannot update other users' profile"), res, HttpServletResponse.SC_UNAUTHORIZED);
@@ -109,7 +103,7 @@ public class RestUser
 		{
 			String oldpsw = req.getParameter("old");
 			String newpsw = req.getParameter("new");
-			User u = (User) req.getSession().getAttribute("current");
+			User u = (User) req.getSession(false).getAttribute("current");
 			if(oldpsw == null || newpsw == null)
 			{
 				ServletUtils.sendMessage(new Message("Unauthorized",
@@ -161,7 +155,7 @@ public class RestUser
 						"401", "Wrong email/password"), res, HttpServletResponse.SC_UNAUTHORIZED);
 				return;
 			}
-			else if(!u.getEmail().equals(((User) req.getSession().getAttribute("current")).getEmail()))
+			else if(!u.getEmail().equals(((User) req.getSession(false).getAttribute("current")).getEmail()))
 			{
 				ServletUtils.sendMessage(new Message("Unauthorized",
 						"401", "You cannot delete other users' profile"), res, HttpServletResponse.SC_UNAUTHORIZED);
