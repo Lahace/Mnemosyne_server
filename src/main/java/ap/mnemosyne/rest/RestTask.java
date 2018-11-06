@@ -21,7 +21,6 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -115,6 +114,13 @@ public class RestTask
 	}
 
 	@PUT
+	public void updateTask(@Context HttpServletRequest req, @Context HttpServletResponse res)
+	{
+		//TODO
+	}
+
+	@PUT
+	@Path("test")
 	public void createTestTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException, ServletException
 	{
 		//Class to serialize and create example tasks
@@ -123,9 +129,11 @@ public class RestTask
 			Set<Place> plist = new HashSet<>();
 			plist.add(new Place("italy", "veneto", "schio", "magré", 2, "Famila",
 					"supermarket", new Point(45.714012, 11.353281), LocalTime.of(9,0), LocalTime.of(20,30)));
+
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Prova task time", new TaskTimeConstraint(LocalTime.of(16,0), ParamsName.time_bed, ConstraintTemporalType.after),
+					new Task(12,"asd@asd.it" , "Prova task time", new TaskTimeConstraint(LocalTime.of(16,0), null, ParamsName.time_bed, ConstraintTemporalType.after),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+
 			new CreateTaskDatabase(getDataSource().getConnection(),
 					new Task(12,"asd@asd.it" , "prova task place", new TaskPlaceConstraint(
 							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",

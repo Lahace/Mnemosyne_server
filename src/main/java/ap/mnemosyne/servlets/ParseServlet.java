@@ -198,6 +198,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 			try
 			{
 				String toParse;
+				//TODO: Add time interval management
 				if(current.getConstraintWord().length() == 2) toParse = current.getConstraintWord() + ":00";
 				else toParse = current.getConstraintWord();
 				specifiedtime = LocalTime.parse(toParse);
@@ -221,7 +222,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 							+ " " + tt.getTextualConstraints().get(0).getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 					return;
 				}
-				constr = new TaskTimeConstraint(specifiedtime, ParamsName.time_specified, pair.getValue());
+				constr = new TaskTimeConstraint(specifiedtime, null ,ParamsName.time_specified, pair.getValue());
 			}
 			else
 			{
@@ -287,7 +288,6 @@ public class ParseServlet extends AbstractDatabaseServlet
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			t.toJSON(res.getOutputStream());
 			LOGGER.info("Creating Task.. Done");
-
 		}
 		catch (SQLException sqle)
 		{
@@ -354,8 +354,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 		if(param.getKey() == LocalTime.class)
 		{
-			LocalTime time = (LocalTime) param.getValue();
-			toRet = new TaskTimeConstraint(time, timing, ConstraintTemporalType.valueOf(resolveMap.get("timing")));
+			List<LocalTime> time = (List<LocalTime>) param.getValue();
+			toRet = new TaskTimeConstraint(time.get(0), time.get(1), timing, ConstraintTemporalType.valueOf(resolveMap.get("timing")));
 		}
 		else
 		{

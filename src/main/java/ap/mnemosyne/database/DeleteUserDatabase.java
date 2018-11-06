@@ -4,19 +4,20 @@ import ap.mnemosyne.resources.User;
 
 import java.sql.*;
 
-public class CreateUserDatabase
+public class DeleteUserDatabase
 {
-	private final String stmt = "INSERT INTO mnemosyne.user(email, password, sessionid) VALUES (?, crypt(?, gen_salt('bf')), ?) RETURNING *";
+	//NOT to be used to update sessionid
+	private final String stmt = "DELETE mnemosyne.user WHERE email=?";
 	private final User u;
 	private final Connection conn;
 
-	public CreateUserDatabase(Connection conn, User u)
+	public DeleteUserDatabase(Connection conn, User u)
 	{
 		this.u = u;
 		this.conn = conn;
 	}
 
-	public User CreateUser() throws SQLException
+	public User deleteUser() throws SQLException
 	{
 		User ret = null;
 		ResultSet rs = null;
@@ -25,12 +26,10 @@ public class CreateUserDatabase
 		try {
 			pstmt = conn.prepareStatement(stmt);
 			pstmt.setString(1, u.getEmail());
-			pstmt.setString(2, u.getPassword());
-			pstmt.setString(3, null);
-			rs = pstmt.executeQuery();
+			int rows = pstmt.executeUpdate();
 
-			if(rs.next())
-				ret = new User(rs.getString("sessionid"), rs.getString("email"), null);
+			if(rows > 0)
+				ret = new User(null, u.getEmail(),null);
 
 		}
 		finally

@@ -11,6 +11,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class GetUserDefinedParameterDatabase
 {
@@ -49,7 +52,17 @@ public class GetUserDefinedParameterDatabase
 				}
 				else if(rs.getString("type").equals("time"))
 				{
-					ret = new Pair<>(LocalTime.class, rs.getTime("time").toLocalTime());
+					List<LocalTime> retList = new ArrayList<>();
+					retList.add(rs.getTime("from_time").toLocalTime());
+					try
+					{
+						retList.add(rs.getTime("to_time").toLocalTime());
+					}
+					catch (DateTimeParseException dtpe)
+					{
+						retList.add(null);
+					}
+					ret = new Pair<>(LocalTime.class, retList);
 				}
 				else
 				{

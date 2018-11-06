@@ -1,7 +1,7 @@
 package ap.mnemosyne.servlets;
 
 import ap.mnemosyne.database.CheckUserCredentialsDatabase;
-import ap.mnemosyne.database.UpdateUserSessionByIdDatabase;
+import ap.mnemosyne.database.UpdateUserSessionDatabase;
 import ap.mnemosyne.listeners.SessionListener;
 import ap.mnemosyne.resources.User;
 import ap.mnemosyne.resources.Message;
@@ -62,8 +62,8 @@ public class AuthServlet extends AbstractDatabaseServlet
 				else
 				{
 					HttpSession s = req.getSession();
-					User newUser = new UpdateUserSessionByIdDatabase(getDataSource().getConnection(),
-							new User(s.getId(), u.getEmail(), u.getPassword())).updateUserById();
+					User newUser = new UpdateUserSessionDatabase(getDataSource().getConnection(),
+							new User(s.getId(), u.getEmail(), u.getPassword())).updateUserSession();
 					if(newUser == null)
 					{
 						ServletUtils.sendMessage(new Message("Login failed", "500", "Something went wrong while updating database records"),

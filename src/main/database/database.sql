@@ -33,13 +33,15 @@ CREATE TABLE mnemosyne.defines(
     parameter VARCHAR(30) NOT NULL,
     type paramType NOT NULL,
     location POINT,
-    time TIME,
+    from_time TIME,
+    to_time TIME,
     PRIMARY KEY (email, parameter),
     FOREIGN KEY (email) REFERENCES mnemosyne.user(email)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (parameter) REFERENCES mnemosyne.parameter(pname)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    CHECK ((type='time' AND location IS NULL AND time IS NOT NULL) OR (type='location' AND time IS NULL AND location IS NOT NULL))
+    CHECK ((type='time' AND location IS NULL AND to_time IS NOT NULL)
+        OR (type='location' AND from_time IS NULL AND to_time IS NULL AND location IS NOT NULL))
 );
 
 CREATE TABLE mnemosyne.task(

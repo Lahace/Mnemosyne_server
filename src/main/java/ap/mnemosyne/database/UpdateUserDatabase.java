@@ -4,19 +4,20 @@ import ap.mnemosyne.resources.User;
 
 import java.sql.*;
 
-public class UpdateUserSessionByIdDatabase
+public class UpdateUserDatabase
 {
-	private final String stmt = "UPDATE mnemosyne.user SET sessionid=? WHERE email=?";
+	//NOT to be used to update sessionid
+	private final String stmt = "UPDATE mnemosyne.user SET // WHERE email=?";
 	private final User u;
 	private final Connection conn;
 
-	public UpdateUserSessionByIdDatabase(Connection conn, User u)
+	public UpdateUserDatabase(Connection conn, User u)
 	{
 		this.u = u;
 		this.conn = conn;
 	}
 
-	public User updateUserById() throws SQLException
+	public User updateUser() throws SQLException
 	{
 		User ret = null;
 		ResultSet rs = null;
@@ -24,7 +25,7 @@ public class UpdateUserSessionByIdDatabase
 		PreparedStatement pstmt = null;
 		try {
 			pstmt = conn.prepareStatement(stmt);
-			pstmt.setString(1, u.getSessionID());
+			pstmt.setString(1, u.getPassword());
 			pstmt.setString(2, u.getEmail());
 			int rows = pstmt.executeUpdate();
 
