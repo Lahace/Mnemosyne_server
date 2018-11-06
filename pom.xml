@@ -12,7 +12,6 @@
 
 	<packaging>war</packaging>
 
-	<!-- Project description elements -->
 	<name>Mnemosyne_Server</name>
 
 	<description>Lato server per Mnemosyne</description>
@@ -38,30 +37,21 @@
 		<url>http://www.dei.unipd.it/en/</url>
 	</organization>
 
-	<!-- Build settings -->
-	
-	<!-- Specifies the encoding to be used for project source files -->
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	
-	<!-- Configuration of the default build lifecycle -->
 	<build>
 		<defaultGoal>compile</defaultGoal>
 		
-		<!-- source code folder -->
 		<sourceDirectory>${basedir}/src/main/java</sourceDirectory>
 		
-		<!-- compiled code folder -->
 		<directory>${basedir}/target</directory>
 		
-		<!-- name of the generated package -->
 		<finalName>${project.artifactId}</finalName>
 
-		<!-- configuration of the plugins for the different goals -->
 		<plugins>
 		
-			<!-- compiler plugin: source and target code is for Java 1.8 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -73,7 +63,6 @@
 			</plugin>
 			
 			
-			<!-- javadoc plugin: output in the javadoc folder -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
@@ -86,7 +75,6 @@
 				</configuration>
 			</plugin>
 
-			<!-- packager plugin: create a WAR file to be deployed -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
@@ -97,10 +85,7 @@
 			</plugin>		
 		</plugins>
 		
-		<!--  process resources before compilation and packaging -->
 		<resources>
-			
-			<!--  copy JSP files to the target directory -->
 			<resource>
 				<targetPath>${basedir}/target/${project.artifactId}/jsp</targetPath>
 				<directory>${basedir}/src/main/webapp/jsp</directory>
@@ -109,7 +94,6 @@
 				</includes>
 			</resource>
 			
-			<!--  copy configuration files to the target directory -->
 			<resource>
 				<targetPath>${basedir}/target/${project.artifactId}/META-INF</targetPath>
 				<directory>${basedir}/src/main/webapp/META-INF</directory>
@@ -117,7 +101,7 @@
 					<include>**/*.*</include>
 				</includes>
 			</resource>
-			<!--  copy configuration files to the target directory -->
+
 			<resource>
 				<targetPath>${basedir}/target/${project.artifactId}/resources/ontology</targetPath>
 				<directory>${basedir}/src/main/webapp/resources/ontology</directory>
@@ -128,7 +112,6 @@
 		</resources>
 	</build>
 
-	<!--Extra repo-->
 	<repositories>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
@@ -150,7 +133,6 @@
 		</repository>
 	</repositories>
 
-	<!-- Dependencies -->
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>

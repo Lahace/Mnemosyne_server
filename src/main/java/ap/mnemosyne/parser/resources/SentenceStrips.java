@@ -2,6 +2,7 @@ package ap.mnemosyne.parser.resources;
 
 import java.util.List;
 
+@Deprecated
 public class SentenceStrips
 {
 	private String fullSentence, action;
