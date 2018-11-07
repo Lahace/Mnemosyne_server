@@ -4,26 +4,29 @@ import ap.mnemosyne.resources.User;
 
 import java.sql.*;
 
-public class DeleteUserDatabase
+public class DeleteTaskDatabase
 {
-	private final String stmt = "DELETE FROM mnemosyne.user WHERE email=?";
+	private final String stmt = "DELETE FROM mnemosyne.task WHERE id=? AND useremail=?";
+	private final int id;
 	private final User u;
 	private final Connection conn;
 
-	public DeleteUserDatabase(Connection conn, User u)
+	public DeleteTaskDatabase(Connection conn,  int id, User u)
 	{
+		this.id = id;
 		this.u = u;
 		this.conn = conn;
 	}
 
-	public boolean deleteUser() throws SQLException
+	public boolean deleteTask() throws SQLException
 	{
 		ResultSet rs = null;
 
 		PreparedStatement pstmt = null;
 		try {
 			pstmt = conn.prepareStatement(stmt);
-			pstmt.setString(1, u.getEmail());
+			pstmt.setInt(1, id);
+			pstmt.setString(2,u.getEmail());
 			int rows = pstmt.executeUpdate();
 
 			if(rows > 0)

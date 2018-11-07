@@ -42,8 +42,8 @@ CREATE TABLE mnemosyne.defines(
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (parameter) REFERENCES mnemosyne.parameter(pname)
         ON DELETE CASCADE ON UPDATE CASCADE,
-    CHECK ((type='time' AND location IS NULL AND to_time IS NOT NULL AND location_SSID IS NULL AND location_cellID IS NULL)
-        OR (type='location' AND from_time IS NULL AND to_time IS NULL AND location IS NOT NULL))
+    CHECK ((type='time' AND location IS NULL AND to_time IS NOT NULL AND location_SSID IS NULL AND location_cellID <0)
+        OR (type='location' AND from_time IS NULL AND to_time IS NULL AND location IS NOT NULL AND parameter NOT IN ('location_any')))
 );
 
 CREATE TABLE mnemosyne.task(

@@ -11,7 +11,8 @@ import java.sql.*;
 public class UpdateTaskDatabase
 {
 	//NOT to be used to update sessionid
-	private final String stmt = "UPDATE mnemosyne.task SET useremail=?, name=?, constr=?, possibleAtWork=?, repeatable=?, doneToday=?, failed=?, placesToSatisfy=? WHERE id=?";
+	private final String stmt = "UPDATE mnemosyne.task SET name=?, constr=?, possibleAtWork=?, repeatable=?, doneToday=?, " +
+			"failed=?, placesToSatisfy=? WHERE id=? AND useremail=? RETURNING *";
 	private final Task t;
 	private final User u;
 	private final Connection conn;
@@ -47,15 +48,16 @@ public class UpdateTaskDatabase
 			baos.close();
 
 			pstmt = conn.prepareStatement(stmt);
-			pstmt.setString(1, u.getEmail());
-			pstmt.setString(2, t.getName());
-			pstmt.setBytes(3, constr);
-			pstmt.setBoolean(4, t.isPossibleAtWork());
-			pstmt.setBoolean(5, t.isRepeatable());
-			pstmt.setBoolean(6, t.isDoneToday());
-			pstmt.setBoolean(7, t.isFailed());
-			pstmt.setBytes(8, places);
-			pstmt.setInt(9, t.getId());
+			pstmt.setString(1, t.getName());
+			pstmt.setBytes(2, constr);
+			pstmt.setBoolean(3, t.isPossibleAtWork());
+			pstmt.setBoolean(4, t.isRepeatable());
+			pstmt.setBoolean(5, t.isDoneToday());
+			pstmt.setBoolean(6, t.isFailed());
+			pstmt.setBytes(7, places);
+			pstmt.setInt(8, t.getId());
+			pstmt.setString(9, u.getEmail());
+
 
 			rs = pstmt.executeQuery();
 

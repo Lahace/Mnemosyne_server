@@ -57,19 +57,14 @@ public class RestUser
 		if(!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
 		try
 		{
-			User u = User.fromJSON(req.getInputStream());
+			User u = User.fromJSON(req.getInputStream()); //change, use session user
 			if(new CheckUserCredentialsDatabase(getDataSource().getConnection(), u.getEmail(), u.getPassword()).checkUserCredentials() == null)
 			{
 				ServletUtils.sendMessage(new Message("Unauthorized",
 						"401", "Wrong email/password"), res, HttpServletResponse.SC_UNAUTHORIZED);
 				return;
 			}
-			else if(!u.getEmail().equals(((User) req.getSession(false).getAttribute("current")).getEmail()))
-			{
-				ServletUtils.sendMessage(new Message("Unauthorized",
-						"401", "You cannot update other users' profile"), res, HttpServletResponse.SC_UNAUTHORIZED);
-				return;
-			}
+
 			User ret = new UpdateUserDatabase(getDataSource().getConnection(), u).updateUser();
 			if(ret == null)
 			{
@@ -162,17 +157,16 @@ public class RestUser
 				return;
 			}
 
-			User ret = new DeleteUserDatabase(getDataSource().getConnection(), u).deleteUser();
-			if(ret == null)
+			if(new DeleteUserDatabase(getDataSource().getConnection(), u).deleteUser())
 			{
-				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-				res.setHeader("Content-Type", "application/json; charset=utf-8");
+				req.getSession().invalidate();
+				ServletUtils.sendMessage(new Message("Ok",
+						"200", "User deleted"), res, HttpServletResponse.SC_OK);
 			}
 			else
 			{
-				res.setStatus(HttpServletResponse.SC_OK);
-				res.setHeader("Content-Type", "application/json; charset=utf-8");
-				ret.toJSON(res.getOutputStream());
+				ServletUtils.sendMessage(new Message("Ok",
+						"400", "User was not deleted, maybe it's not defined?"), res, HttpServletResponse.SC_BAD_REQUEST);
 			}
 
 		}

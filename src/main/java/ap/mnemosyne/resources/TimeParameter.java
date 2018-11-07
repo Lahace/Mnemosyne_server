@@ -7,12 +7,11 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @JsonTypeName("time-parameter")
 public class TimeParameter extends Parameter

@@ -7,10 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 @JsonTypeName("location-parameter")
@@ -23,7 +20,7 @@ public class LocationParameter extends Parameter
 	@JsonCreator
 	public LocationParameter(@JsonProperty("name") ParamsName name, @JsonProperty("user")String userEmail,
 	                         @JsonProperty("location") Point location,
-	                         @JsonProperty("cellID") int cellID, @JsonProperty("SSID") String SSID)
+	                         @JsonProperty("cellID") int cellID, @JsonProperty("ssid") String SSID)
 	{
 		super(name, userEmail);
 		this.location = location;

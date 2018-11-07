@@ -1,5 +1,7 @@
 package ap.mnemosyne.resources;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,8 +25,10 @@ public class Place extends Resource implements Serializable
 	private LocalTime opening;
 	private LocalTime closing;
 
-	public Place(String country, String state, String town, String suburb, int houseNumber, String name,
-				 String placeType, Point coordinates, LocalTime opening, LocalTime closing)
+	@JsonCreator
+	public Place(@JsonProperty("country") String country, @JsonProperty("state") String state, @JsonProperty("town") String town, @JsonProperty("suburb") String suburb,
+	             @JsonProperty("house-number") int houseNumber, @JsonProperty("name") String name, @JsonProperty("place-type") String placeType,
+	             @JsonProperty("coordinates") Point coordinates, @JsonProperty("opening") LocalTime opening, @JsonProperty("closing") LocalTime closing)
 	{
 		this.country = country;
 		this.state = state;

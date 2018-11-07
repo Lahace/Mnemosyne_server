@@ -1,9 +1,6 @@
 package ap.mnemosyne.rest;
 
-import ap.mnemosyne.database.CreateTaskDatabase;
-import ap.mnemosyne.database.GetTaskByIDDatabase;
-import ap.mnemosyne.database.SearchTaskByUserDatabase;
-import ap.mnemosyne.database.UpdateTaskDatabase;
+import ap.mnemosyne.database.*;
 import ap.mnemosyne.enums.ConstraintTemporalType;
 import ap.mnemosyne.enums.NormalizedActions;
 import ap.mnemosyne.enums.ParamsName;
@@ -61,7 +58,7 @@ public class RestTask
 
 	@GET
 	@Path("{id}")
-	public void getTaskByID(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("id") int id) throws IOException, ServletException
+	public void getTaskByID(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("id") int id) throws IOException
 	{
 		try
 		{
@@ -78,6 +75,11 @@ public class RestTask
 						"400", "Task was not found"), res, HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
 		catch(SQLException sqle)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
@@ -91,7 +93,7 @@ public class RestTask
 	}
 
 	@POST
-	public void createTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException, ServletException
+	public void createTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
 		try
 		{
@@ -103,9 +105,10 @@ public class RestTask
 			ret.toJSON(res.getOutputStream());
 
 		}
-		catch (IOException ioe)
+		catch(ServletException se)
 		{
-			ServletUtils.sendMessage(new Message("IOException in RestTask", "500", ioe.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		catch(SQLException sqle)
 		{
@@ -115,7 +118,7 @@ public class RestTask
 	}
 
 	@PUT
-	public void updateTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException, ServletException
+	public void updateTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
 		try
 		{
@@ -134,9 +137,10 @@ public class RestTask
 			}
 
 		}
-		catch (IOException ioe)
+		catch(ServletException se)
 		{
-			ServletUtils.sendMessage(new Message("IOException in RestTask", "500", ioe.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		catch(SQLException sqle)
 		{
@@ -147,7 +151,7 @@ public class RestTask
 
 	@PUT
 	@Path("test")
-	public void createTestTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException, ServletException
+	public void createTestTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
 		//Class to serialize and create example tasks
 		try
@@ -165,6 +169,42 @@ public class RestTask
 							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",
 									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before, NormalizedActions.get),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+			res.setStatus(HttpServletResponse.SC_OK);
+		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@DELETE
+	@Path("{id}")
+	public void deleteTask(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("id") int id) throws IOException
+	{
+		try
+		{
+			User u = (User) req.getSession(false).getAttribute("current");
+			if(new DeleteTaskDatabase(getDataSource().getConnection(), id, u).deleteTask())
+			{
+				ServletUtils.sendMessage(new Message("Ok",
+						"200", "Parameter deleted"), res, HttpServletResponse.SC_OK);
+			}
+			else
+			{
+				ServletUtils.sendMessage(new Message("Ok",
+						"400", "Parameter was not deleted, maybe it's not defined?"), res, HttpServletResponse.SC_BAD_REQUEST);
+			}
+		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		catch(SQLException sqle)
 		{

@@ -4,7 +4,11 @@ import ap.mnemosyne.enums.ParamsName;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
 		include = JsonTypeInfo.As.WRAPPER_OBJECT)
@@ -31,6 +35,22 @@ public abstract class Parameter extends Resource
 	public String getUserEmail()
 	{
 		return userEmail;
+	}
+
+	public static final Parameter fromJSON(InputStream in) throws IOException
+	{
+		StringBuilder textBuilder = new StringBuilder();
+		try (Reader reader = new BufferedReader(new InputStreamReader
+				(in, Charset.forName(StandardCharsets.UTF_8.name())))) {
+			int c = 0;
+			while ((c = reader.read()) != -1) {
+				textBuilder.append((char) c);
+			}
+		}
+		ObjectMapper om = new ObjectMapper();
+		om.findAndRegisterModules();
+		Parameter p = om.readValue(textBuilder.toString(), Parameter.class);
+		return p;
 	}
 
 }

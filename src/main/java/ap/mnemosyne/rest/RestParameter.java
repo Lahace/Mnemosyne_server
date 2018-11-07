@@ -1,34 +1,178 @@
 package ap.mnemosyne.rest;
 
+import ap.mnemosyne.database.CreateUserDefinedParameterDatabase;
+import ap.mnemosyne.database.DeleteUserDefinedParameterDatabase;
+import ap.mnemosyne.database.GetUserDefinedParameterDatabase;
+import ap.mnemosyne.database.UpdateUserDefinedParameterDatabase;
+import ap.mnemosyne.enums.ParamsName;
+import ap.mnemosyne.resources.Message;
+import ap.mnemosyne.resources.Parameter;
+import ap.mnemosyne.resources.User;
+import ap.mnemosyne.util.ServletUtils;
+
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
+import java.sql.SQLException;
 
 @Path("parameter")
 public class RestParameter
 {
 	@GET
-	public void getParameter(@Context HttpServletRequest req, @Context HttpServletResponse res)
+	@Path("{parameter}")
+	public void getParameter(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("parameter") String param) throws IOException
 	{
-		//TODO
+		try
+		{
+			ParamsName p = ParamsName.valueOf(param);
+			User u = (User) req.getSession().getAttribute("current");
+			Parameter pdb = new GetUserDefinedParameterDatabase(getDataSource().getConnection(), u , p).getUserDefinedParameter();
+			if(pdb == null)
+			{
+				ServletUtils.sendMessage(new Message("Bad Request",
+						"400", "Parameter " + param + " is not defined for user " + u.getEmail()), res, HttpServletResponse.SC_BAD_REQUEST);
+				return;
+			}
+			res.setStatus(HttpServletResponse.SC_OK);
+			res.setHeader("Content-Type", "application/json; charset=utf-8");
+			pdb.toJSON(res.getOutputStream());
+		}
+		catch(IllegalArgumentException iae)
+		{
+			ServletUtils.sendMessage(new Message("Bad Request",
+					"400", "Parameter does not exists"), res, HttpServletResponse.SC_BAD_REQUEST);
+		}
+		catch (SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
 	}
 
+
 	@POST
-	public void createParameter(@Context HttpServletRequest req, @Context HttpServletResponse res)
+	public void createParameter(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
-		//TODO
+		if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+		try
+		{
+			Parameter p = Parameter.fromJSON(req.getInputStream());
+			User u = (User) req.getSession().getAttribute("current");
+			Parameter pdb = new CreateUserDefinedParameterDatabase(getDataSource().getConnection(), u , p).createUserDefinedParameter();
+			res.setStatus(HttpServletResponse.SC_OK);
+			res.setHeader("Content-Type", "application/json; charset=utf-8");
+			pdb.toJSON(res.getOutputStream());
+		}
+		catch(IllegalArgumentException iae)
+		{
+			ServletUtils.sendMessage(new Message("Bad Request",
+					"400", "Parameter does not exists"), res, HttpServletResponse.SC_BAD_REQUEST);
+		}
+		catch (SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@PUT
-	public void updateParameter(@Context HttpServletRequest req, @Context HttpServletResponse res)
+	public void updateParameter(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
-		//TODO
+		if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+		try
+		{
+			Parameter p = Parameter.fromJSON(req.getInputStream());
+			User u = (User) req.getSession().getAttribute("current");
+			Parameter pdb = new UpdateUserDefinedParameterDatabase(getDataSource().getConnection(), u , p).updateUserDefinedParameter();
+			res.setStatus(HttpServletResponse.SC_OK);
+			res.setHeader("Content-Type", "application/json; charset=utf-8");
+			pdb.toJSON(res.getOutputStream());
+		}
+		catch(IllegalArgumentException iae)
+		{
+			ServletUtils.sendMessage(new Message("Bad Request",
+					"400", "Parameter does not exists"), res, HttpServletResponse.SC_BAD_REQUEST);
+		}
+		catch (SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
 	}
 
 	@DELETE
-	public void deleteParameter(@Context HttpServletRequest req, @Context HttpServletResponse res)
+	@Path("{parameter}")
+	public void deleteParameter(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("parameter") String param) throws IOException
 	{
-		//TODO
+		try
+		{
+			ParamsName p = ParamsName.valueOf(param);
+			User u = (User) req.getSession().getAttribute("current");
+			if(new DeleteUserDefinedParameterDatabase(getDataSource().getConnection(), u , p).deleteUserDefinedParameter())
+			{
+				ServletUtils.sendMessage(new Message("Ok",
+						"200", "Parameter deleted"), res, HttpServletResponse.SC_OK);
+			}
+			else
+			{
+				ServletUtils.sendMessage(new Message("Ok",
+						"400", "Parameter was not deleted, maybe it's not defined?"), res, HttpServletResponse.SC_BAD_REQUEST);
+			}
+		}
+		catch(IllegalArgumentException iae)
+		{
+			ServletUtils.sendMessage(new Message("Bad Request",
+					"400", "Parameter does not exists"), res, HttpServletResponse.SC_BAD_REQUEST);
+		}
+		catch (SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	private DataSource getDataSource() throws ServletException
+	{
+		InitialContext cxt;
+		DataSource ds;
+
+		try {
+			cxt = new InitialContext();
+			ds = (DataSource) cxt.lookup("java:/comp/env/jdbc/mnemosyne");
+		} catch (NamingException e) {
+			ds = null;
+
+			throw new ServletException(
+					String.format("Impossible to access the connection pool to the database: %s",
+							e.getMessage()));
+		}
+		return ds;
 	}
 }

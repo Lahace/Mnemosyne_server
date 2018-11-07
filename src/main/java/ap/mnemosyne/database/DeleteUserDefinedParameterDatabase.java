@@ -1,22 +1,27 @@
 package ap.mnemosyne.database;
 
+import ap.mnemosyne.enums.ParamsName;
+import ap.mnemosyne.resources.Parameter;
 import ap.mnemosyne.resources.User;
 
 import java.sql.*;
 
-public class DeleteUserDatabase
+public class DeleteUserDefinedParameterDatabase
 {
-	private final String stmt = "DELETE FROM mnemosyne.user WHERE email=?";
+	//NOT to be used to update sessionid
+	private final String stmt = "DELETE mnemosyne.defines WHERE email=? AND parameter=?";
 	private final User u;
 	private final Connection conn;
+	private final ParamsName p;
 
-	public DeleteUserDatabase(Connection conn, User u)
+	public DeleteUserDefinedParameterDatabase(Connection conn, User u, ParamsName p)
 	{
 		this.u = u;
+		this.p = p;
 		this.conn = conn;
 	}
 
-	public boolean deleteUser() throws SQLException
+	public boolean deleteUserDefinedParameter() throws SQLException
 	{
 		ResultSet rs = null;
 
