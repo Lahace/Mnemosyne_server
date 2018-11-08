@@ -31,7 +31,7 @@ public class RestTask
 	{
 		try
 		{
-			List<Task> tl = new SearchTaskByUserDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current")).searchTaskByUser();
+			List<Task> tl = new GetTasksByUserDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current")).getTasksByUser();
 			if(tl != null)
 			{
 				res.setStatus(HttpServletResponse.SC_OK);
@@ -100,7 +100,7 @@ public class RestTask
 			if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
 			Task t = Task.fromJSON(req.getInputStream());
 			Task ret = new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
-			res.setStatus(HttpServletResponse.SC_OK);
+			res.setStatus(HttpServletResponse.SC_CREATED);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			ret.toJSON(res.getOutputStream());
 
@@ -192,8 +192,7 @@ public class RestTask
 			User u = (User) req.getSession(false).getAttribute("current");
 			if(new DeleteTaskDatabase(getDataSource().getConnection(), id, u).deleteTask())
 			{
-				ServletUtils.sendMessage(new Message("Ok",
-						"200", "Parameter deleted"), res, HttpServletResponse.SC_OK);
+				ServletUtils.sendMessage(new Message("Ok"), res, HttpServletResponse.SC_OK);
 			}
 			else
 			{

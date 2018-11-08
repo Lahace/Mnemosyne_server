@@ -137,8 +137,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 					break;
 
 				case location_house:
-					param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p)
-							.getUserDefinedParameter();
+					param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p)
+							.getUserDefinedParameterByName();
 					if(param == null)
 					{
 						throw new ParameterNotDefinedException(p.toString());
@@ -159,8 +159,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 				case location_work:
 					possibleAtWork = true;
-					param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p)
-							.getUserDefinedParameter();
+					param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p)
+							.getUserDefinedParameterByName();
 					if(param == null)
 					{
 						throw new ParameterNotDefinedException(p.toString());
@@ -320,8 +320,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 	private TaskConstraint solveLocationConstraint(ParamsName location, Map<String, String> resolveMap, HttpServletRequest req) throws ServletException, SQLException, NoDataReceivedException
 	{
 		TaskConstraint toRet = null;
-		Parameter param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(),
-				(User) req.getSession().getAttribute("current"), location).getUserDefinedParameter();
+		Parameter param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(),
+				(User) req.getSession().getAttribute("current"), location).getUserDefinedParameterByName();
 		if(param == null)
 		{
 			throw new ParameterNotDefinedException(location.toString());
@@ -345,8 +345,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 	private TaskConstraint solveTimeConstraint(ParamsName timing, Map<String, String> resolveMap, HttpServletRequest req) throws ServletException, SQLException
 	{
 		TaskConstraint toRet = null;
-		Parameter param = new GetUserDefinedParameterDatabase(getDataSource().getConnection(),
-				(User) req.getSession().getAttribute("current"), timing).getUserDefinedParameter();
+		Parameter param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(),
+				(User) req.getSession().getAttribute("current"), timing).getUserDefinedParameterByName();
 		if(param == null)
 		{
 			throw new ParameterNotDefinedException(timing.toString());

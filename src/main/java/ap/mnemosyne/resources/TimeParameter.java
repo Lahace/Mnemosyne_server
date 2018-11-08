@@ -10,8 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalTime;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @JsonTypeName("time-parameter")
 public class TimeParameter extends Parameter
@@ -21,7 +19,7 @@ public class TimeParameter extends Parameter
 
 	@JsonCreator
 	public TimeParameter(@JsonProperty("name") ParamsName name, @JsonProperty("user") String userEmail,
-	                     @JsonProperty("fromTime") LocalTime fromTime, @JsonProperty("toTime") LocalTime toTime)
+	                     @JsonProperty("from-time") LocalTime fromTime, @JsonProperty("to-time") LocalTime toTime)
 	{
 		super(name, userEmail);
 		this.fromTime = fromTime;

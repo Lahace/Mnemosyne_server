@@ -26,7 +26,7 @@ public class RestUser
 		try
 		{
 			User session = ((User) req.getSession().getAttribute("current"));
-			User u = new SearchUserByEmailDatabase(getDataSource().getConnection(), session.getEmail()).searchUserByEmail();
+			User u = new GetUserByEmailDatabase(getDataSource().getConnection(), session.getEmail()).getUserByEmail();
 			if(u == null)
 			{
 				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -160,8 +160,7 @@ public class RestUser
 			if(new DeleteUserDatabase(getDataSource().getConnection(), u).deleteUser())
 			{
 				req.getSession().invalidate();
-				ServletUtils.sendMessage(new Message("Ok",
-						"200", "User deleted"), res, HttpServletResponse.SC_OK);
+				ServletUtils.sendMessage(new Message("Ok"), res, HttpServletResponse.SC_OK);
 			}
 			else
 			{

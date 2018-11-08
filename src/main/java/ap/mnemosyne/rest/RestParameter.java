@@ -1,12 +1,10 @@
 package ap.mnemosyne.rest;
 
-import ap.mnemosyne.database.CreateUserDefinedParameterDatabase;
-import ap.mnemosyne.database.DeleteUserDefinedParameterDatabase;
-import ap.mnemosyne.database.GetUserDefinedParameterDatabase;
-import ap.mnemosyne.database.UpdateUserDefinedParameterDatabase;
+import ap.mnemosyne.database.*;
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.resources.Message;
 import ap.mnemosyne.resources.Parameter;
+import ap.mnemosyne.resources.ResourceList;
 import ap.mnemosyne.resources.User;
 import ap.mnemosyne.util.ServletUtils;
 
@@ -21,10 +19,47 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 @Path("parameter")
 public class RestParameter
 {
+
+	@GET
+	public void getParametersList(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
+	{
+		try
+		{
+			User u = (User) req.getSession().getAttribute("current");
+			Map<ParamsName, Parameter> pdb = new GetUserDefinedParametersDatabase(getDataSource().getConnection(), u ).getUserDefinedParameters();
+			res.setStatus(HttpServletResponse.SC_OK);
+			res.setHeader("Content-Type", "application/json; charset=utf-8");
+			List<Parameter> plist = new ArrayList<>();
+			for(Map.Entry<ParamsName, Parameter> e : pdb.entrySet())
+			{
+				plist.add(e.getValue());
+			}
+			new ResourceList<>(plist).toJSON(res.getOutputStream());
+		}
+		catch(IllegalArgumentException iae)
+		{
+			ServletUtils.sendMessage(new Message("Bad Request",
+					"400", "Parameter does not exists"), res, HttpServletResponse.SC_BAD_REQUEST);
+		}
+		catch (SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(ServletException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
+
 	@GET
 	@Path("{parameter}")
 	public void getParameter(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("parameter") String param) throws IOException
@@ -33,7 +68,7 @@ public class RestParameter
 		{
 			ParamsName p = ParamsName.valueOf(param);
 			User u = (User) req.getSession().getAttribute("current");
-			Parameter pdb = new GetUserDefinedParameterDatabase(getDataSource().getConnection(), u , p).getUserDefinedParameter();
+			Parameter pdb = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), u , p).getUserDefinedParameterByName();
 			if(pdb == null)
 			{
 				ServletUtils.sendMessage(new Message("Bad Request",
@@ -71,7 +106,7 @@ public class RestParameter
 			Parameter p = Parameter.fromJSON(req.getInputStream());
 			User u = (User) req.getSession().getAttribute("current");
 			Parameter pdb = new CreateUserDefinedParameterDatabase(getDataSource().getConnection(), u , p).createUserDefinedParameter();
-			res.setStatus(HttpServletResponse.SC_OK);
+			res.setStatus(HttpServletResponse.SC_CREATED);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			pdb.toJSON(res.getOutputStream());
 		}
@@ -132,8 +167,7 @@ public class RestParameter
 			User u = (User) req.getSession().getAttribute("current");
 			if(new DeleteUserDefinedParameterDatabase(getDataSource().getConnection(), u , p).deleteUserDefinedParameter())
 			{
-				ServletUtils.sendMessage(new Message("Ok",
-						"200", "Parameter deleted"), res, HttpServletResponse.SC_OK);
+				ServletUtils.sendMessage(new Message("Ok"), res, HttpServletResponse.SC_OK);
 			}
 			else
 			{

@@ -7,19 +7,19 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class SearchUserByEmailDatabase
+public class GetUserByEmailDatabase
 {
 	private final String stmt = "SELECT * FROM mnemosyne.user WHERE email=?";
 	private final Connection conn;
 	private final String email;
 
-	public SearchUserByEmailDatabase(Connection conn, String email)
+	public GetUserByEmailDatabase(Connection conn, String email)
 	{
 		this.conn = conn;
 		this.email = email;
 	}
 
-	public User searchUserByEmail() throws SQLException
+	public User getUserByEmail() throws SQLException
 	{
 		PreparedStatement pstmt = null;
 		User u = null;

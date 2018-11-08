@@ -19,7 +19,6 @@ public abstract class TaskConstraint extends Resource implements Serializable
 	private ParamsName paramName;
 	private ConstraintTemporalType type;
 
-
 	public TaskConstraint(@JsonProperty("param-name") ParamsName paramName,  @JsonProperty("type") ConstraintTemporalType type)
 	{
 		this.paramName = paramName;

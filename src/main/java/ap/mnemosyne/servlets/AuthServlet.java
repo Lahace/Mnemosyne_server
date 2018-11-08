@@ -40,7 +40,7 @@ public class AuthServlet extends AbstractDatabaseServlet
 			{
 				if(u.getSessionID() != null && SessionListener.map.get(u.getSessionID()) != null)
 				{
-					res.setStatus(HttpServletResponse.SC_OK);
+					res.setStatus(HttpServletResponse.SC_CREATED);
 					res.setHeader("Content-Type", "application/json; charset=utf-8");
 					u.toJSON(res.getOutputStream());
 				}
@@ -56,7 +56,7 @@ public class AuthServlet extends AbstractDatabaseServlet
 						return;
 					}
 					s.setAttribute("current", newUser);
-					res.setStatus(HttpServletResponse.SC_OK);
+					res.setStatus(HttpServletResponse.SC_CREATED);
 					res.setHeader("Content-Type", "application/json; charset=utf-8");
 					newUser.toJSON(res.getOutputStream());
 				}

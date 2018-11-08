@@ -3,8 +3,9 @@ package ap.mnemosyne.resources;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.geotools.geometry.GeometryBuilder;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.geotools.geometry.jts.JTSFactoryFinder;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -34,10 +35,10 @@ public class Point extends Resource implements Serializable
 		return lon;
 	}
 
-	public org.opengis.geometry.primitive.Point toGISPoint()
+	public org.locationtech.jts.geom.Point toJTSPoint()
 	{
-		GeometryBuilder builder = new GeometryBuilder( DefaultGeographicCRS.WGS84 );
-		return builder.createPoint(getLat(), getLon());
+		GeometryFactory builder = JTSFactoryFinder.getGeometryFactory();
+		return builder.createPoint(new Coordinate(this.getLat(),this.getLon()));
 	}
 
 	@Override

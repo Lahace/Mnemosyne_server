@@ -52,5 +52,4 @@ public abstract class Parameter extends Resource
 		Parameter p = om.readValue(textBuilder.toString(), Parameter.class);
 		return p;
 	}
-
 }

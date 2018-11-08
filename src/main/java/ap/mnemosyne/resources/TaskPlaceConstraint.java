@@ -23,7 +23,7 @@ public class TaskPlaceConstraint extends TaskConstraint
 
 	@JsonCreator
 	public TaskPlaceConstraint(@JsonProperty("constraint-place") Place constraintPlace, @JsonProperty("param-name") ParamsName paramName ,
-	                           @JsonProperty("tamporal-type") ConstraintTemporalType type, @JsonProperty("normalized-action") NormalizedActions normalizedAction)
+	                           @JsonProperty("temporal-type") ConstraintTemporalType type, @JsonProperty("normalized-action") NormalizedActions normalizedAction)
 	{
 		super(paramName, type);
 		this.constraintPlace = constraintPlace;
