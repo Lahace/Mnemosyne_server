@@ -13,4 +13,5 @@ public interface PlacesProvider
 {
 	List<Place> getPlacesFromQuery(String query) throws RuntimeException, NoDataReceivedException;
 	Place getPlaceFromPoint(Point point) throws NoDataReceivedException;
+	int getMinutesToDestination(Point from, Point to) throws NoDataReceivedException;
 }

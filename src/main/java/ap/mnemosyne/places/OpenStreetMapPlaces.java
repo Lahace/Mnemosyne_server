@@ -16,8 +16,9 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -78,11 +79,24 @@ public class OpenStreetMapPlaces implements PlacesProvider
 				{
 					name = address.get(node.get("type").asText()) != null ? address.get(node.get("type").asText()).asText() : null;
 				}
+
+				String town = null;
+				if(address.get("town") == null)
+				{
+					if(address.get("village") != null)
+					{
+						town = address.get("village").asText();
+					}
+				}
+				else
+				{
+					town = address.get("town").asText();
+				}
 				int houseNumber = -1;
 				try{ houseNumber = address.get("house_number").asInt();}catch (NullPointerException npe){} //Ignore
 				Place p = new Place(address.get("country")!=null ? address.get("country").asText() : null,
 						address.get("state")!=null ? address.get("state").asText() : null,
-						address.get("town")!=null ? address.get("town").asText() : null,
+						town,
 						address.get("suburb")!=null ? address.get("suburb").asText() : null,
 						houseNumber,
 						name,
@@ -186,6 +200,12 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			throw new NoDataReceivedException("Invalid data received");
 		}
 		return p;
+	}
+
+	@Override
+	public int getMinutesToDestination(Point from, Point to) throws NoDataReceivedException
+	{
+		return -1;
 	}
 
 	private CloseableHttpClient getHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException

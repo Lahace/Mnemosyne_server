@@ -12,6 +12,7 @@ import ap.mnemosyne.parser.resources.TextualTask;
 import ap.mnemosyne.places.PlacesManager;
 import ap.mnemosyne.resources.*;
 import ap.mnemosyne.util.ServletUtils;
+import ap.mnemosyne.util.TimeUtils;
 import ap.mnemosyne.util.Tuple;
 
 import javax.servlet.ServletConfig;
@@ -23,10 +24,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -57,7 +55,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		if(sentence == null)
 		{
 			ServletUtils.sendMessage(new Message("Bad Request",
-					"400", "Please specify the sentence to be parsed"), res, HttpServletResponse.SC_BAD_REQUEST);
+					"PRSR01", "Please specify the sentence to be parsed"), res, HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
 
@@ -71,7 +69,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		catch (NullPointerException npe)
 		{
 			ServletUtils.sendMessage(new Message("Bad Request",
-					"400", "Please specify both lat and lon of your current position"), res, HttpServletResponse.SC_BAD_REQUEST);
+					"PRSR02", "Please specify both lat and lon of your current position"), res, HttpServletResponse.SC_BAD_REQUEST);
 			return;
 		}
 
@@ -83,7 +81,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		{
 			LOGGER.warning("FAILED: No action retrieved from sentence");
 			ServletUtils.sendMessage(new Message("Not implemented",
-					"500", "Parser did not recognized sentence " + tt.getFullSentence()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					"PRSR03", "Parser did not recognized sentence " + tt.getFullSentence()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			return;
 		}
 
@@ -105,7 +103,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 			{
 				LOGGER.warning("FAILED: No action definition for: " + tt.getTextualAction().getVerb() + " " + tt.getTextualAction().getSubject());
 				ServletUtils.sendMessage(new Message("Not implemented",
-						"501", "Could not find a definition for action " + tt.getTextualAction().getVerb()
+						"PRSR04", "Could not find a definition for action " + tt.getTextualAction().getVerb()
 						+ " with subject " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 				return;
 			}
@@ -116,24 +114,50 @@ public class ParseServlet extends AbstractDatabaseServlet
 			switch (p)
 			{
 				case location_item:
+					//TODO: UPDATE places with user's current position
 					my = pman.getPlacesFromPoint(new Point(lat,lon));
-					if(my == null) throw new NoDataReceivedException("No data received with current lat/lon");
+					if(my == null) throw new NoDataReceivedException("No data received with current user lat/lon");
 					List<String> places = new SearchPlacesByItemDatabase(getDataSource().getConnection(), tt.getTextualAction().getSubject()).searchPlacesByItem();
 					if(places.isEmpty())
 					{
 						LOGGER.warning("FAILED: No places found for item " + tt.getTextualAction().getSubject());
 						ServletUtils.sendMessage(new Message("Not found",
-								"404", "Could not find places where to find " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_FOUND);
+								"PRSR05", "Could not find places where to find " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_FOUND);
+						return;
 					}
 					for(String s : places)
 					{
-						for (Place place : pman.getPlacesFromQuery(s + " in " + my.getTown()))
+						for (Place place : pman.getPlacesFromQuery(s + " in " + my.getTown() + " in " + my.getState()))
 						{
 							//TODO: add check for closing/opening time
 							placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
 															place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
 						}
+
+						//TODO: add query caching for PlaceManager
+						//Adding also places around known places to satisfy every constraint
+						//eg. if user works 100km away from his/her house, we must find places near his/her house in case constraint is something like "when i get back home"
+						Point housePoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_house)
+								.getUserDefinedParameterByName()).getLocation();
+						Place myHouse = pman.getPlacesFromPoint(housePoint);
+						for (Place place : pman.getPlacesFromQuery(s + " in " + myHouse.getTown() + " in " + my.getState()))
+						{
+							placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+									place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
+						}
+
+						Point workPoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_work)
+								.getUserDefinedParameterByName()).getLocation();
+						Place myWorkplace = pman.getPlacesFromPoint(workPoint);
+						for (Place place : pman.getPlacesFromQuery(s + " in " + myWorkplace.getTown() + " in " + my.getState()))
+						{
+							placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+									place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
+						}
 					}
+					if(placesToSatisfy.isEmpty())
+						throw new NoDataReceivedException("No data was received searching for places where to find: " + tt.getTextualAction().getSubject());
+
 					break;
 
 				case location_house:
@@ -192,16 +216,26 @@ public class ParseServlet extends AbstractDatabaseServlet
 			//Resolving Constraint
 			//Getting only the first constraint
 			//TODO: add multiple constraint support
+			if(tt.getTextualConstraints().isEmpty())
+			{
+				LOGGER.info("No constraint found");
+				LOGGER.info("Creating task..");
+				Task t = new Task(-1, user, name ,null, possibleAtWork, repeatable, doneToday, failed, placesToSatisfy);
+				res.setStatus(HttpServletResponse.SC_OK);
+				res.setHeader("Content-Type", "application/json; charset=utf-8");
+				t.toJSON(res.getOutputStream());
+				LOGGER.info("Creating Task.. Done");
+			}
 			TextualConstraint current = tt.getTextualConstraints().get(0);
 			boolean parsed;
-			LocalTime specifiedtime = null;
+			LocalTime specifiedTime = null;
 			try
 			{
 				String toParse;
-				//TODO: Add time interval management
-				if(current.getConstraintWord().length() == 2) toParse = current.getConstraintWord() + ":00";
+				//TODO: Add time interval support
+				if(current.getConstraintWord().length() == 2 || current.getConstraintWord().length() == 1 ) toParse = current.getConstraintWord() + ":00";
 				else toParse = current.getConstraintWord();
-				specifiedtime = LocalTime.parse(toParse);
+				specifiedTime = LocalTime.parse(toParse);
 				parsed = true;
 			}
 			catch (DateTimeParseException dtpe)
@@ -212,17 +246,63 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 			if(parsed)
 			{
-				LOGGER.info("Found specific time in constraint: " + specifiedtime);
+				LOGGER.info("Found specific time in constraint: " + specifiedTime);
 				Tuple<String, ConstraintTemporalType> pair = new GetConstraintMarkerFromMarkerDatabase(getDataSource().getConnection(), current.getConstraintMarker()).getConstraintFromMarker();
 				if(pair.getRight() == null)
 				{
 					LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintMarker());
 					ServletUtils.sendMessage(new Message("Not implemented",
-							"501", "Could not find a definition for constraint '" + tt.getTextualConstraints().get(0).getConstraintMarker()
+							"PRSR06", "Could not find a definition for constraint '" + tt.getTextualConstraints().get(0).getConstraintMarker()
 							+ " " + tt.getTextualConstraints().get(0).getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 					return;
 				}
-				constr = new TaskTimeConstraint(specifiedtime, null ,ParamsName.time_specified, pair.getRight());
+
+				if(!p.equals(ParamsName.location_work) || !p.equals(ParamsName.location_house))
+				{
+					//Remove every place that's not open at the time specified
+					TimeParameter bed = (TimeParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(),
+							(User) req.getSession().getAttribute("current"), ParamsName.time_bed).getUserDefinedParameterByName();
+					for (Place place : placesToSatisfy)
+					{
+						if ((pair.getRight().equals(ConstraintTemporalType.at) && !TimeUtils.isTimeBetween(specifiedTime, place.getOpening(), place.getClosing())) ||
+								(pair.getRight().equals(ConstraintTemporalType.before) && TimeUtils.isTimeBetween(specifiedTime, bed.getToTime(), place.getOpening())) ||
+								(pair.getRight().equals(ConstraintTemporalType.after) && TimeUtils.isTimeBetween(specifiedTime, place.getClosing(), bed.getFromTime())))
+						{
+							placesToSatisfy.remove(place);
+						}
+					}
+
+					if (placesToSatisfy.isEmpty())
+					{
+						LOGGER.warning("FAILED: placesToSatisfy was emptied");
+						ServletUtils.sendMessage(new Message("Bad request",
+								"PRSR07", "No places found that's still open at: " + specifiedTime), res, HttpServletResponse.SC_BAD_REQUEST);
+						return;
+					}
+
+					//changing constraint to match with places' closing/opening time
+					//getting earliest opening place and latest closing place
+
+					Place maxClosing = findLatestOpenedPlace(placesToSatisfy);
+					Place minOpening = findEarliestOpeningPlace(placesToSatisfy);
+
+					if (pair.getRight().equals(ConstraintTemporalType.before) && specifiedTime.isAfter(maxClosing.getClosing()))
+					{
+						constr = new TaskTimeConstraint(maxClosing.getClosing(), null, ParamsName.time_specified, pair.getRight());
+					}
+					else if (pair.getRight().equals(ConstraintTemporalType.after) && specifiedTime.isBefore(minOpening.getOpening()))
+					{
+						constr = new TaskTimeConstraint(minOpening.getOpening(), null, ParamsName.time_specified, pair.getRight());
+					}
+					else
+					{
+						constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
+					}
+				}
+				else
+				{
+					constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
+				}
 			}
 			else
 			{
@@ -232,7 +312,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 				{
 					LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintWord() + " " + current.getVerb() + " " + current.getConstraintMarker());
 					ServletUtils.sendMessage(new Message("Not implemented",
-							"501", "Could not find a definition for constraint '" + current.getConstraintMarker()
+							"PRSR06", "Could not find a definition for constraint '" + current.getConstraintMarker()
 							+ " " + current.getVerb()+ " " + current.getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 					return;
 				}
@@ -293,25 +373,25 @@ public class ParseServlet extends AbstractDatabaseServlet
 		{
 			LOGGER.severe("SQLException: " + sqle.getMessage() + " -> Code: " + sqle.getErrorCode() + " State: " + sqle.getSQLState());
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
-					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					"PRSR08", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		catch (ServletException bde)
 		{
 			LOGGER.severe("ServletException: " + bde.getMessage());
 			ServletUtils.sendMessage(new Message("Internal Server Error",
-					"500", bde.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					"PRSR09", bde.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		catch (NoDataReceivedException ndre)
 		{
 			LOGGER.severe("NoDataReceivedException: " + ndre.getMessage());
 			ServletUtils.sendMessage(new Message("Bad Request",
-					"400", ndre.getMessage()), res, HttpServletResponse.SC_BAD_REQUEST);
+					"PRSR10", ndre.getMessage()), res, HttpServletResponse.SC_BAD_REQUEST);
 		}
 		catch(ParameterNotDefinedException pnde)
 		{
 			LOGGER.severe("ParameterNotDefinedException: " + pnde.getMessage());
 			ServletUtils.sendMessage(new Message("Not found",
-					"404", pnde.getMessage()), res, HttpServletResponse.SC_NOT_FOUND);
+					"PRSR11", pnde.getMessage()), res, HttpServletResponse.SC_NOT_FOUND);
 		}
 
 		return;
@@ -362,6 +442,40 @@ public class ParseServlet extends AbstractDatabaseServlet
 			throw new ServletException("Unexpected parameter declaration, needed time parameter, found " + param.getClass());
 		}
 
+		return toRet;
+	}
+
+	private Place findLatestOpenedPlace(Set<Place> pset)
+	{
+		Place toRet = null;
+		for(Place p : pset)
+		{
+			if(toRet == null)
+			{
+				toRet = p;
+			}
+			else if(p.getClosing().isAfter(toRet.getClosing()))
+			{
+				toRet = p;
+			}
+		}
+		return toRet;
+	}
+
+	private Place findEarliestOpeningPlace(Set<Place> pset)
+	{
+		Place toRet = null;
+		for(Place p : pset)
+		{
+			if(toRet == null)
+			{
+				toRet = p;
+			}
+			else if(p.getOpening().isBefore(toRet.getOpening()))
+			{
+				toRet = p;
+			}
+		}
 		return toRet;
 	}
 }

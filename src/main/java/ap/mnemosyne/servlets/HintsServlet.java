@@ -3,14 +3,20 @@ package ap.mnemosyne.servlets;
 import ap.mnemosyne.database.GetTasksByUserDatabase;
 import ap.mnemosyne.database.GetUserDefinedParametersDatabase;
 import ap.mnemosyne.enums.ParamsName;
+import ap.mnemosyne.exceptions.NoDataReceivedException;
+import ap.mnemosyne.places.PlacesManager;
 import ap.mnemosyne.resources.*;
 import ap.mnemosyne.util.ServletUtils;
+import ap.mnemosyne.util.TimeUtils;
+import ap.mnemosyne.util.Tuple;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
@@ -19,14 +25,31 @@ import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class HintsServlet extends AbstractDatabaseServlet
 {
 	private final int METERS_DISTANCE_AT_PLACE = 200;
+	private final int TIME_AT_MINUTES = 15;
+	private final int TIME_BEFORE_MINUTES = 30;
+	private final int TIME_AFTER_MINUTES = 5;
+	private final int TIME_MAX_SLACK_MINUTES = 15;
+	//private final int
 	private final Logger LOGGER = Logger.getLogger(ParseServlet.class.getName());
+	private PlacesManager pman;
+
+	public void init(ServletConfig config) throws ServletException
+	{
+		LOGGER.setLevel(Level.INFO);
+		super.init(config);
+		LOGGER.info("Initializing ParseServlet..");
+		pman = new PlacesManager();
+		LOGGER.info("Initializing ParseServlet.. Done");
+	}
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
@@ -96,7 +119,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 		}
 		else if(lat < 0 && lon < 0 && (ssid == null  || cellID  < 0))
 		{
-			LOGGER.info("Not Acceptable: Parameters sent are not sufficient, specify lat and lon");
+			LOGGER.info("Not Acceptable: Parameters sent are not sufficient, specify lat and lon (ssid: " + ssid + " cellID: " + cellID + ")");
 			ServletUtils.sendMessage(new Message("Not Acceptable",
 					"406", "Parameters sent are not sufficient, specify lat and lon"), res, HttpServletResponse.SC_NOT_ACCEPTABLE);
 			return;
@@ -118,22 +141,83 @@ public class HintsServlet extends AbstractDatabaseServlet
 					.getUserDefinedParameters();
 			if (lat >= 0 && lon >= 0)
 			{
-				position = resolvePosition(user, plist, new Point(lat, lon), phoneTime);
+				position = resolvePosition(plist, new Point(lat, lon), phoneTime);
 			}
 			else
 			{
-				position = resolvePosition(user, plist, ssid, cellID, phoneTime);
+				position = resolvePosition(plist, ssid, cellID, phoneTime);
 				if (position == null)
 				{
-					LOGGER.info("Not Acceptable: Parameters sent are not sufficient, specify lat and lon");
+					LOGGER.info("Not Acceptable: Parameters sent are not sufficient (position is null), specify lat and lon");
 					ServletUtils.sendMessage(new Message("Not Acceptable",
-							"406", "Parameters sent are not sufficient, specify lat and lon"), res, HttpServletResponse.SC_NOT_ACCEPTABLE);
+							"406", "Parameters sent are not sufficient (position is null), specify lat and lon"), res, HttpServletResponse.SC_NOT_ACCEPTABLE);
 					return;
 				}
 			}
 
 			List<Task> tasks = new GetTasksByUserDatabase(getDataSource().getConnection(), user).getTasksByUser();
-			List<Task> doable = new ArrayList<>();
+			List<Integer> doable = new ArrayList<>();
+
+			for(Task t : tasks)
+			{
+				if(!t.isDoneToday() && !t.isFailed())
+				{
+					if(position != ParamsName.location_work || (position == ParamsName.location_work && t.isPossibleAtWork()))
+					{
+						if(t.getConstr() == null)
+						{
+
+						}
+						else if (t.getConstr() instanceof TaskTimeConstraint)
+						{
+							//computing nearest place where to satisfy this task
+							Tuple<Place, Integer> pair = null;
+							int dist = 0;
+							for(Place p : t.getPlacesToSatisfy())
+							{
+								//At this point, position == null means that we already asked for lat/lon
+								if(position != null)
+								{
+									dist = distanceInMeters(p.getCoordinates(), ((LocationParameter) plist.get(position)).getLocation());
+								}
+								else
+								{
+									dist = distanceInMeters(p.getCoordinates(), new Point(lat,lon));
+								}
+								if(pair == null || dist<pair.getRight())
+								{
+									pair = new Tuple<>(p, dist);
+								}
+							}
+
+							Point my;
+							if(position != null)
+								my = ((LocationParameter) plist.get(position)).getLocation();
+							else
+								my = new Point(lat,lon);
+
+							int timeToNearest = pman.getMinutesToDestination(my, pair.getLeft().getCoordinates());
+
+							switch (t.getConstr().getType())
+							{
+								case at:
+
+									break;
+
+								case before:
+									break;
+
+								case after:
+									break;
+							}
+						}
+						else if (t.getConstr() instanceof TaskPlaceConstraint)
+						{
+
+						}
+					}
+				}
+			}
 
 			//TODO complete
 		}
@@ -163,11 +247,17 @@ public class HintsServlet extends AbstractDatabaseServlet
 			ServletUtils.sendMessage(new Message("ClassNotFoundException",
 					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
+		catch (NoDataReceivedException e)
+		{
+			LOGGER.severe("NoDataReceivedException: " + e.getMessage());
+			ServletUtils.sendMessage(new Message("NoDataReceivedException",
+					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
 
 		LOGGER.info("Incoming request.. Completed");
 	}
 
-	private ParamsName resolvePosition(User u, Map<ParamsName, Parameter> plist, String ssid, int cellID, LocalTime givenTime) throws SQLException
+	private ParamsName resolvePosition(Map<ParamsName, Parameter> plist, String ssid, int cellID, LocalTime givenTime)
 	{
 		LocationParameter house = (LocationParameter) plist.get(ParamsName.valueOf("location_house"));
 		LocationParameter work = (LocationParameter) plist.get(ParamsName.valueOf("location_work"));
@@ -178,7 +268,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 			LOGGER.info("User is at its house (parameters are ssid: " + ssid + " cellID: " + cellID + " time: " + givenTime + ")");
 			return ParamsName.location_house;
 		}
-		else if(work.getSSID().equals(ssid) && work.getCellID() == cellID && timeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
+		else if(work.getSSID().equals(ssid) && work.getCellID() == cellID && TimeUtils.isTimeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
 		{
 			LOGGER.info("User is at its workplace (parameters are ssid: " + ssid + " cellID: " + cellID + " time: " + givenTime + ")");
 			return ParamsName.location_work;
@@ -187,26 +277,27 @@ public class HintsServlet extends AbstractDatabaseServlet
 		return null;
 	}
 
-	private ParamsName resolvePosition(User u, Map<ParamsName, Parameter> plist, Point givenPoint, LocalTime givenTime) throws SQLException, TransformException, FactoryException
+	private ParamsName resolvePosition(Map<ParamsName, Parameter> plist, Point givenPoint, LocalTime givenTime) throws TransformException, FactoryException
 	{
 		org.locationtech.jts.geom.Point gisGivenPoint = givenPoint.toJTSPoint();
-		org.locationtech.jts.geom.Point gisHousePoint = ((LocationParameter) plist.get(ParamsName.valueOf("location_house"))).getLocation().toJTSPoint();
-		org.locationtech.jts.geom.Point gisWorkPoint = ((LocationParameter) plist.get(ParamsName.valueOf("location_work"))).getLocation().toJTSPoint();
+		Point housePoint = ((LocationParameter) plist.get(ParamsName.valueOf("location_house"))).getLocation();
+		Point workPoint = ((LocationParameter) plist.get(ParamsName.valueOf("location_work"))).getLocation();
 		TimeParameter workTime = (TimeParameter) plist.get(ParamsName.valueOf("time_work"));
 
 		if(workTime == null)
 		{
 			//just set an impossible work time
-			workTime = new TimeParameter(ParamsName.valueOf("time_work"), u.getEmail(),
+			//AKA starts and finishes at the same time
+			workTime = new TimeParameter(ParamsName.valueOf("time_work"), null,
 					LocalTime.of(0,0), LocalTime.of(0,0));
 		}
 
 		CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:4326");
 
-		int houseDistance = (int) JTS.orthodromicDistance(gisGivenPoint.getCoordinate(), gisHousePoint.getCoordinate(), sourceCRS);
-		int workDistance = (int) JTS.orthodromicDistance(gisGivenPoint.getCoordinate(), gisWorkPoint.getCoordinate(), sourceCRS);
+		int houseDistance = distanceInMeters(givenPoint, housePoint);
+		int workDistance = distanceInMeters(givenPoint, workPoint);
 
-		if(workDistance <= METERS_DISTANCE_AT_PLACE && timeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
+		if(workDistance <= METERS_DISTANCE_AT_PLACE && TimeUtils.isTimeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
 		{
 			LOGGER.info("User is at its workplace (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
 					" distance: " + houseDistance + " time: " + givenTime + ")");
@@ -219,14 +310,18 @@ public class HintsServlet extends AbstractDatabaseServlet
 			return ParamsName.location_house;
 		}
 
+		LOGGER.info("User seems to be outside (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
+				" distance from house: " + houseDistance + " distance from work: " + workDistance + " time: " + givenTime + ")");
 		return null;
 	}
 
-	private boolean timeBetween(LocalTime time, LocalTime from, LocalTime to)
+	private int distanceInMeters(Point one, Point two) throws FactoryException, TransformException
 	{
-		if(time.isAfter(from) && time.isBefore(to))
-			return true;
+		org.locationtech.jts.geom.Point gisPointOne = one.toJTSPoint();
+		org.locationtech.jts.geom.Point gisPointTwo = two.toJTSPoint();
+		CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:4326");
 
-		return false;
+		return (int) JTS.orthodromicDistance(gisPointOne.getCoordinate(), gisPointTwo.getCoordinate(), sourceCRS);
+
 	}
 }

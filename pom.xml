@@ -109,6 +109,13 @@
 					<include>**/*.owl</include>
 				</includes>
 			</resource>
+			<resource>
+				<targetPath>${basedir}/target/${project.artifactId}/resources/APIKeys</targetPath>
+				<directory>${basedir}/src/main/webapp/resources/APIKeys</directory>
+				<includes>
+					<include>**/*.key</include>
+				</includes>
+			</resource>
 		</resources>
 	</build>
 

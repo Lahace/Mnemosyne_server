@@ -39,7 +39,6 @@ public class TaskTimeConstraint extends TaskConstraint
 		return toTime;
 	}
 
-
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException
 	{

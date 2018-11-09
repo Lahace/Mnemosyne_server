@@ -4,9 +4,7 @@ import ap.mnemosyne.exceptions.NoDataReceivedException;
 import ap.mnemosyne.resources.Place;
 import ap.mnemosyne.resources.Point;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PlacesManager
 {
@@ -16,8 +14,8 @@ public class PlacesManager
 	{
 		//TODO: load array with config file
 		classList = new HashSet<>();
-
 		classList.add(new OpenStreetMapPlaces());
+		classList.add(new OpenRoutePlaces());
 	}
 
 	public Set<Place> getPlacesFromQuery(String query)
@@ -51,5 +49,28 @@ public class PlacesManager
 		{
 			return null;
 		}
+	}
+
+	public int getMinutesToDestination(Point from, Point to) throws NoDataReceivedException
+	{
+		List<Integer> times = new ArrayList<>();
+		for(PlacesProvider p : classList)
+		{
+			try
+			{
+				int time = p.getMinutesToDestination(from,to);
+				if(time>=0)
+				{
+					times.add(time);
+				}
+			}
+			catch (NoDataReceivedException ndre)
+			{
+				//ignore
+			}
+		}
+
+		//average the result
+		return (times.stream().mapToInt(Integer::intValue).sum())/times.size();
 	}
 }
