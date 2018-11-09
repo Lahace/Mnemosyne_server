@@ -37,21 +37,13 @@ public class PlacesManager
 		return toRet;
 	}
 
-	public Place getPlacesFromPoint(Point point)
+	public Place getPlacesFromPoint(Point point) throws NoDataReceivedException
 	{
 		//TODO: choose the best provider for places
-
-		try
-		{
-			return classList.iterator().next().getPlaceFromPoint(point);
-		}
-		catch (NoDataReceivedException e)
-		{
-			return null;
-		}
+		return classList.iterator().next().getPlaceFromPoint(point);
 	}
 
-	public int getMinutesToDestination(Point from, Point to) throws NoDataReceivedException
+	public int getMinutesToDestination(Point from, Point to)
 	{
 		List<Integer> times = new ArrayList<>();
 		for(PlacesProvider p : classList)

@@ -116,7 +116,6 @@ public class ParseServlet extends AbstractDatabaseServlet
 				case location_item:
 					//TODO: UPDATE places with user's current position
 					my = pman.getPlacesFromPoint(new Point(lat,lon));
-					if(my == null) throw new NoDataReceivedException("No data received with current user lat/lon");
 					List<String> places = new SearchPlacesByItemDatabase(getDataSource().getConnection(), tt.getTextualAction().getSubject()).searchPlacesByItem();
 					if(places.isEmpty())
 					{
@@ -172,7 +171,6 @@ public class ParseServlet extends AbstractDatabaseServlet
 					{
 						point = ((LocationParameter) param).getLocation();
 						my = pman.getPlacesFromPoint(point);
-						if(my == null) throw new NoDataReceivedException("No data received with lat/lon for parameter" + p.toString());
 						placesToSatisfy.add(my);
 					}
 					else
@@ -194,7 +192,6 @@ public class ParseServlet extends AbstractDatabaseServlet
 					{
 						point = ((LocationParameter) param).getLocation();
 						my = pman.getPlacesFromPoint(point);
-						if(my == null) throw new NoDataReceivedException("No data received with lat/lon for parameter" + p.toString());
 						placesToSatisfy.add(my);
 					}
 					else
@@ -283,8 +280,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 					//changing constraint to match with places' closing/opening time
 					//getting earliest opening place and latest closing place
 
-					Place maxClosing = findLatestOpenedPlace(placesToSatisfy);
-					Place minOpening = findEarliestOpeningPlace(placesToSatisfy);
+					Place maxClosing = TimeUtils.findLatestOpenedPlace(placesToSatisfy);
+					Place minOpening = TimeUtils.findEarliestOpeningPlace(placesToSatisfy);
 
 					if (pair.getRight().equals(ConstraintTemporalType.before) && specifiedTime.isAfter(maxClosing.getClosing()))
 					{
@@ -364,6 +361,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 			LOGGER.info("Creating task..");
 
 			Task t = new Task(-1, user, name ,constr, possibleAtWork, repeatable, doneToday, failed, placesToSatisfy);
+			new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			t.toJSON(res.getOutputStream());
@@ -411,7 +409,6 @@ public class ParseServlet extends AbstractDatabaseServlet
 		{
 			Point point = ((LocationParameter) param).getLocation();
 			Place my = pman.getPlacesFromPoint(point);
-			if(my == null) throw new NoDataReceivedException("No data received with lat/lon for parameter" + location.toString());
 			toRet = new TaskPlaceConstraint(my, location,
 					ConstraintTemporalType.valueOf(resolveMap.get("timing")), NormalizedActions.valueOf(resolveMap.get("normalized_action")));
 		}
@@ -442,40 +439,6 @@ public class ParseServlet extends AbstractDatabaseServlet
 			throw new ServletException("Unexpected parameter declaration, needed time parameter, found " + param.getClass());
 		}
 
-		return toRet;
-	}
-
-	private Place findLatestOpenedPlace(Set<Place> pset)
-	{
-		Place toRet = null;
-		for(Place p : pset)
-		{
-			if(toRet == null)
-			{
-				toRet = p;
-			}
-			else if(p.getClosing().isAfter(toRet.getClosing()))
-			{
-				toRet = p;
-			}
-		}
-		return toRet;
-	}
-
-	private Place findEarliestOpeningPlace(Set<Place> pset)
-	{
-		Place toRet = null;
-		for(Place p : pset)
-		{
-			if(toRet == null)
-			{
-				toRet = p;
-			}
-			else if(p.getOpening().isBefore(toRet.getOpening()))
-			{
-				toRet = p;
-			}
-		}
 		return toRet;
 	}
 }

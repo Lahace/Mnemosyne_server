@@ -2,6 +2,7 @@ package ap.mnemosyne.servlets;
 
 import ap.mnemosyne.database.GetTasksByUserDatabase;
 import ap.mnemosyne.database.GetUserDefinedParametersDatabase;
+import ap.mnemosyne.database.UpdateTaskDatabase;
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.exceptions.NoDataReceivedException;
 import ap.mnemosyne.places.PlacesManager;
@@ -25,21 +26,20 @@ import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class HintsServlet extends AbstractDatabaseServlet
 {
-	private final int METERS_DISTANCE_AT_PLACE = 200;
-	private final int TIME_AT_MINUTES = 15;
-	private final int TIME_BEFORE_MINUTES = 30;
-	private final int TIME_AFTER_MINUTES = 5;
+	private final int LOCATION_RADIUS_METERS = 150;
+	private final int TIME_NOTICE_MINUTES = 30;
 	private final int TIME_MAX_SLACK_MINUTES = 15;
+	private final int LOCATION_INTEREST_DISTANCE_METERS = 800;
 	//private final int
-	private final Logger LOGGER = Logger.getLogger(ParseServlet.class.getName());
+	private final Logger LOGGER = Logger.getLogger(HintsServlet.class.getName());
 	private PlacesManager pman;
 
 	public void init(ServletConfig config) throws ServletException
@@ -156,7 +156,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 			}
 
 			List<Task> tasks = new GetTasksByUserDatabase(getDataSource().getConnection(), user).getTasksByUser();
-			List<Integer> doable = new ArrayList<>();
+			List<Hint> doable = new ArrayList<>();
 
 			for(Task t : tasks)
 			{
@@ -166,60 +166,134 @@ public class HintsServlet extends AbstractDatabaseServlet
 					{
 						if(t.getConstr() == null)
 						{
-
+							//TODO
 						}
 						else if (t.getConstr() instanceof TaskTimeConstraint)
 						{
-							//computing nearest place where to satisfy this task
-							Tuple<Place, Integer> pair = null;
-							int dist = 0;
-							for(Place p : t.getPlacesToSatisfy())
-							{
-								//At this point, position == null means that we already asked for lat/lon
-								if(position != null)
-								{
-									dist = distanceInMeters(p.getCoordinates(), ((LocationParameter) plist.get(position)).getLocation());
-								}
-								else
-								{
-									dist = distanceInMeters(p.getCoordinates(), new Point(lat,lon));
-								}
-								if(pair == null || dist<pair.getRight())
-								{
-									pair = new Tuple<>(p, dist);
-								}
-							}
-
+							Tuple<Place, Integer> nearest = null;
+							int timeToNearest;
 							Point my;
-							if(position != null)
-								my = ((LocationParameter) plist.get(position)).getLocation();
-							else
-								my = new Point(lat,lon);
-
-							int timeToNearest = pman.getMinutesToDestination(my, pair.getLeft().getCoordinates());
 
 							switch (t.getConstr().getType())
 							{
 								case at:
+									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime))
+									{
+										setTaskFailed(t, user);
+										break;
+									}
+									//computing nearest place where to satisfy this task
+									//At this point, position == null means that we already asked for lat/lon
+									nearest = null;
+									if(position != null)
+									{
+										nearest = getClosestToMeFromList(((LocationParameter) plist.get(position)).getLocation(), t.getPlacesToSatisfy());
+									}
+									else
+									{
+										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
+									}
+
+									if(position != null)
+										my = ((LocationParameter) plist.get(position)).getLocation();
+									else
+										my = new Point(lat,lon);
+
+									timeToNearest = pman.getMinutesToDestination(my, nearest.getLeft().getCoordinates());
+
+									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime.minusMinutes(timeToNearest)))
+									{
+										doable.add(new Hint(t.getId(), true));
+									}
+									else if(phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES)
+											.minusMinutes(timeToNearest).minusMinutes(TIME_NOTICE_MINUTES)))
+									{
+										doable.add(new Hint(t.getId(), false));
+									}
 
 									break;
 
 								case before:
+									if(((TaskTimeConstraint) t.getConstr()).getFromTime().isBefore(phoneTime))
+									{
+										setTaskFailed(t, user);
+										break;
+									}
+
+									nearest = null;
+									if(position != null)
+									{
+										nearest = getClosestToMeFromList(((LocationParameter) plist.get(position)).getLocation(), t.getPlacesToSatisfy());
+									}
+									else
+									{
+										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
+									}
+
+									if(position != null)
+										my = ((LocationParameter) plist.get(position)).getLocation();
+									else
+										my = new Point(lat,lon);
+
+									timeToNearest = pman.getMinutesToDestination(my, nearest.getLeft().getCoordinates());
+
+									if(((TaskTimeConstraint) t.getConstr()).getFromTime().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
+									{
+										doable.add(new Hint(t.getId(), true));
+									}
+									if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS)
+									{
+										doable.add(new Hint(t.getId(), false));
+									}
+
 									break;
 
 								case after:
+									Place last = TimeUtils.findLatestOpenedPlace(t.getPlacesToSatisfy());
+									if(last.getClosing().isBefore(phoneTime))
+									{
+										setTaskFailed(t, user);
+										break;
+									}
+
+									nearest = null;
+									if(position != null)
+									{
+										nearest = getClosestToMeFromList(((LocationParameter) plist.get(position)).getLocation(), t.getPlacesToSatisfy());
+									}
+									else
+									{
+										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
+									}
+
+									if(position != null)
+										my = ((LocationParameter) plist.get(position)).getLocation();
+									else
+										my = new Point(lat,lon);
+
+									timeToNearest = pman.getMinutesToDestination(my, nearest.getLeft().getCoordinates());
+
+									if(last.getClosing().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
+									{
+										doable.add(new Hint(t.getId(), true));
+									}
+									if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS && phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime()))
+									{
+										doable.add(new Hint(t.getId(), false));
+									}
+
 									break;
 							}
 						}
 						else if (t.getConstr() instanceof TaskPlaceConstraint)
 						{
-
+							//TODO
 						}
 					}
 				}
 			}
 
-			//TODO complete
+			new ResourceList<Hint>(doable).toJSON(res.getOutputStream());
 		}
 		catch (SQLException sqle)
 		{
@@ -245,12 +319,6 @@ public class HintsServlet extends AbstractDatabaseServlet
 		{
 			LOGGER.severe("ClassNotFoundException: " + e.getMessage());
 			ServletUtils.sendMessage(new Message("ClassNotFoundException",
-					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		}
-		catch (NoDataReceivedException e)
-		{
-			LOGGER.severe("NoDataReceivedException: " + e.getMessage());
-			ServletUtils.sendMessage(new Message("NoDataReceivedException",
 					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
@@ -297,13 +365,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 		int houseDistance = distanceInMeters(givenPoint, housePoint);
 		int workDistance = distanceInMeters(givenPoint, workPoint);
 
-		if(workDistance <= METERS_DISTANCE_AT_PLACE && TimeUtils.isTimeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
+		if(workDistance <= LOCATION_RADIUS_METERS && TimeUtils.isTimeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
 		{
 			LOGGER.info("User is at its workplace (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
 					" distance: " + houseDistance + " time: " + givenTime + ")");
 			return ParamsName.location_work;
 		}
-		else if(houseDistance <= METERS_DISTANCE_AT_PLACE)
+		else if(houseDistance <= LOCATION_RADIUS_METERS)
 		{
 			LOGGER.info("User is at its house (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
 					" distance: " + houseDistance + " time: " + givenTime + ")");
@@ -322,6 +390,30 @@ public class HintsServlet extends AbstractDatabaseServlet
 		CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:4326");
 
 		return (int) JTS.orthodromicDistance(gisPointOne.getCoordinate(), gisPointTwo.getCoordinate(), sourceCRS);
+	}
 
+	private Tuple<Place, Integer> getClosestToMeFromList(Point myPosition, Set<Place> plist) throws FactoryException, TransformException
+	{
+		Tuple<Place, Integer> pair = null;
+
+		if(plist.isEmpty()) return null;
+
+		int dist = 0;
+		for(Place p : plist)
+		{
+			dist = distanceInMeters(p.getCoordinates(), myPosition);
+
+			if(pair == null || dist<pair.getRight())
+			{
+				pair = new Tuple<>(p, dist);
+			}
+		}
+		return pair;
+	}
+
+	private void setTaskFailed(Task t, User u) throws SQLException
+	{
+		Task tNew = new Task(t.getId(), t.getUser(),t.getName(),t.getConstr(), t.isPossibleAtWork(), t.isRepeatable(), t.isDoneToday(), true, t.getPlacesToSatisfy());
+		new UpdateTaskDatabase(getDataSource().getConnection(), tNew, u);
 	}
 }

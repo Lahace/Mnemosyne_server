@@ -28,7 +28,7 @@ import java.util.List;
 public class OpenStreetMapPlaces implements PlacesProvider
 {
 
-	private static long lastRequest = 0;
+	private static Long lastRequest = new Long(0);
 	private final static long msTimeBetweenRequests = 1000;
 	private final String requestUrl = "https://nominatim.openstreetmap.org/search";
 	private final String requestUrlReverse = "https://nominatim.openstreetmap.org/reverse";
@@ -36,7 +36,11 @@ public class OpenStreetMapPlaces implements PlacesProvider
 	@Override
 	public List<Place> getPlacesFromQuery(String query) throws RuntimeException, NoDataReceivedException
 	{
-		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
+		long timeWait = 0;
+		synchronized (lastRequest)
+		{
+			timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
+		}
 
 		if(timeWait<0)
 		{
@@ -69,7 +73,7 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			String body = handler.handleResponse(resp);
 			ObjectMapper map = new ObjectMapper();
 			JsonNode obj = map.readTree(body);
-			if(obj.size() == 0) throw new NoDataReceivedException("No data received with this query");
+			if(obj.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this query (" + query + ")");
 
 			for(JsonNode node : obj)
 			{
@@ -111,15 +115,21 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		{
 			throw new RuntimeException(e);
 		}
-
-		lastRequest = System.currentTimeMillis();
+		synchronized (lastRequest)
+		{
+			lastRequest = System.currentTimeMillis();
+		}
 		return toRet;
 	}
 
 	@Override
 	public Place getPlaceFromPoint(Point point) throws NoDataReceivedException
 	{
-		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
+		long timeWait;
+		synchronized (lastRequest)
+		{
+			timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
+		}
 
 		if(timeWait<0)
 		{
@@ -151,7 +161,7 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			String body = handler.handleResponse(resp);
 			ObjectMapper map = new ObjectMapper();
 			JsonNode node = map.readTree(body);
-			if(node.size() == 0) throw new NoDataReceivedException("No data received with this lat/lon");
+			if(node.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this lat/lon " + node);
 
 			JsonNode address = node.get("address");
 			String name = null;
@@ -191,13 +201,15 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		{
 			throw new RuntimeException(e);
 		}
-
-		lastRequest = System.currentTimeMillis();
+		synchronized (lastRequest)
+		{
+			lastRequest = System.currentTimeMillis();
+		}
 
 		if(p.getTown() == null)
 		{
 			//If coordinates are off, no town is returned
-			throw new NoDataReceivedException("Invalid data received");
+			throw new NoDataReceivedException("OpenStreetMaps: Invalid data received");
 		}
 		return p;
 	}

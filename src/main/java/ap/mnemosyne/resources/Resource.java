@@ -37,7 +37,9 @@ import java.io.*;
 		@JsonSubTypes.Type(value = Message.class),
 		@JsonSubTypes.Type(value = TaskConstraint.class),
 		@JsonSubTypes.Type(value = Point.class),
-		@JsonSubTypes.Type(value = Place.class)
+		@JsonSubTypes.Type(value = Place.class),
+		@JsonSubTypes.Type(value = Hint.class),
+		@JsonSubTypes.Type(value = Parameter.class)
 })
 public abstract class Resource {
 
