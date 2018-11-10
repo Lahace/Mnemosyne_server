@@ -17,13 +17,20 @@ import java.util.Objects;
 public class Hint extends Resource
 {
 	private int taskID;
+	private Place closestPlace;
 	private boolean urgent;
 
 	@JsonCreator
-	public Hint(@JsonProperty("task-id") int taskID, @JsonProperty("urgent") boolean urgent)
+	public Hint(@JsonProperty("task-id") int taskID, @JsonProperty("closest-place") Place closestPlace ,@JsonProperty("urgent") boolean urgent)
 	{
 		this.taskID = taskID;
 		this.urgent = urgent;
+		this.closestPlace = closestPlace;
+	}
+
+	public Place getClosestPlace()
+	{
+		return closestPlace;
 	}
 
 	public int getTaskID()

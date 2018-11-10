@@ -81,42 +81,15 @@
 				<version>3.2.0</version>
 				<configuration>
 					<webXml>${basedir}/src/main/webapp/WEB-INF/web.xml</webXml>
+					<webResources>
+						<resource>
+							<!-- this is relative to the pom.xml directory -->
+							<directory>src/main/resources</directory>
+						</resource>
+					</webResources>
 				</configuration>
-			</plugin>		
+			</plugin>
 		</plugins>
-		
-		<resources>
-			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}/jsp</targetPath>
-				<directory>${basedir}/src/main/webapp/jsp</directory>
-				<includes>
-					<include>**/*.*</include>
-				</includes>
-			</resource>
-			
-			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}/META-INF</targetPath>
-				<directory>${basedir}/src/main/webapp/META-INF</directory>
-				<includes>
-					<include>**/*.*</include>
-				</includes>
-			</resource>
-
-			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}/resources/ontology</targetPath>
-				<directory>${basedir}/src/main/webapp/resources/ontology</directory>
-				<includes>
-					<include>**/*.owl</include>
-				</includes>
-			</resource>
-			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}/resources/APIKeys</targetPath>
-				<directory>${basedir}/src/main/webapp/resources/APIKeys</directory>
-				<includes>
-					<include>**/*.key</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
 
 	<repositories>

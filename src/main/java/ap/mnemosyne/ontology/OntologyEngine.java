@@ -15,7 +15,7 @@ import java.net.URL;
 @Deprecated
 public class OntologyEngine
 {
-	public final URL ONTOLOGY_LOCATION = getClass().getResource("/ontology/Ontology.owl");
+	public final URL ONTOLOGY_LOCATION = getClass().getResource("/ap/mnemosyne/ontology/Ontology.owl");
 
 	private final OntModel MODEL;
 	private final String REPLACE_CHAR = "@=@";

@@ -18,7 +18,6 @@ import org.apache.http.ssl.SSLContextBuilder;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;

@@ -4,7 +4,6 @@ import ap.mnemosyne.database.GetTasksByUserDatabase;
 import ap.mnemosyne.database.GetUserDefinedParametersDatabase;
 import ap.mnemosyne.database.UpdateTaskDatabase;
 import ap.mnemosyne.enums.ParamsName;
-import ap.mnemosyne.exceptions.NoDataReceivedException;
 import ap.mnemosyne.places.PlacesManager;
 import ap.mnemosyne.resources.*;
 import ap.mnemosyne.util.ServletUtils;
@@ -160,6 +159,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 			for(Task t : tasks)
 			{
+				LOGGER.info("Examining task: " + t.getName());
 				if(!t.isDoneToday() && !t.isFailed())
 				{
 					if(position != ParamsName.location_work || (position == ParamsName.location_work && t.isPossibleAtWork()))
@@ -177,8 +177,10 @@ public class HintsServlet extends AbstractDatabaseServlet
 							switch (t.getConstr().getType())
 							{
 								case at:
+									LOGGER.info("Found: " + t.getConstr().getType());
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime))
 									{
+										LOGGER.info("Task has failed");
 										setTaskFailed(t, user);
 										break;
 									}
@@ -201,21 +203,25 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 									timeToNearest = pman.getMinutesToDestination(my, nearest.getLeft().getCoordinates());
 
-									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime.minusMinutes(timeToNearest)))
+									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime.plusMinutes(timeToNearest)))
 									{
-										doable.add(new Hint(t.getId(), true));
+										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft() ,true));
 									}
 									else if(phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES)
 											.minusMinutes(timeToNearest).minusMinutes(TIME_NOTICE_MINUTES)))
 									{
-										doable.add(new Hint(t.getId(), false));
+										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft(), false));
 									}
 
 									break;
 
 								case before:
+									LOGGER.info("Found: " + t.getConstr().getType());
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().isBefore(phoneTime))
 									{
+										LOGGER.info("Task has failed");
 										setTaskFailed(t, user);
 										break;
 									}
@@ -239,19 +245,23 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
 									{
-										doable.add(new Hint(t.getId(), true));
+										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft(), true));
 									}
-									if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS)
+									else if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS)
 									{
-										doable.add(new Hint(t.getId(), false));
+										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft(), false));
 									}
 
 									break;
 
 								case after:
+									LOGGER.info("Found: " + t.getConstr().getType());
 									Place last = TimeUtils.findLatestOpenedPlace(t.getPlacesToSatisfy());
 									if(last.getClosing().isBefore(phoneTime))
 									{
+										LOGGER.info("Task has failed");
 										setTaskFailed(t, user);
 										break;
 									}
@@ -275,11 +285,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 									if(last.getClosing().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
 									{
-										doable.add(new Hint(t.getId(), true));
+										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft(), true));
 									}
-									if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS && phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime()))
+									else if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS && phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime()))
 									{
-										doable.add(new Hint(t.getId(), false));
+										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft(), false));
 									}
 
 									break;
@@ -293,7 +305,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 				}
 			}
 
-			new ResourceList<Hint>(doable).toJSON(res.getOutputStream());
+			new ResourceList<>(doable).toJSON(res.getOutputStream());
 		}
 		catch (SQLException sqle)
 		{
@@ -411,9 +423,9 @@ public class HintsServlet extends AbstractDatabaseServlet
 		return pair;
 	}
 
-	private void setTaskFailed(Task t, User u) throws SQLException
+	private void setTaskFailed(Task t, User u) throws SQLException, IOException
 	{
 		Task tNew = new Task(t.getId(), t.getUser(),t.getName(),t.getConstr(), t.isPossibleAtWork(), t.isRepeatable(), t.isDoneToday(), true, t.getPlacesToSatisfy());
-		new UpdateTaskDatabase(getDataSource().getConnection(), tNew, u);
+		new UpdateTaskDatabase(getDataSource().getConnection(), tNew, u).updateTask();
 	}
 }

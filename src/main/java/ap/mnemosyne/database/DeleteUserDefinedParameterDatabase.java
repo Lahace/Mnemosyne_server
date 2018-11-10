@@ -1,7 +1,6 @@
 package ap.mnemosyne.database;
 
 import ap.mnemosyne.enums.ParamsName;
-import ap.mnemosyne.resources.Parameter;
 import ap.mnemosyne.resources.User;
 
 import java.sql.*;

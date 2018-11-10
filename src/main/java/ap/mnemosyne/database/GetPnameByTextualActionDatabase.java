@@ -2,8 +2,6 @@ package ap.mnemosyne.database;
 
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.parser.resources.TextualAction;
-import ap.mnemosyne.parser.resources.TextualTask;
-import ap.mnemosyne.resources.User;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

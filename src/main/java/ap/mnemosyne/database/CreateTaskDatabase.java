@@ -2,7 +2,6 @@ package ap.mnemosyne.database;
 
 import ap.mnemosyne.resources.Task;
 import ap.mnemosyne.resources.User;
-import javassist.bytecode.ByteArray;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

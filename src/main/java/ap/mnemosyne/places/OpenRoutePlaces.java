@@ -18,13 +18,10 @@ import org.apache.http.ssl.SSLContextBuilder;
 
 import java.io.*;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class OpenRoutePlaces implements PlacesProvider
 {
@@ -46,19 +43,13 @@ public class OpenRoutePlaces implements PlacesProvider
 	@Override
 	public int getMinutesToDestination(Point from, Point to) throws NoDataReceivedException
 	{
-		URL keyUrl = System.class.getResource("/APIKeys/openroute.key");
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		InputStream input = classLoader.getResourceAsStream("ap/mnemosyne/places/openroute.key");
 		String apiKey = null;
-		try
-		{
-			File key = new File(keyUrl.toURI());
-			Scanner s = new Scanner(key);
-			while(s.hasNext())
-				apiKey = s.next();
-		}
-		catch (URISyntaxException | FileNotFoundException e)
-		{
-			e.printStackTrace();
-		}
+
+		Scanner s = new Scanner(input);
+		while(s.hasNext())
+			apiKey = s.next();
 
 		try
 		{
