@@ -3,6 +3,7 @@ package ap.mnemosyne.servlets;
 import ap.mnemosyne.database.GetTasksByUserDatabase;
 import ap.mnemosyne.database.GetUserDefinedParametersDatabase;
 import ap.mnemosyne.database.UpdateTaskDatabase;
+import ap.mnemosyne.enums.NormalizedActions;
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.places.PlacesManager;
 import ap.mnemosyne.resources.*;
@@ -299,7 +300,57 @@ public class HintsServlet extends AbstractDatabaseServlet
 						}
 						else if (t.getConstr() instanceof TaskPlaceConstraint)
 						{
-							//TODO
+							Point my;
+							switch (t.getConstr().getType())
+							{
+								case at:
+									if(position != null)
+										my = ((LocationParameter) plist.get(position)).getLocation();
+									else
+										my = new Point(lat,lon);
+									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
+									{
+										if(distanceInMeters(my, ((LocationParameter) plist.get(t.getConstr().getParamName())).getLocation()) <= LOCATION_RADIUS_METERS)
+										{
+											doable.add(new Hint(t.getId(), false));
+										}
+									}
+									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
+									{
+										//TODO: need to know previous user's location
+									}
+									break;
+
+								case before:
+									if(position != null)
+										my = ((LocationParameter) plist.get(position)).getLocation();
+									else
+										my = new Point(lat,lon);
+									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
+									{
+
+									}
+									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
+									{
+
+									}
+									break;
+
+								case after:
+									if(position != null)
+										my = ((LocationParameter) plist.get(position)).getLocation();
+									else
+										my = new Point(lat,lon);
+									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
+									{
+
+									}
+									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
+									{
+
+									}
+									break;
+							}
 						}
 					}
 				}

@@ -28,6 +28,13 @@ public class Hint extends Resource
 		this.closestPlace = closestPlace;
 	}
 
+	public Hint(@JsonProperty("task-id") int taskID ,@JsonProperty("urgent") boolean urgent)
+	{
+		this.taskID = taskID;
+		this.urgent = urgent;
+		this.closestPlace = null;
+	}
+
 	public Place getClosestPlace()
 	{
 		return closestPlace;

@@ -94,10 +94,10 @@ public class ParseServlet extends AbstractDatabaseServlet
 		boolean failed = false;
 		Set<Place> placesToSatisfy = new HashSet<>();
 
-		//Resolving Action
 		try
 		{
-			LOGGER.info("Resolving action..");
+
+			LOGGER.info("Checking action validity..");
 			ParamsName p = new GetPnameByTextualActionDatabase(getDataSource().getConnection(), tt.getTextualAction()).getPnameByTextualAction();
 			if(p == null)
 			{
@@ -110,53 +110,15 @@ public class ParseServlet extends AbstractDatabaseServlet
 			Parameter param;
 			Place my;
 			Point point;
+			boolean findPlacesForItem = false;
 			LOGGER.info("Resolving parameter " + p.toString() + " for actions");
 			switch (p)
 			{
 				case location_item:
-					//TODO: UPDATE places with user's current position
-					my = pman.getPlacesFromPoint(new Point(lat,lon));
-					List<String> places = new SearchPlacesByItemDatabase(getDataSource().getConnection(), tt.getTextualAction().getSubject()).searchPlacesByItem();
-					if(places.isEmpty())
-					{
-						LOGGER.warning("FAILED: No places found for item " + tt.getTextualAction().getSubject());
-						ServletUtils.sendMessage(new Message("Not found",
-								"PRSR05", "Could not find places where to find " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_FOUND);
-						return;
-					}
-					for(String s : places)
-					{
-						for (Place place : pman.getPlacesFromQuery(s + " in " + my.getTown() + " in " + my.getState()))
-						{
-							//TODO: add check for closing/opening time
-							placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
-															place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
-						}
-
-						//TODO: add query caching for PlaceManager
-						//Adding also places around known places to satisfy every constraint
-						//eg. if user works 100km away from his/her house, we must find places near his/her house in case constraint is something like "when i get back home"
-						Point housePoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_house)
-								.getUserDefinedParameterByName()).getLocation();
-						Place myHouse = pman.getPlacesFromPoint(housePoint);
-						for (Place place : pman.getPlacesFromQuery(s + " in " + myHouse.getTown() + " in " + my.getState()))
-						{
-							placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
-									place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
-						}
-
-						Point workPoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_work)
-								.getUserDefinedParameterByName()).getLocation();
-						Place myWorkplace = pman.getPlacesFromPoint(workPoint);
-						for (Place place : pman.getPlacesFromQuery(s + " in " + myWorkplace.getTown() + " in " + my.getState()))
-						{
-							placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
-									place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
-						}
-					}
-					if(placesToSatisfy.isEmpty())
-						throw new NoDataReceivedException("No data was received searching for places where to find: " + tt.getTextualAction().getSubject());
-
+					/*Deferring operation since it's quite heavy, we can then return error messages in (for examples) constraints before
+					searching for places
+					*/
+					findPlacesForItem = true;
 					break;
 
 				case location_house:
@@ -201,159 +163,208 @@ public class ParseServlet extends AbstractDatabaseServlet
 					break;
 
 				case location_any:
-					//ignore, empty list means that every place is possible
-					break;
+					//TODO: should be any place
+					throw new ParameterNotDefinedException(p.toString());
 
 				default:
 					throw new ServletException("Could not find parameter " + p);
 			}
 
-			LOGGER.info("Resolving constraints.. ");
+			LOGGER.info("Checking constraints validity.. ");
 
 			//Resolving Constraint
 			//Getting only the first constraint
 			//TODO: add multiple constraint support
-			if(tt.getTextualConstraints().isEmpty())
-			{
-				LOGGER.info("No constraint found");
-				LOGGER.info("Creating task..");
-				Task t = new Task(-1, user, name ,null, possibleAtWork, repeatable, doneToday, failed, placesToSatisfy);
-				res.setStatus(HttpServletResponse.SC_OK);
-				res.setHeader("Content-Type", "application/json; charset=utf-8");
-				t.toJSON(res.getOutputStream());
-				LOGGER.info("Creating Task.. Done");
-			}
-			TextualConstraint current = tt.getTextualConstraints().get(0);
-			boolean parsed;
+			boolean parsed = false;
 			LocalTime specifiedTime = null;
-			try
+			Tuple<String, ConstraintTemporalType> pair = null;
+			if(!tt.getTextualConstraints().isEmpty())
 			{
-				String toParse;
-				//TODO: Add time interval support
-				if(current.getConstraintWord().length() == 2 || current.getConstraintWord().length() == 1 ) toParse = current.getConstraintWord() + ":00";
-				else toParse = current.getConstraintWord();
-				specifiedTime = LocalTime.parse(toParse);
-				parsed = true;
-			}
-			catch (DateTimeParseException dtpe)
-			{
-				dtpe.printStackTrace();
-				parsed = false;
-			}
-
-			if(parsed)
-			{
-				LOGGER.info("Found specific time in constraint: " + specifiedTime);
-				Tuple<String, ConstraintTemporalType> pair = new GetConstraintMarkerFromMarkerDatabase(getDataSource().getConnection(), current.getConstraintMarker()).getConstraintFromMarker();
-				if(pair.getRight() == null)
+				TextualConstraint current = tt.getTextualConstraints().get(0);
+				try
 				{
-					LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintMarker());
-					ServletUtils.sendMessage(new Message("Not implemented",
-							"PRSR06", "Could not find a definition for constraint '" + tt.getTextualConstraints().get(0).getConstraintMarker()
-							+ " " + tt.getTextualConstraints().get(0).getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
-					return;
+					String toParse;
+					//TODO: Add time interval support
+					if (current.getConstraintWord().length() == 2 || current.getConstraintWord().length() == 1)
+						toParse = current.getConstraintWord() + ":00";
+					else toParse = current.getConstraintWord();
+					specifiedTime = LocalTime.parse(toParse);
+					parsed = true;
+				}
+				catch (DateTimeParseException dtpe)
+				{
+					dtpe.printStackTrace();
+					parsed = false;
 				}
 
-				if(!p.equals(ParamsName.location_work) || !p.equals(ParamsName.location_house))
+				if (!parsed)
 				{
-					//Remove every place that's not open at the time specified
-					TimeParameter bed = (TimeParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(),
-							(User) req.getSession().getAttribute("current"), ParamsName.time_bed).getUserDefinedParameterByName();
-					for (Place place : placesToSatisfy)
+					LOGGER.info("Getting resolver record..");
+					Map<String, String> map = new GetConstraintResolveByTextualConstraintDatabase(getDataSource().getConnection(), current).getConstraintResolvesByTextualAction();
+					if (map.isEmpty())
 					{
-						if ((pair.getRight().equals(ConstraintTemporalType.at) && !TimeUtils.isTimeBetween(specifiedTime, place.getOpening(), place.getClosing())) ||
-								(pair.getRight().equals(ConstraintTemporalType.before) && TimeUtils.isTimeBetween(specifiedTime, bed.getToTime(), place.getOpening())) ||
-								(pair.getRight().equals(ConstraintTemporalType.after) && TimeUtils.isTimeBetween(specifiedTime, place.getClosing(), bed.getFromTime())))
-						{
-							placesToSatisfy.remove(place);
-						}
-					}
-
-					if (placesToSatisfy.isEmpty())
-					{
-						LOGGER.warning("FAILED: placesToSatisfy was emptied");
-						ServletUtils.sendMessage(new Message("Bad request",
-								"PRSR07", "No places found that's still open at: " + specifiedTime), res, HttpServletResponse.SC_BAD_REQUEST);
+						LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintWord() + " " + current.getVerb() + " " + current.getConstraintMarker());
+						ServletUtils.sendMessage(new Message("Not implemented",
+								"PRSR06", "Could not find a definition for constraint '" + current.getConstraintMarker()
+								+ " " + current.getVerb() + " " + current.getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 						return;
-					}
-
-					//changing constraint to match with places' closing/opening time
-					//getting earliest opening place and latest closing place
-
-					Place maxClosing = TimeUtils.findLatestOpenedPlace(placesToSatisfy);
-					Place minOpening = TimeUtils.findEarliestOpeningPlace(placesToSatisfy);
-
-					if (pair.getRight().equals(ConstraintTemporalType.before) && specifiedTime.isAfter(maxClosing.getClosing()))
-					{
-						constr = new TaskTimeConstraint(maxClosing.getClosing(), null, ParamsName.time_specified, pair.getRight());
-					}
-					else if (pair.getRight().equals(ConstraintTemporalType.after) && specifiedTime.isBefore(minOpening.getOpening()))
-					{
-						constr = new TaskTimeConstraint(minOpening.getOpening(), null, ParamsName.time_specified, pair.getRight());
 					}
 					else
 					{
-						constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
+						LOGGER.info("Resolving " + ParamsName.valueOf(map.get("parameter")));
+						switch (ParamsName.valueOf(map.get("parameter")))
+						{
+							case location_work:
+								possibleAtWork = true;
+								constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
+								break;
+
+							case location_house:
+								constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
+								break;
+
+							case location_item:
+								throw new ParameterNotDefinedException(p.toString());
+
+							case location_any:
+								//Still not supported
+								throw new ParameterNotDefinedException(p.toString());
+
+							case time_bed:
+								constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
+								break;
+
+							case time_work:
+								constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
+								break;
+
+							case time_lunch:
+								constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
+								break;
+
+							case time_dinner:
+								constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
+								break;
+
+							default:
+								throw new ServletException("Could not find parameter " + p);
+						}
 					}
 				}
 				else
 				{
-					constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
+					LOGGER.info("Found specific time in constraint: " + specifiedTime);
+					pair = new GetConstraintMarkerFromMarkerDatabase(getDataSource().getConnection(), current.getConstraintMarker()).getConstraintFromMarker();
+					if(pair.getRight() == null)
+					{
+						LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintMarker());
+						ServletUtils.sendMessage(new Message("Not implemented",
+								"PRSR06", "Could not find a definition for constraint '" + tt.getTextualConstraints().get(0).getConstraintMarker()
+								+ " " + tt.getTextualConstraints().get(0).getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
+						return;
+					}
 				}
 			}
 			else
 			{
-				LOGGER.info("Getting resolver record..");
-				Map<String, String> map = new GetConstraintResolveByTextualConstraintDatabase(getDataSource().getConnection(), current).getConstraintResolvesByTextualAction();
-				if (map.isEmpty())
+				LOGGER.info("No constraints found");
+			}
+
+			if(findPlacesForItem)
+			{
+				LOGGER.info("Computing places to satisfy action");
+				//TODO: UPDATE places with user's current position
+				my = pman.getPlacesFromPoint(new Point(lat,lon));
+				List<String> places = new SearchPlacesByItemDatabase(getDataSource().getConnection(), tt.getTextualAction().getSubject()).searchPlacesByItem();
+				if(places.isEmpty())
 				{
-					LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintWord() + " " + current.getVerb() + " " + current.getConstraintMarker());
-					ServletUtils.sendMessage(new Message("Not implemented",
-							"PRSR06", "Could not find a definition for constraint '" + current.getConstraintMarker()
-							+ " " + current.getVerb()+ " " + current.getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
+					LOGGER.warning("FAILED: No places found for item " + tt.getTextualAction().getSubject());
+					ServletUtils.sendMessage(new Message("Not found",
+							"PRSR05", "Could not find places where to find " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_FOUND);
 					return;
 				}
-				else
+				for(String s : places)
 				{
-					LOGGER.info("Resolving " + ParamsName.valueOf(map.get("parameter")));
-					switch (ParamsName.valueOf(map.get("parameter")))
+					LOGGER.info(my.toString());
+					for (Place place : pman.getPlacesFromQuery(s + " in " + my.getTown() + " in " + my.getState()))
 					{
-						case location_work:
-							possibleAtWork = true;
-							constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
-							break;
+						//TODO: add check for closing/opening time
+						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
+					}
 
-						case location_house:
-							constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
-							break;
+					//TODO: add query caching for PlaceManager & reduce query number
+					//Adding also places around known places to satisfy every constraint
+					//eg. if user works 100km away from his/her house, we must find places near his/her house in case constraint is something like "when i get back home"
+					Point housePoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_house)
+							.getUserDefinedParameterByName()).getLocation();
+					Place myHouse = pman.getPlacesFromPoint(housePoint);
+					for (Place place : pman.getPlacesFromQuery(s + " in " + myHouse.getTown() + " in " + my.getState()))
+					{
+						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
+					}
 
-						case location_item:
-							throw new ParameterNotDefinedException(p.toString());
+					Point workPoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_work)
+							.getUserDefinedParameterByName()).getLocation();
+					Place myWorkplace = pman.getPlacesFromPoint(workPoint);
+					for (Place place : pman.getPlacesFromQuery(s + " in " + myWorkplace.getTown() + " in " + my.getState()))
+					{
+						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
+					}
+				}
+				if(placesToSatisfy.isEmpty())
+					throw new NoDataReceivedException("No data was received searching for places where to find: " + tt.getTextualAction().getSubject());
 
-						case location_any:
-							throw new ParameterNotDefinedException(p.toString());
+				if(parsed)
+				{
 
-						case time_bed:
-							constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
-							break;
+					if(!p.equals(ParamsName.location_work) || !p.equals(ParamsName.location_house))
+					{
+						//Remove every place that's not open at the time specified
+						TimeParameter bed = (TimeParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(),
+								(User) req.getSession().getAttribute("current"), ParamsName.time_bed).getUserDefinedParameterByName();
+						for (Place place : placesToSatisfy)
+						{
+							if ((pair.getRight().equals(ConstraintTemporalType.at) && !TimeUtils.isTimeBetween(specifiedTime, place.getOpening(), place.getClosing())) ||
+									(pair.getRight().equals(ConstraintTemporalType.before) && TimeUtils.isTimeBetween(specifiedTime, bed.getToTime(), place.getOpening())) ||
+									(pair.getRight().equals(ConstraintTemporalType.after) && TimeUtils.isTimeBetween(specifiedTime, place.getClosing(), bed.getFromTime())))
+							{
+								placesToSatisfy.remove(place);
+							}
+						}
 
-						case time_work:
-							constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
-							break;
+						if (placesToSatisfy.isEmpty())
+						{
+							LOGGER.warning("FAILED: placesToSatisfy was emptied");
+							ServletUtils.sendMessage(new Message("Bad request",
+									"PRSR07", "No places found that's still open at: " + specifiedTime), res, HttpServletResponse.SC_BAD_REQUEST);
+							return;
+						}
 
-						case time_lunch:
-							constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
-							break;
+						//changing constraint to match with places' closing/opening time
+						//getting earliest opening place and latest closing place
 
-						case time_dinner:
-							constr = this.solveTimeConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
-							break;
+						Place maxClosing = TimeUtils.findLatestOpenedPlace(placesToSatisfy);
+						Place minOpening = TimeUtils.findEarliestOpeningPlace(placesToSatisfy);
 
-						case time_closure:
-							throw new ParameterNotDefinedException(p.toString());
-
-						default:
-							throw new ServletException("Could not find parameter " + p);
+						if (pair.getRight().equals(ConstraintTemporalType.before) && specifiedTime.isAfter(maxClosing.getClosing()))
+						{
+							constr = new TaskTimeConstraint(maxClosing.getClosing(), null, ParamsName.time_specified, pair.getRight());
+						}
+						else if (pair.getRight().equals(ConstraintTemporalType.after) && specifiedTime.isBefore(minOpening.getOpening()))
+						{
+							constr = new TaskTimeConstraint(minOpening.getOpening(), null, ParamsName.time_specified, pair.getRight());
+						}
+						else
+						{
+							constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
+						}
+					}
+					else
+					{
+						constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
 					}
 				}
 			}

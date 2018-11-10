@@ -10,7 +10,6 @@ INSERT INTO mnemosyne.parameter(pname) VALUES('time_lunch');
 INSERT INTO mnemosyne.parameter(pname) VALUES('time_bed');
 INSERT INTO mnemosyne.parameter(pname) VALUES('time_work');
 INSERT INTO mnemosyne.parameter(pname) VALUES('time_dinner');
-INSERT INTO mnemosyne.parameter(pname) VALUES('time_closure');
 INSERT INTO mnemosyne.parameter(pname) VALUES('time_specified');
 
 INSERT INTO mnemosyne.defines(email, parameter, type, location_cellID, from_time, to_time) VALUES ('asd@asd.it','time_lunch','time',-1,'12:00', '13:00');
@@ -124,7 +123,7 @@ INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VA
 INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('quando', 'tornare', 'casa', 'location_house');
 INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('prima', 'arrivare', 'casa', 'location_house');
 INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('prima', 'tornare', 'casa', 'location_house');
-INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('quando', 'uscire', 'casa', 'location_house');
+--INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('quando', 'uscire', 'casa', 'location_house');
 INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('prima', 'null', 'pranzo', 'time_lunch');
 INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('dopo', 'null', 'pranzo', 'time_lunch');
 INSERT INTO mnemosyne.wants(constraint_marker,verb,constraint_word,parameter) VALUES ('quando', 'null', 'mangio', 'time_lunch');
