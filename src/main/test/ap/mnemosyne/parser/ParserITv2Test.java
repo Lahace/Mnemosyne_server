@@ -14,7 +14,7 @@ public class ParserITv2Test
 		p.parseString("devo prendere le medicine dopo pranzo");
 		p.parseString("devo pagare il bollo entro domani");
 		p.parseString("devo prendere il pane entro le 16:30");
-		p.parseString("devo prenotare dal dottore entro le 17:30");
+		p.parseString("devo prenotare dal dottore entro le 7:30");
 		p.parseString("devo dar da mangiare al gatto quando torno a casa");
 		p.parseString("devo fare la lavatrice quando torno a casa");
 		p.parseString("devo mettere la crema prima di andare a letto");

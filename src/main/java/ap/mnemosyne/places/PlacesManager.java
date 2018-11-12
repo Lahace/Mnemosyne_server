@@ -18,7 +18,7 @@ public class PlacesManager
 		classList.add(new OpenRoutePlaces());
 	}
 
-	public Set<Place> getPlacesFromQuery(String query) throws NoDataReceivedException
+	public Set<Place> getPlacesFromQuery(String query)
 	{
 		Set<Place> toRet = new HashSet<>();
 		for(PlacesProvider p : classList)

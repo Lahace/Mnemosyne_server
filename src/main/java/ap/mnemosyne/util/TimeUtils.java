@@ -9,8 +9,19 @@ public class TimeUtils
 {
 	public static boolean isTimeBetween(LocalTime time, LocalTime from, LocalTime to)
 	{
-		if(time.isAfter(from) && time.isBefore(to))
+		if(time.equals(from) || time.equals(to))
 			return true;
+
+		if(from.isAfter(to))
+		{
+			if (!(time.isAfter(from) && time.isBefore(to)))
+				return true;
+		}
+		else
+		{
+			if (time.isAfter(from) && time.isBefore(to))
+				return true;
+		}
 
 		return false;
 	}

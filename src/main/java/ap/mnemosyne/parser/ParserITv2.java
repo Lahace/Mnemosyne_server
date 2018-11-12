@@ -18,16 +18,18 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParserITv2
 {
 	private TintPipeline pipeline;
+	private final Logger LOGGER = Logger.getLogger(ParserITv2.class.getName());
 
 	public ParserITv2()
 	{
-		System.out.print("Loading pipeline.. ");
+		LOGGER.info("Loading pipeline.. ");
 		pipeline = new TintPipeline();
 		try
 		{
@@ -37,11 +39,11 @@ public class ParserITv2
 		}
 		catch(IOException ioe)
 		{
-			System.out.print(ioe.getMessage());
+			LOGGER.severe(ioe.getMessage());
 			return;
 		}
 		pipeline.load();
-		System.out.println("Loaded.");
+		LOGGER.info("Loaded.");
 	}
 
 	public TextualTask parseString(String text)
@@ -51,7 +53,7 @@ public class ParserITv2
 
 		//Phase 2
 		TextualTask tt = this.retrieveTextualTask(pre);
-		System.out.println(tt);
+		LOGGER.info(tt.toString());
 
 		return tt;
 	}
@@ -86,7 +88,7 @@ public class ParserITv2
 
 		IndexedWord root = sg.getFirstRoot();
 		String rootValue = root.getString(CoreAnnotations.LemmaAnnotation.class);
-		System.out.println(sg.toCompactString(true));
+		LOGGER.info(sg.toCompactString(true));
 		TextualAction tact = null;
 		List<TextualConstraint> tconstr = new ArrayList<>();
 
@@ -120,7 +122,17 @@ public class ParserITv2
 
 				case "nmod":
 					marker = null;
-					word = sge.getTarget().value();
+					try
+					{
+						//Gotta do this little hack, because docs on how to extract timestamps is scarce
+						word = text.substring(sge.getTarget().beginPosition(), sge.getTarget().endPosition() + 3);
+						if(word.length() == 4) word = "0" + word;
+						LocalTime.parse(word);
+					}
+					catch (StringIndexOutOfBoundsException | DateTimeParseException e)
+					{
+						word = sge.getTarget().value();
+					}
 					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 					{
 						switch(sge2.getRelation().toString())
@@ -140,6 +152,7 @@ public class ParserITv2
 					{
 						//Gotta do this little hack, because docs on how to extract timestamps is scarce
 						word = text.substring(sge.getTarget().beginPosition(), sge.getTarget().endPosition() + 3);
+						if(word.length() == 4) word = "0" + word;
 						LocalTime.parse(word);
 					}
 					catch (StringIndexOutOfBoundsException | DateTimeParseException e)

@@ -3,6 +3,7 @@ package ap.mnemosyne.places;
 import ap.mnemosyne.exceptions.NoDataReceivedException;
 import ap.mnemosyne.resources.Place;
 import ap.mnemosyne.resources.Point;
+import ap.mnemosyne.servlets.ParseServlet;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.ResponseHandler;
@@ -23,6 +24,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class OpenStreetMapPlaces implements PlacesProvider
 {
@@ -31,6 +33,7 @@ public class OpenStreetMapPlaces implements PlacesProvider
 	private final static long msTimeBetweenRequests = 1000;
 	private final String requestUrl = "https://nominatim.openstreetmap.org/search";
 	private final String requestUrlReverse = "https://nominatim.openstreetmap.org/reverse";
+	private final Logger LOGGER = Logger.getLogger(OpenStreetMapPlaces.class.getName());
 
 	@Override
 	public List<Place> getPlacesFromQuery(String query) throws RuntimeException, NoDataReceivedException
@@ -161,6 +164,7 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			ObjectMapper map = new ObjectMapper();
 			JsonNode node = map.readTree(body);
 			if(node.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this lat/lon " + node);
+			LOGGER.info("node: " + node);
 
 			JsonNode address = node.get("address");
 			String name = null;
