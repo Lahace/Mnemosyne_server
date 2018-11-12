@@ -38,23 +38,32 @@ public class OpenStreetMapPlaces implements PlacesProvider
 	@Override
 	public List<Place> getPlacesFromQuery(String query) throws RuntimeException, NoDataReceivedException
 	{
+		LOGGER.info("Resolving places from query.. waiting");
 		long timeWait = 0;
-		synchronized (lastRequest)
+		while (true)
 		{
-			timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
-		}
+			synchronized (lastRequest)
+			{
+				timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
+			}
 
-		if(timeWait<0)
-		{
-			try
+			if (timeWait < 0)
 			{
-				Thread.sleep(-1*timeWait);
+				try
+				{
+					Thread.sleep(-1 * timeWait);
+				}
+				catch (InterruptedException e)
+				{
+					//ignored
+				}
 			}
-			catch (InterruptedException e)
+			else
 			{
-				//ignored
+				break;
 			}
 		}
+		LOGGER.info("Resolving places from query");
 		List<Place> toRet = new ArrayList<>();
 		try
 		{
@@ -73,6 +82,18 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			ResponseHandler<String> handler = new BasicResponseHandler();
 
 			String body = handler.handleResponse(resp);
+			synchronized (lastRequest)
+			{
+				lastRequest = System.currentTimeMillis();
+			}
+			try
+			{
+				LOGGER.info("PlacesFromQuery response: " + body.substring(0, 50) + "..");
+			}
+			catch(StringIndexOutOfBoundsException e)
+			{
+				LOGGER.info("PlacesFromQuery response: " + body);
+			}
 			ObjectMapper map = new ObjectMapper();
 			JsonNode obj = map.readTree(body);
 			if(obj.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this query (" + query + ")");
@@ -115,11 +136,8 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		}
 		catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException | IOException | URISyntaxException e)
 		{
+			LOGGER.info("RUNTIME EXCEPTION " + e.getMessage());
 			throw new RuntimeException(e);
-		}
-		synchronized (lastRequest)
-		{
-			lastRequest = System.currentTimeMillis();
 		}
 		return toRet;
 	}
@@ -127,24 +145,33 @@ public class OpenStreetMapPlaces implements PlacesProvider
 	@Override
 	public Place getPlaceFromPoint(Point point) throws NoDataReceivedException
 	{
+		LOGGER.info("Resolving place from point.. waiting");
 		long timeWait;
-		synchronized (lastRequest)
+		while (true)
 		{
-			timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
+			synchronized (lastRequest)
+			{
+				timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
+			}
+
+			if (timeWait < 0)
+			{
+				try
+				{
+					Thread.sleep(-1 * timeWait);
+				}
+				catch (InterruptedException e)
+				{
+					//ignored
+				}
+			}
+			else
+			{
+				break;
+			}
 		}
 
-		if(timeWait<0)
-		{
-			try
-			{
-				Thread.sleep(-1*timeWait);
-			}
-			catch (InterruptedException e)
-			{
-				//ignored
-			}
-		}
-
+		LOGGER.info("Resolving place from point");
 		Place p = null;
 		try {
 
@@ -161,10 +188,21 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			ResponseHandler<String> handler = new BasicResponseHandler();
 
 			String body = handler.handleResponse(resp);
+			synchronized (lastRequest)
+			{
+				lastRequest = System.currentTimeMillis();
+			}
+			try
+			{
+				LOGGER.info("PlacesFromQuery response: " + body.substring(0, 50) + "..");
+			}
+			catch(StringIndexOutOfBoundsException e)
+			{
+				LOGGER.info("PlacesFromQuery response: " + body);
+			}
 			ObjectMapper map = new ObjectMapper();
 			JsonNode node = map.readTree(body);
 			if(node.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this lat/lon " + node);
-			LOGGER.info("node: " + node);
 
 			JsonNode address = node.get("address");
 			String name = null;
@@ -203,10 +241,6 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException | IOException | URISyntaxException e)
 		{
 			throw new RuntimeException(e);
-		}
-		synchronized (lastRequest)
-		{
-			lastRequest = System.currentTimeMillis();
 		}
 
 		if(p.getTown() == null)

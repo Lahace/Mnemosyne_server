@@ -115,6 +115,10 @@ public class ParserITv2
 							case "case":
 								marker = sge2.getTarget().value();
 								break;
+
+							case "mark":
+								marker = sge2.getTarget().value();
+								break;
 						}
 					}
 					tconstr.add(new TextualConstraint(marker,word, "null"));

@@ -1,8 +1,6 @@
 package ap.mnemosyne.servlets;
 
-import ap.mnemosyne.database.GetTasksByUserDatabase;
-import ap.mnemosyne.database.GetUserDefinedParametersDatabase;
-import ap.mnemosyne.database.UpdateTaskDatabase;
+import ap.mnemosyne.database.*;
 import ap.mnemosyne.enums.NormalizedActions;
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.places.PlacesManager;
@@ -22,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.security.InvalidParameterException;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
@@ -34,16 +33,29 @@ import java.util.logging.Logger;
 
 public class HintsServlet extends AbstractDatabaseServlet
 {
-	private final int LOCATION_RADIUS_METERS = 150;
-	private final int TIME_NOTICE_MINUTES = 30;
-	private final int TIME_MAX_SLACK_MINUTES = 15;
-	private final int LOCATION_INTEREST_DISTANCE_METERS = 800;
+	public final int LOCATION_RADIUS_METERS = 150;
+	public final int LOCATION_RADIUS_BEFORE_METERS = 2000;
+	public final int LOCATION_RADIUS_BEFORE_URGENT_METERS = 500;
+	public final int LOCATION_INTEREST_DISTANCE_METERS = 800;
+	public final int TIME_NOTICE_MINUTES = 30;
+	public final int TIME_MAX_SLACK_MINUTES = 10;
+
 	//private final int
 	private final Logger LOGGER = Logger.getLogger(HintsServlet.class.getName());
 	private PlacesManager pman;
 
 	public void init(ServletConfig config) throws ServletException
 	{
+		//CHECKING CONSTANTS CORRECTNESS (to avoid human (me) error)
+		if(!(LOCATION_RADIUS_METERS<LOCATION_RADIUS_BEFORE_URGENT_METERS))
+		{
+			throw new InvalidParameterException("LOCATION_RADIUS_METERS must be < than LOCATION_RADIUS_BEFORE_URGENT_METERS");
+		}
+		if(!(LOCATION_RADIUS_BEFORE_URGENT_METERS<LOCATION_RADIUS_BEFORE_METERS))
+		{
+			throw new InvalidParameterException("LOCATION_RADIUS_BEFORE_URGENT_METERS must be < than LOCATION_RADIUS_BEFORE_METERS");
+		}
+
 		LOGGER.setLevel(Level.INFO);
 		super.init(config);
 		LOGGER.info("Initializing ParseServlet..");
@@ -135,17 +147,18 @@ public class HintsServlet extends AbstractDatabaseServlet
 		//END check
 
 		ParamsName position = null;
+		Map<ParamsName, Parameter> userParametersMap;
 		try
 		{
-			Map<ParamsName, Parameter> plist = new GetUserDefinedParametersDatabase(getDataSource().getConnection(), user)
+			 userParametersMap = new GetUserDefinedParametersDatabase(getDataSource().getConnection(), user)
 					.getUserDefinedParameters();
 			if (lat >= 0 && lon >= 0)
 			{
-				position = resolvePosition(plist, new Point(lat, lon), phoneTime);
+				position = resolvePosition(userParametersMap, new Point(lat, lon), phoneTime);
 			}
 			else
 			{
-				position = resolvePosition(plist, ssid, cellID, phoneTime);
+				position = resolvePosition(userParametersMap, ssid, cellID, phoneTime);
 				if (position == null)
 				{
 					LOGGER.info("Not Acceptable: Parameters sent are not sufficient (position is null), specify lat and lon");
@@ -157,6 +170,15 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 			List<Task> tasks = new GetTasksByUserDatabase(getDataSource().getConnection(), user).getTasksByUser();
 			List<Hint> doable = new ArrayList<>();
+			Point myPoint;
+			if(position != null)
+				myPoint = ((LocationParameter) userParametersMap.get(position)).getLocation();
+			else
+				myPoint = new Point(lat,lon);
+
+			LocationParameter prevPlaceParameter = (LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), user, ParamsName.location_previous)
+					.getUserDefinedParameterByName();
+			ParamsName prevPosition = resolvePosition(userParametersMap, prevPlaceParameter.getLocation(), phoneTime);
 
 			for(Task t : tasks)
 			{
@@ -173,8 +195,6 @@ public class HintsServlet extends AbstractDatabaseServlet
 						{
 							Tuple<Place, Integer> nearest = null;
 							int timeToNearest;
-							Point my;
-
 							switch (t.getConstr().getType())
 							{
 								case at:
@@ -190,19 +210,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 									nearest = null;
 									if(position != null)
 									{
-										nearest = getClosestToMeFromList(((LocationParameter) plist.get(position)).getLocation(), t.getPlacesToSatisfy());
+										nearest = getClosestToMeFromList(((LocationParameter) userParametersMap.get(position)).getLocation(), t.getPlacesToSatisfy());
 									}
 									else
 									{
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									if(position != null)
-										my = ((LocationParameter) plist.get(position)).getLocation();
-									else
-										my = new Point(lat,lon);
-
-									timeToNearest = pman.getMinutesToDestination(my, nearest.getLeft().getCoordinates());
+									timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
 
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime.plusMinutes(timeToNearest)))
 									{
@@ -230,19 +245,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 									nearest = null;
 									if(position != null)
 									{
-										nearest = getClosestToMeFromList(((LocationParameter) plist.get(position)).getLocation(), t.getPlacesToSatisfy());
+										nearest = getClosestToMeFromList(((LocationParameter) userParametersMap.get(position)).getLocation(), t.getPlacesToSatisfy());
 									}
 									else
 									{
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									if(position != null)
-										my = ((LocationParameter) plist.get(position)).getLocation();
-									else
-										my = new Point(lat,lon);
-
-									timeToNearest = pman.getMinutesToDestination(my, nearest.getLeft().getCoordinates());
+									timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
 
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
 									{
@@ -270,19 +280,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 									nearest = null;
 									if(position != null)
 									{
-										nearest = getClosestToMeFromList(((LocationParameter) plist.get(position)).getLocation(), t.getPlacesToSatisfy());
+										nearest = getClosestToMeFromList(((LocationParameter) userParametersMap.get(position)).getLocation(), t.getPlacesToSatisfy());
 									}
 									else
 									{
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									if(position != null)
-										my = ((LocationParameter) plist.get(position)).getLocation();
-									else
-										my = new Point(lat,lon);
-
-									timeToNearest = pman.getMinutesToDestination(my, nearest.getLeft().getCoordinates());
+									timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
 
 									if(last.getClosing().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
 									{
@@ -300,54 +305,80 @@ public class HintsServlet extends AbstractDatabaseServlet
 						}
 						else if (t.getConstr() instanceof TaskPlaceConstraint)
 						{
-							Point my;
 							switch (t.getConstr().getType())
 							{
 								case at:
-									if(position != null)
-										my = ((LocationParameter) plist.get(position)).getLocation();
-									else
-										my = new Point(lat,lon);
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
-										if(distanceInMeters(my, ((LocationParameter) plist.get(t.getConstr().getParamName())).getLocation()) <= LOCATION_RADIUS_METERS)
+										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
 										{
-											doable.add(new Hint(t.getId(), false));
+											if (position != null && position.equals(t.getConstr().getParamName()))
+											{
+												doable.add(new Hint(t.getId(), false));
+											}
 										}
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
-										//TODO: need to know previous user's location
+										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()))
+										{
+											if (position == null || !position.equals(t.getConstr().getParamName()))
+											{
+												doable.add(new Hint(t.getId(), false));
+											}
+										}
 									}
 									break;
 
 								case before:
-									if(position != null)
-										my = ((LocationParameter) plist.get(position)).getLocation();
-									else
-										my = new Point(lat,lon);
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
+										if(position != null && position.equals(t.getConstr().getParamName()))
+										{
+											LOGGER.info("Task has failed");
+											setTaskFailed(t, user);
+											break;
+										}
 
+										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
+										{
+											if(distanceInMeters(myPoint, ((TaskPlaceConstraint)t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_URGENT_METERS)
+											{
+												doable.add(new Hint(t.getId(), true));
+											}
+											else if(distanceInMeters(myPoint, ((TaskPlaceConstraint)t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_METERS)
+											{
+												doable.add(new Hint(t.getId(), false));
+											}
+										}
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
-
+										//NOT possible for now
 									}
 									break;
 
 								case after:
-									if(position != null)
-										my = ((LocationParameter) plist.get(position)).getLocation();
-									else
-										my = new Point(lat,lon);
+									//Same as AT case
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
-
+										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
+										{
+											if (position != null && position.equals(t.getConstr().getParamName()))
+											{
+												doable.add(new Hint(t.getId(), false));
+											}
+										}
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
-
+										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()))
+										{
+											if (position == null || !position.equals(t.getConstr().getParamName()))
+											{
+												doable.add(new Hint(t.getId(), false));
+											}
+										}
 									}
 									break;
 							}
@@ -355,6 +386,16 @@ public class HintsServlet extends AbstractDatabaseServlet
 					}
 				}
 			}
+
+			//updating user's last known position
+			if(position == null)
+				new UpdateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
+						new LocationParameter(ParamsName.location_previous, user.getEmail(), new Point(lat,lon), -1, null))
+						.updateUserDefinedParameter();
+			else
+				new UpdateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
+						new LocationParameter(ParamsName.location_previous, user.getEmail(), ((LocationParameter)userParametersMap.get(position)).getLocation(), -1, null))
+						.updateUserDefinedParameter();
 
 			new ResourceList<>(doable).toJSON(res.getOutputStream());
 		}

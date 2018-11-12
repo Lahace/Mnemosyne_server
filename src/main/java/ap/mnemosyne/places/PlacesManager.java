@@ -5,10 +5,12 @@ import ap.mnemosyne.resources.Place;
 import ap.mnemosyne.resources.Point;
 
 import java.util.*;
+import java.util.logging.Logger;
 
 public class PlacesManager
 {
 	final Set<PlacesProvider> classList;
+	private final Logger LOGGER = Logger.getLogger(PlacesManager.class.getName());
 
 	public PlacesManager()
 	{
@@ -31,7 +33,7 @@ public class PlacesManager
 			}
 			catch (NoDataReceivedException ndre)
 			{
-				//ignore
+				LOGGER.info(p.getClass().getSimpleName() + " gave no results with query: " + query);
 			}
 		}
 		return toRet;
@@ -40,7 +42,10 @@ public class PlacesManager
 	public Place getPlacesFromPoint(Point point) throws NoDataReceivedException
 	{
 		//TODO: choose the best provider for places
-		return classList.iterator().next().getPlaceFromPoint(point);
+		PlacesProvider curr = classList.iterator().next();
+		Place ret = curr.getPlaceFromPoint(point);
+		if(ret==null) LOGGER.info(curr.getClass().getSimpleName()+ " gave no results with point: " + point);
+		return ret;
 	}
 
 	public int getMinutesToDestination(Point from, Point to)

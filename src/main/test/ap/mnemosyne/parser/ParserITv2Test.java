@@ -11,7 +11,7 @@ public class ParserITv2Test
 	{
 		ParserITv2 p = new ParserITv2();
 		p.parseString("devo prendere il pane prima di rientrare a casa");
-		p.parseString("devo prendere le medicine dopo pranzo");
+		p.parseString("devo prendere le medicine quando ceno");
 		p.parseString("devo pagare il bollo entro domani");
 		p.parseString("devo prendere il pane entro le 16:30");
 		p.parseString("devo prenotare dal dottore entro le 7:30");

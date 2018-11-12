@@ -200,7 +200,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					specifiedTime = LocalTime.parse(toParse);
 					parsed = true;
 				}
-				catch (DateTimeParseException dtpe)
+				catch (NullPointerException | DateTimeParseException dtpe)
 				{
 					LOGGER.info("Could not parse time: " + toParse);
 					parsed = false;
@@ -229,6 +229,12 @@ public class ParseServlet extends AbstractDatabaseServlet
 								break;
 
 							case location_house:
+								if(map.get("timing").equals(ConstraintTemporalType.before) && map.get("normalized_action").equals(NormalizedActions.leave))
+								{
+									LOGGER.warning("FAILED: Leave is not implemented for location_house ");
+									ServletUtils.sendMessage(new Message("Not implemented",
+											"PRSR13", "This constraint is not supported yet"), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
+								}
 								constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
 								break;
 
@@ -338,6 +344,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 						Set<Place> toReplace = new HashSet<>();
 						while(iter.hasNext())
 						{
+							//TODO: maybe also add time to destination to the condition? -> specifiedTime + timeToDestination
 							Place place = iter.next();
 							if ((pair.getRight().equals(ConstraintTemporalType.at) && !TimeUtils.isTimeBetween(specifiedTime, place.getOpening(), place.getClosing())) ||
 									(pair.getRight().equals(ConstraintTemporalType.before) && TimeUtils.isTimeBetween(specifiedTime, bed.getToTime(), place.getOpening())) ||
@@ -420,7 +427,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 		{
 			LOGGER.severe("NullPointerException: " + npe.getMessage());
 			ServletUtils.sendMessage(new Message("NullPointerException on server-side",
-					"PRSR12", "Something went clearly wrong, please send this to the monkeys who created this application: " + npe.getCause()), res, HttpServletResponse.SC_NOT_FOUND);
+					"PRSR12", "Something is clearly wrong, please send a warning to the monkeys who created this application"), res, HttpServletResponse.SC_NOT_FOUND);
+			npe.printStackTrace();
 		}
 
 		return;
