@@ -39,6 +39,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 	public final int LOCATION_INTEREST_DISTANCE_METERS = 800;
 	public final int TIME_NOTICE_MINUTES = 30;
 	public final int TIME_MAX_SLACK_MINUTES = 10;
+	public final int TIME_EVENTS_BEFORE_BED_MINUTES = 20;
+	public final double MULTIPLIER_TIME_NOTICE = 0.2;
 
 	//private final int
 	private final Logger LOGGER = Logger.getLogger(HintsServlet.class.getName());
@@ -185,23 +187,148 @@ public class HintsServlet extends AbstractDatabaseServlet
 				LOGGER.info("Examining task: " + t.getName());
 				if(!t.isDoneToday() && !t.isFailed())
 				{
-					if(position != ParamsName.location_work || (position == ParamsName.location_work && t.isPossibleAtWork()))
+					LocalTime fromLunch = ((TimeParameter) userParametersMap.get(ParamsName.time_lunch)).getFromTime();
+					LocalTime toLunch = ((TimeParameter) userParametersMap.get(ParamsName.time_lunch)).getToTime();
+					if(position != ParamsName.location_work || t.isPossibleAtWork() || TimeUtils.isTimeBetween(phoneTime, fromLunch, toLunch))
 					{
+						Tuple<Place, Integer> nearest = null;
+						int timeToNearest;
+						Place latestClosing;
+						int timeToLatest;
+						LocalTime fromBed;
+						LocalTime toBed;
 						if(t.getConstr() == null)
 						{
-							//TODO
+							ParamsName taskPos = null;
+							LocalTime toWork = ((TimeParameter) userParametersMap.get(ParamsName.time_work)).getToTime();
+							if(t.getPlacesToSatisfy().isEmpty())
+							{
+								taskPos = ParamsName.location_any;
+							}
+							else if(t.getPlacesToSatisfy().size() == 1)
+							{
+								taskPos = resolvePosition(userParametersMap, t.getPlacesToSatisfy().iterator().next().getCoordinates(), phoneTime);
+							}
+							else
+							{
+								//For now, this does not support multiple work places/houses
+								taskPos = ParamsName.location_item;
+							}
+
+							switch (taskPos)
+							{
+								case location_any:
+									//Tricky to manage
+									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
+									toBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getToTime();
+									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES)))
+									{
+										LOGGER.info("Task has failed (Asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
+										setTaskFailed(t, user);
+										break;
+									}
+
+									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES).plusMinutes(TIME_NOTICE_MINUTES)))
+									{
+										LOGGER.info("Adding to doable, urgent");
+										doable.add(new Hint(t.getId(), null ,true));
+									}
+									else
+									{
+										LOGGER.info("Adding to doable, non urgent");
+										doable.add(new Hint(t.getId(), null ,false));
+									}
+									break;
+
+								case location_item:
+									nearest = null;
+									latestClosing = TimeUtils.findLatestOpenedPlace(t.getPlacesToSatisfy());
+									if(position != null)
+									{
+										nearest = getClosestToMeFromList(((LocationParameter) userParametersMap.get(position)).getLocation(), t.getPlacesToSatisfy());
+									}
+									else
+									{
+										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
+									}
+
+									if((phoneTime.isAfter(toWork) && position == ParamsName.location_house) || (phoneTime.isAfter(latestClosing.getClosing())))
+									{
+										LOGGER.info("Task has failed (Asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
+										setTaskFailed(t, user);
+										break;
+									}
+
+									if((phoneTime.isAfter(toWork) && distanceInMeters(myPoint, ((LocationParameter) userParametersMap.get(ParamsName.location_house)).getLocation())
+											<= LOCATION_RADIUS_BEFORE_METERS))
+									{
+										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft() ,true));
+									}
+									else if(distanceInMeters(myPoint, nearest.getLeft().getCoordinates()) <= LOCATION_INTEREST_DISTANCE_METERS)
+									{
+										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
+										doable.add(new Hint(t.getId(), nearest.getLeft() ,false));
+									}
+
+									break;
+
+								case location_work:
+									if((phoneTime.isAfter(toWork) && position == null))
+									{
+										LOGGER.info("Task has failed (Asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
+										setTaskFailed(t, user);
+										break;
+									}
+
+									if(toWork.isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES)))
+									{
+										LOGGER.info("Adding to doable, urgent");
+										doable.add(new Hint(t.getId(), null ,true));
+									}
+									else if(position == ParamsName.location_work)
+									{
+										LOGGER.info("Adding to doable, non urgent");
+										doable.add(new Hint(t.getId(), null ,false));
+									}
+									break;
+
+								case location_house:
+									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
+									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES)))
+									{
+										LOGGER.info("Task has failed (Asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
+										setTaskFailed(t, user);
+										break;
+									}
+
+									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES).plusMinutes(TIME_NOTICE_MINUTES)))
+									{
+										LOGGER.info("Adding to doable, urgent");
+										doable.add(new Hint(t.getId(), null ,true));
+									}
+									else if(position == ParamsName.location_house)
+									{
+										LOGGER.info("Adding to doable, non urgent");
+										doable.add(new Hint(t.getId(), null ,false));
+									}
+									break;
+							}
 						}
 						else if (t.getConstr() instanceof TaskTimeConstraint)
 						{
-							Tuple<Place, Integer> nearest = null;
-							int timeToNearest;
 							switch (t.getConstr().getType())
 							{
 								case at:
 									LOGGER.info("Found: " + t.getConstr().getType());
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime))
 									{
-										LOGGER.info("Task has failed");
+										LOGGER.info("Task has failed (Asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
 										setTaskFailed(t, user);
 										break;
 									}
@@ -237,7 +364,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 									LOGGER.info("Found: " + t.getConstr().getType());
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().isBefore(phoneTime))
 									{
-										LOGGER.info("Task has failed");
+										LOGGER.info("Task has failed (Asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
 										setTaskFailed(t, user);
 										break;
 									}
@@ -269,10 +397,11 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 								case after:
 									LOGGER.info("Found: " + t.getConstr().getType());
-									Place last = TimeUtils.findLatestOpenedPlace(t.getPlacesToSatisfy());
-									if(last.getClosing().isBefore(phoneTime))
+									latestClosing = TimeUtils.findLatestOpenedPlace(t.getPlacesToSatisfy());
+									if(latestClosing.getClosing().isBefore(phoneTime))
 									{
-										LOGGER.info("Task has failed");
+										LOGGER.info("Task has failed (asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
 										setTaskFailed(t, user);
 										break;
 									}
@@ -287,9 +416,9 @@ public class HintsServlet extends AbstractDatabaseServlet
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
+									timeToLatest = pman.getMinutesToDestination(myPoint, latestClosing.getCoordinates());
 
-									if(last.getClosing().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
+									if(latestClosing.getClosing().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToLatest)))
 									{
 										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
 										doable.add(new Hint(t.getId(), nearest.getLeft(), true));
@@ -305,9 +434,18 @@ public class HintsServlet extends AbstractDatabaseServlet
 						}
 						else if (t.getConstr() instanceof TaskPlaceConstraint)
 						{
+							//This is only possible with known places (eg. work or house)
 							switch (t.getConstr().getType())
 							{
 								case at:
+									if(prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+									{
+										LOGGER.info("Task has failed (asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
+										setTaskFailed(t, user);
+										break;
+									}
+
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
 										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
@@ -335,7 +473,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										if(position != null && position.equals(t.getConstr().getParamName()))
 										{
-											LOGGER.info("Task has failed");
+											LOGGER.info("Task has failed (asking for confirmation)");
+											doable.add(new Hint(t.getId(), null ,true, true));
 											setTaskFailed(t, user);
 											break;
 										}
@@ -360,6 +499,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 								case after:
 									//Same as AT case
+									if(prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+									{
+										LOGGER.info("Task has failed (asking for confirmation)");
+										doable.add(new Hint(t.getId(), null ,true, true));
+										setTaskFailed(t, user);
+										break;
+									}
+
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
 										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
@@ -431,9 +578,11 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 	private ParamsName resolvePosition(Map<ParamsName, Parameter> plist, String ssid, int cellID, LocalTime givenTime)
 	{
-		LocationParameter house = (LocationParameter) plist.get(ParamsName.valueOf("location_house"));
-		LocationParameter work = (LocationParameter) plist.get(ParamsName.valueOf("location_work"));
-		TimeParameter workTime = (TimeParameter) plist.get(ParamsName.valueOf("time_work"));
+		LocationParameter house = (LocationParameter) plist.get(ParamsName.location_house);
+		LocationParameter work = (LocationParameter) plist.get(ParamsName.location_work);
+		TimeParameter workTime = (TimeParameter) plist.get(ParamsName.time_work);
+
+		LOGGER.info("Identifying user's position with parameters ssid: " + ssid + " cellID: " + cellID + " givenTime: " + givenTime);
 
 		if(house.getSSID().equals(ssid) && house.getCellID() == cellID)
 		{
@@ -452,15 +601,17 @@ public class HintsServlet extends AbstractDatabaseServlet
 	private ParamsName resolvePosition(Map<ParamsName, Parameter> plist, Point givenPoint, LocalTime givenTime) throws TransformException, FactoryException
 	{
 		org.locationtech.jts.geom.Point gisGivenPoint = givenPoint.toJTSPoint();
-		Point housePoint = ((LocationParameter) plist.get(ParamsName.valueOf("location_house"))).getLocation();
-		Point workPoint = ((LocationParameter) plist.get(ParamsName.valueOf("location_work"))).getLocation();
-		TimeParameter workTime = (TimeParameter) plist.get(ParamsName.valueOf("time_work"));
+		Point housePoint = ((LocationParameter) plist.get(ParamsName.location_house)).getLocation();
+		Point workPoint = ((LocationParameter) plist.get(ParamsName.location_work)).getLocation();
+		TimeParameter workTime = (TimeParameter) plist.get(ParamsName.time_work);
+
+		LOGGER.info("Identifying user's position with parameters givenPoint: " + givenPoint + " givenTime: " + givenTime);
 
 		if(workTime == null)
 		{
 			//just set an impossible work time
 			//AKA starts and finishes at the same time
-			workTime = new TimeParameter(ParamsName.valueOf("time_work"), null,
+			workTime = new TimeParameter(ParamsName.time_work, null,
 					LocalTime.of(0,0), LocalTime.of(0,0));
 		}
 

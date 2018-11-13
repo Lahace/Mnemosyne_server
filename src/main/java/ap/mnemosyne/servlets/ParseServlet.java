@@ -135,7 +135,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					{
 						point = ((LocationParameter) param).getLocation();
 						my = pman.getPlacesFromPoint(point);
-						LOGGER.info("My place is: " + my.toString());
+						LOGGER.info("House is at: " + my.toString());
 						placesToSatisfy.add(my);
 					}
 					else
@@ -158,7 +158,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					{
 						point = ((LocationParameter) param).getLocation();
 						my = pman.getPlacesFromPoint(point);
-						LOGGER.info("My place is: " + my.toString());
+						LOGGER.info("Workplace is at: " + my.toString());
 						placesToSatisfy.add(my);
 					}
 					else
@@ -168,8 +168,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 					break;
 
 				case location_any:
-					//TODO: should be any place
-					throw new ParameterNotDefinedException(p.toString());
+					//Do nothing, no need to add places
+					break;
 
 				default:
 					throw new ServletException("Could not find parameter " + p);

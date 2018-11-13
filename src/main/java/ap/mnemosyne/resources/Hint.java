@@ -19,20 +19,30 @@ public class Hint extends Resource
 	private int taskID;
 	private Place closestPlace;
 	private boolean urgent;
+	private boolean confirm;
 
 	@JsonCreator
-	public Hint(@JsonProperty("task-id") int taskID, @JsonProperty("closest-place") Place closestPlace ,@JsonProperty("urgent") boolean urgent)
+	public Hint(@JsonProperty("task-id") int taskID, @JsonProperty("closest-place") Place closestPlace ,@JsonProperty("urgent") boolean urgent, @JsonProperty("confirm") boolean confirm)
 	{
 		this.taskID = taskID;
 		this.urgent = urgent;
 		this.closestPlace = closestPlace;
+		this.confirm = confirm;
+	}
+
+	public Hint(@JsonProperty("task-id") int taskID, @JsonProperty("closest-place") Place closestPlace ,@JsonProperty("urgent") boolean urgent)
+	{
+		this(taskID, closestPlace, urgent, false);
 	}
 
 	public Hint(@JsonProperty("task-id") int taskID ,@JsonProperty("urgent") boolean urgent)
 	{
-		this.taskID = taskID;
-		this.urgent = urgent;
-		this.closestPlace = null;
+		this(taskID, null, urgent, false);
+	}
+
+	public Hint(@JsonProperty("task-id") int taskID ,@JsonProperty("urgent") boolean urgent, @JsonProperty("confirm") boolean confirm)
+	{
+		this(taskID, null, urgent, confirm);
 	}
 
 	public Place getClosestPlace()
@@ -48,6 +58,11 @@ public class Hint extends Resource
 	public boolean isUrgent()
 	{
 		return urgent;
+	}
+
+	public boolean isConfirm()
+	{
+		return confirm;
 	}
 
 	@Override
@@ -84,13 +99,15 @@ public class Hint extends Resource
 		if (o == null || getClass() != o.getClass()) return false;
 		Hint hint = (Hint) o;
 		return taskID == hint.taskID &&
-				urgent == hint.urgent;
+				urgent == hint.urgent &&
+				confirm == hint.confirm &&
+				Objects.equals(closestPlace, hint.closestPlace);
 	}
 
 	@Override
 	public int hashCode()
 	{
-		return Objects.hash(taskID, urgent);
+		return Objects.hash(taskID, closestPlace, urgent, confirm);
 	}
 
 	@Override
@@ -98,7 +115,9 @@ public class Hint extends Resource
 	{
 		return "Hint{" +
 				"taskID=" + taskID +
+				", closestPlace=" + closestPlace +
 				", urgent=" + urgent +
+				", confirm=" + confirm +
 				'}';
 	}
 

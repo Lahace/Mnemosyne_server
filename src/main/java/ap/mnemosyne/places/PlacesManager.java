@@ -42,9 +42,14 @@ public class PlacesManager
 	public Place getPlacesFromPoint(Point point) throws NoDataReceivedException
 	{
 		//TODO: choose the best provider for places
-		PlacesProvider curr = classList.iterator().next();
-		Place ret = curr.getPlaceFromPoint(point);
-		if(ret==null) LOGGER.info(curr.getClass().getSimpleName()+ " gave no results with point: " + point);
+		Place ret = null;
+		for(PlacesProvider p : classList)
+		{
+			Place temp = p.getPlaceFromPoint(point);
+			if(temp==null) LOGGER.info(p.getClass().getSimpleName()+ " gave no results with point: " + point);
+			else ret = temp;
+		}
+
 		return ret;
 	}
 
