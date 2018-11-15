@@ -2,13 +2,13 @@ package ap.mnemosyne.database;
 
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.resources.*;
+import org.joda.time.LocalTime;
 import org.postgresql.geometric.PGpoint;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
@@ -51,14 +51,14 @@ public class GetUserDefinedParametersDatabase
 					LocalTime to = null;
 					try
 					{
-						to = rs.getTime("to_time").toLocalTime();
+						to = new LocalTime(rs.getTime("to_time"));
 					}
 					catch (DateTimeParseException dtpe)
 					{
 						//ignore
 					}
 					ret.put(ParamsName.valueOf(rs.getString("parameter")),new TimeParameter(ParamsName.valueOf(rs.getString("parameter")),
-							user.getEmail(), rs.getTime("from_time").toLocalTime(), to));
+							user.getEmail(), new LocalTime(rs.getTime("from_time")), to));
 				}
 				else
 				{

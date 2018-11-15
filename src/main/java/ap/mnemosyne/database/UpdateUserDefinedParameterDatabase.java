@@ -2,6 +2,7 @@ package ap.mnemosyne.database;
 
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.resources.*;
+import org.joda.time.LocalTime;
 import org.postgresql.geometric.PGpoint;
 
 import java.sql.*;
@@ -38,9 +39,9 @@ public class UpdateUserDefinedParameterDatabase
 				pstmt.setString(2, null);
 				pstmt.setObject(3, null);
 				pstmt.setInt(4, -1);
-				Time tfrom = Time.valueOf(((TimeParameter) p).getFromTime());
+				Time tfrom = new Time(((TimeParameter) p).getFromTime().toDateTimeToday().getMillis());
 				pstmt.setTime(5, tfrom);
-				Time tto = Time.valueOf(((TimeParameter) p).getToTime());
+				Time tto = new Time(((TimeParameter) p).getToTime().toDateTimeToday().getMillis());
 				pstmt.setTime(6, tto);
 				pstmt.setString(7, u.getEmail());
 				pstmt.setString(8, p.getName().toString());
@@ -70,7 +71,7 @@ public class UpdateUserDefinedParameterDatabase
 				if(rs.getString("type").equals("time"))
 				{
 					ret = new TimeParameter(ParamsName.valueOf(rs.getString("parameter")), rs.getString("email"),
-							rs.getTime("from_time").toLocalTime(), rs.getTime("to_time").toLocalTime());
+							new LocalTime(rs.getTime("from_time")), new LocalTime(rs.getTime("to_time")));
 				}
 				else if(rs.getString("type").equals("location"))
 				{

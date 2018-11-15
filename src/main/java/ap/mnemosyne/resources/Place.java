@@ -5,10 +5,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.joda.time.LocalTime;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalTime;
 import java.util.Objects;
 
 @JsonTypeName("place")

@@ -10,6 +10,7 @@ import ap.mnemosyne.util.TimeUtils;
 import ap.mnemosyne.util.Tuple;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
+import org.joda.time.LocalTime;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
@@ -22,7 +23,6 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.security.InvalidParameterException;
 import java.sql.SQLException;
-import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -612,7 +612,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 			//just set an impossible work time
 			//AKA starts and finishes at the same time
 			workTime = new TimeParameter(ParamsName.time_work, null,
-					LocalTime.of(0,0), LocalTime.of(0,0));
+					new LocalTime(0,0), new LocalTime(0,0));
 		}
 
 		CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:4326");

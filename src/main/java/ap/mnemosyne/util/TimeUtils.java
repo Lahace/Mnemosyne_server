@@ -1,8 +1,8 @@
 package ap.mnemosyne.util;
 
 import ap.mnemosyne.resources.Place;
+import org.joda.time.LocalTime;
 
-import java.time.LocalTime;
 import java.util.Set;
 
 public class TimeUtils

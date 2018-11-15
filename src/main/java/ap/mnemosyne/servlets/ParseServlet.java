@@ -14,6 +14,7 @@ import ap.mnemosyne.resources.*;
 import ap.mnemosyne.util.ServletUtils;
 import ap.mnemosyne.util.TimeUtils;
 import ap.mnemosyne.util.Tuple;
+import org.joda.time.LocalTime;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
@@ -22,7 +23,6 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.logging.Level;
@@ -47,8 +47,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
-		LocalTime standardOpening = LocalTime.of(9,0);
-		LocalTime standardClosing = LocalTime.of(19,30);
+		LocalTime standardOpening = new LocalTime(9,0);
+		LocalTime standardClosing = new LocalTime(19,30);
 
 		if(!ServletUtils.checkContentType(MediaType.APPLICATION_FORM_URLENCODED, req, res)) return;
 		String sentence = req.getParameter("sentence");
