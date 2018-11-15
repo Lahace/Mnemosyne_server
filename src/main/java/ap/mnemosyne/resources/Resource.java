@@ -19,8 +19,11 @@ package ap.mnemosyne.resources;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Represents a generic resource.
@@ -68,4 +71,20 @@ public abstract class Resource {
 	public abstract String toJSON() throws IOException;
 
 	public abstract void toJSON(final PrintWriter pw) throws IOException;
+
+	public static Resource fromJSON(InputStream in) throws IOException
+	{
+		StringBuilder textBuilder = new StringBuilder();
+		try (Reader reader = new BufferedReader(new InputStreamReader
+				(in, Charset.forName(StandardCharsets.UTF_8.name())))) {
+			int c = 0;
+			while ((c = reader.read()) != -1) {
+				textBuilder.append((char) c);
+			}
+		}
+		ObjectMapper om = new ObjectMapper();
+		om.findAndRegisterModules();
+		Parameter p = om.readValue(textBuilder.toString(), Parameter.class);
+		return p;
+	}
 }
