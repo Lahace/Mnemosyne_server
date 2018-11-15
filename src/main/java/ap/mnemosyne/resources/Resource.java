@@ -84,7 +84,7 @@ public abstract class Resource {
 		}
 		ObjectMapper om = new ObjectMapper();
 		om.findAndRegisterModules();
-		Parameter p = om.readValue(textBuilder.toString(), Parameter.class);
+		Resource p = om.readValue(textBuilder.toString(), Resource.class);
 		return p;
 	}
 }
