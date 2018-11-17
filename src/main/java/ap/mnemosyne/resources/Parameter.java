@@ -37,7 +37,7 @@ public abstract class Parameter extends Resource
 		return userEmail;
 	}
 
-	public static final Parameter fromJSON(InputStream in) throws IOException
+	public static Parameter fromJSON(InputStream in) throws IOException
 	{
 		StringBuilder textBuilder = new StringBuilder();
 		try (Reader reader = new BufferedReader(new InputStreamReader

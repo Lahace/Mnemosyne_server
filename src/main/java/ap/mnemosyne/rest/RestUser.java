@@ -107,8 +107,8 @@ public class RestUser
 			}
 			else if(new CheckUserCredentialsDatabase(getDataSource().getConnection(), u.getEmail(), oldpsw).checkUserCredentials() == null)
 			{
-				ServletUtils.sendMessage(new Message("Unauthorized",
-						"401", "Wrong email/password"), res, HttpServletResponse.SC_UNAUTHORIZED);
+				ServletUtils.sendMessage(new Message("Bad Request",
+						"400", "Wrong email/password for user update"), res, HttpServletResponse.SC_BAD_REQUEST);
 				return;
 			}
 
@@ -146,8 +146,8 @@ public class RestUser
 
 			if(new CheckUserCredentialsDatabase(getDataSource().getConnection(), u.getEmail(), u.getPassword()).checkUserCredentials() == null)
 			{
-				ServletUtils.sendMessage(new Message("Unauthorized",
-						"401", "Wrong email/password"), res, HttpServletResponse.SC_UNAUTHORIZED);
+				ServletUtils.sendMessage(new Message("Bad Request",
+						"400", "Wrong email/password for user delete"), res, HttpServletResponse.SC_BAD_REQUEST);
 				return;
 			}
 			else if(!u.getEmail().equals(((User) req.getSession(false).getAttribute("current")).getEmail()))

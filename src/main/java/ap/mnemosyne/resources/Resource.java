@@ -18,22 +18,14 @@ package ap.mnemosyne.resources;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Represents a generic resource.
- * 
- * @author Nicola Ferro (ferro@dei.unipd.it)
- * @version 1.00
- * @since 1.00
- */
-
-@JsonTypeInfo(use= JsonTypeInfo.Id.NAME, include= JsonTypeInfo.As.WRAPPER_OBJECT)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
+		include = JsonTypeInfo.As.WRAPPER_OBJECT)
 @JsonSubTypes({
 		@JsonSubTypes.Type(value = Task.class),
 		@JsonSubTypes.Type(value = User.class),
@@ -44,28 +36,11 @@ import java.nio.charset.StandardCharsets;
 		@JsonSubTypes.Type(value = Hint.class),
 		@JsonSubTypes.Type(value = Parameter.class)
 })
-public abstract class Resource {
+public abstract class Resource
+{
 
-	/**
-	 * The JSON factory to be used for creating JSON parsers and generators.
-	 */
-	protected static final JsonFactory JSON_FACTORY;
+	public Resource() {}
 
-	static {
-		// setup the JSON factory
-		JSON_FACTORY = new JsonFactory();
-		JSON_FACTORY.disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET);
-		JSON_FACTORY.disable(JsonParser.Feature.AUTO_CLOSE_SOURCE);
-	}
-
-	/**
-	/**
-	 * Returns a JSON representation of the {@code Resource} into the given {@code OutputStream}.
-	 *
-	 * @param out  the stream to which the JSON representation of the {@code Resource} has to be written.
-	 *
-	 * @throws IOException if something goes wrong during the parsing.
-	 */
 	public abstract void toJSON(final OutputStream out) throws IOException;
 
 	public abstract String toJSON() throws IOException;
