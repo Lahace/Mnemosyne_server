@@ -81,7 +81,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		{
 			LOGGER.warning("FAILED: No action retrieved from sentence");
 			ServletUtils.sendMessage(new Message("Not implemented",
-					"PRSR03", "Parser did not recognized sentence " + tt.getFullSentence()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+					"PRSR03", "Parser did not recognized sentence: " + tt.getFullSentence()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			return;
 		}
 
@@ -103,8 +103,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 			{
 				LOGGER.warning("FAILED: No action definition for: " + tt.getTextualAction().getVerb() + " " + tt.getTextualAction().getSubject());
 				ServletUtils.sendMessage(new Message("Not implemented",
-						"PRSR04", "Could not find a definition for action " + tt.getTextualAction().getVerb()
-						+ " with subject " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
+						"PRSR04", "Could not find a definition for action: " + tt.getTextualAction().getVerb()
+						+ " " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 				return;
 			}
 			Parameter param;
@@ -214,7 +214,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					{
 						LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintMarker() + " " + current.getVerb() + " " + current.getConstraintWord());
 						ServletUtils.sendMessage(new Message("Not implemented",
-								"PRSR06", "Could not find a definition for constraint '" + current.getConstraintMarker()
+								"PRSR06", "Could not find a definition for constraint: " + current.getConstraintMarker()
 								+ " " + current.getVerb() + " " + current.getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 						return;
 					}
@@ -274,7 +274,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					{
 						LOGGER.warning("FAILED: No constraint definition for: " + current.getConstraintMarker());
 						ServletUtils.sendMessage(new Message("Not implemented",
-								"PRSR06", "Could not find a definition for constraint '" + tt.getTextualConstraints().get(0).getConstraintMarker()
+								"PRSR06", "Could not find a definition for constraint: " + tt.getTextualConstraints().get(0).getConstraintMarker()
 								+ " " + tt.getTextualConstraints().get(0).getConstraintWord()), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
 						return;
 					}
@@ -296,7 +296,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 				{
 					LOGGER.warning("FAILED: No places found for item " + tt.getTextualAction().getSubject());
 					ServletUtils.sendMessage(new Message("Not found",
-							"PRSR05", "Could not find places where to find " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_FOUND);
+							"PRSR05", "Could not find places where to find: " + tt.getTextualAction().getSubject()), res, HttpServletResponse.SC_NOT_FOUND);
 					return;
 				}
 				for(String s : places)
@@ -427,7 +427,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		{
 			LOGGER.severe("NullPointerException: " + npe.getMessage());
 			ServletUtils.sendMessage(new Message("NullPointerException on server-side",
-					"PRSR12", "Something is clearly wrong, please send a warning to the monkeys who created this application"), res, HttpServletResponse.SC_NOT_FOUND);
+					"PRSR12", "Something is clearly wrong, please send a warning to the monkeys who created this application"), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			npe.printStackTrace();
 		}
 
