@@ -196,8 +196,8 @@ public class RestTask
 			}
 			else
 			{
-				ServletUtils.sendMessage(new Message("Ok",
-						"400", "Parameter was not deleted, maybe it's not defined?"), res, HttpServletResponse.SC_BAD_REQUEST);
+				ServletUtils.sendMessage(new Message("Error while deleting task",
+						"400", "Task was not deleted"), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
 		catch(ServletException se)
