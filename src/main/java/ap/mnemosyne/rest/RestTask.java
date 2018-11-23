@@ -157,7 +157,7 @@ public class RestTask
 		try
 		{
 			Set<Place> plist = new HashSet<>();
-			plist.add(new Place("italy", "veneto", "schio", "magré", 2, "Famila",
+			plist.add(new Place("italy", "veneto", "schio", "magré", "Via lmao",2, "Famila",
 					"supermarket", new Point(45.714012, 11.353281), new LocalTime(9,0), new LocalTime(20,30)));
 
 			new CreateTaskDatabase(getDataSource().getConnection(),
@@ -166,7 +166,7 @@ public class RestTask
 
 			new CreateTaskDatabase(getDataSource().getConnection(),
 					new Task(12,((User)req.getSession().getAttribute("current")).getEmail() , "prova task place", new TaskPlaceConstraint(
-							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",
+							new Place("italy", "veneto", "schio", "magré", "Via lmao",2, "casa", "housing",
 									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before, NormalizedActions.get),
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);

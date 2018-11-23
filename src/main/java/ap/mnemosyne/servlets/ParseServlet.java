@@ -304,7 +304,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					for (Place place : pman.getPlacesFromQuery(s + " in " + my.getTown() + " in " + my.getState()))
 					{
 						//TODO: add check for closing/opening time
-						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getRoad() ,place.getHouseNumber(),
 								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
 					}
 
@@ -316,7 +316,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					Place myHouse = pman.getPlacesFromPoint(housePoint);
 					for (Place place : pman.getPlacesFromQuery(s + " in " + myHouse.getTown() + " in " + my.getState()))
 					{
-						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getRoad() ,place.getHouseNumber(),
 								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
 					}
 
@@ -325,7 +325,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					Place myWorkplace = pman.getPlacesFromPoint(workPoint);
 					for (Place place : pman.getPlacesFromQuery(s + " in " + myWorkplace.getTown() + " in " + my.getState()))
 					{
-						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getHouseNumber(),
+						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getRoad() ,place.getHouseNumber(),
 								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
 					}
 				}
