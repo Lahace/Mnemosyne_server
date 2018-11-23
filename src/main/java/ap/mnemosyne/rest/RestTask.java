@@ -75,7 +75,7 @@ public class RestTask
 						"400", "Task was not found"), res, HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException | ClassNotFoundException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -84,11 +84,6 @@ public class RestTask
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		}
-		catch (ClassNotFoundException ex)
-		{
-			ServletUtils.sendMessage(new Message("Internal Server Error",
-					"500", ex.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 	}
 
@@ -105,7 +100,7 @@ public class RestTask
 			ret.toJSON(res.getOutputStream());
 
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -137,7 +132,7 @@ public class RestTask
 			}
 
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -171,7 +166,7 @@ public class RestTask
 							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -200,7 +195,7 @@ public class RestTask
 						"400", "Task was not deleted"), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			}
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

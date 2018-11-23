@@ -53,7 +53,7 @@ public class RestParameter
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -89,7 +89,7 @@ public class RestParameter
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -120,7 +120,7 @@ public class RestParameter
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -150,7 +150,7 @@ public class RestParameter
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -185,7 +185,7 @@ public class RestParameter
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		catch(ServletException se)
+		catch(ServletException | IOException se)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
