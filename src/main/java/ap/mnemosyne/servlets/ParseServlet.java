@@ -393,10 +393,10 @@ public class ParseServlet extends AbstractDatabaseServlet
 			LOGGER.info("Creating task..");
 
 			Task t = new Task(-1, user, name ,constr, possibleAtWork, repeatable, doneToday, failed, placesToSatisfy);
-			new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
+			Task ret = new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
-			t.toJSON(res.getOutputStream());
+			ret.toJSON(res.getOutputStream());
 			LOGGER.info("Creating Task.. Done");
 		}
 		catch (SQLException sqle)
