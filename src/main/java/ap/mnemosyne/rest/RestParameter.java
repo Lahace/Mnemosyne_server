@@ -6,6 +6,7 @@ import ap.mnemosyne.resources.Message;
 import ap.mnemosyne.resources.Parameter;
 import ap.mnemosyne.resources.ResourceList;
 import ap.mnemosyne.resources.User;
+import ap.mnemosyne.servlets.ParseServlet;
 import ap.mnemosyne.util.ServletUtils;
 
 import javax.naming.InitialContext;
@@ -22,6 +23,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @Path("parameter")
 public class RestParameter
@@ -100,7 +102,7 @@ public class RestParameter
 	@POST
 	public void createParameter(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
-		if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+		if (!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
 		try
 		{
 			Parameter p = Parameter.fromJSON(req.getInputStream());
@@ -130,7 +132,7 @@ public class RestParameter
 	@PUT
 	public void updateParameter(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
-		if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+		if (!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
 		try
 		{
 			Parameter p = Parameter.fromJSON(req.getInputStream());

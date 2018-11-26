@@ -13,9 +13,9 @@ public class ServletUtils
 	public static String checkContentType(String[] admitted, HttpServletRequest req)
 	{
 		String found = null;
-		String reqtype = req.getHeader("Content-Type");
+		String reqtype = req.getHeader("Content-Type").replaceAll(" ", "");
 		for(String s : admitted)
-			if(s.equals(reqtype))
+			if(s.replaceAll(" ", "").equals(reqtype))
 				found = s;
 
 		return found;
@@ -23,17 +23,17 @@ public class ServletUtils
 
 	public static boolean checkContentType(String admitted, HttpServletRequest req)
 	{
-		String reqtype = req.getHeader("Content-Type");
-        return admitted.equals(reqtype);
+		String reqtype = req.getHeader("Content-Type").replaceAll(" ", "");
+        return admitted.replaceAll(" ", "").equals(reqtype);
 
     }
 
 	public static String checkContentType(String[] admitted, HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
 		String found = null;
-		String reqtype = req.getHeader("Content-Type");
+		String reqtype = req.getHeader("Content-Type").replaceAll(" ", "");
 		for(String s : admitted)
-			if(s.equals(reqtype))
+			if(s.replaceAll(" ", "").equals(reqtype))
 				found = s;
 		if(found == null)
 		{
@@ -46,8 +46,8 @@ public class ServletUtils
 
 	public static boolean checkContentType(String admitted, HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
-		String reqtype = req.getHeader("Content-Type");
-		if(admitted.equals(reqtype))
+		String reqtype = req.getHeader("Content-Type").replaceAll(" ", "");
+		if(admitted.replaceAll(" ", "").equals(reqtype))
 			return true;
 
 		sendMessage(new Message("Content-Type not allowed", "415", reqtype + " Content-type is not allowed/supported in a " + req.getMethod() + " request for this URL"),

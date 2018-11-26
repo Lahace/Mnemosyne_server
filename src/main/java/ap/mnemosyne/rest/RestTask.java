@@ -92,7 +92,7 @@ public class RestTask
 	{
 		try
 		{
-			if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+			if (!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
 			Task t = Task.fromJSON(req.getInputStream());
 			Task ret = new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_CREATED);
@@ -117,7 +117,7 @@ public class RestTask
 	{
 		try
 		{
-			if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+			if (!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
 			Task t = Task.fromJSON(req.getInputStream());
 			Task ret = new UpdateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).updateTask();
 			if(ret == null)

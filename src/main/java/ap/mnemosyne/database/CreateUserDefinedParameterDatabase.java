@@ -35,8 +35,8 @@ public class CreateUserDefinedParameterDatabase
 				pstmt.setString(2, p.getName().toString());
 				pstmt.setString(3, "time");
 				pstmt.setObject(4, null);
-				pstmt.setInt(5, -1);
-				pstmt.setString(6, null);
+				pstmt.setString(5, null);
+				pstmt.setInt(6, -1);
 				Time tfrom = new Time(((TimeParameter) p).getFromTime().toDateTimeToday().getMillis());
 				pstmt.setTime(7, tfrom);
 				Time tto = new Time(((TimeParameter) p).getToTime().toDateTimeToday().getMillis());

@@ -54,7 +54,7 @@ public class RestUser
 	//Will be implemented as soon as User has some extra fields
 	private void updateUser(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
-		if(!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+		if(!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
 		try
 		{
 			User u = User.fromJSON(req.getInputStream()); //change, use session user
@@ -139,7 +139,7 @@ public class RestUser
 	@DELETE
 	public void deleteUser(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
-		if(!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+		if(!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
 		try
 		{
 			User u = User.fromJSON(req.getInputStream());
