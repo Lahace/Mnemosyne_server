@@ -21,6 +21,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
+import javax.xml.stream.Location;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.time.format.DateTimeParseException;
@@ -311,8 +312,13 @@ public class ParseServlet extends AbstractDatabaseServlet
 					//TODO: add query caching for PlaceManager & reduce query number
 					//Adding also places around known places to satisfy every constraint
 					//eg. if user works 100km away from his/her house, we must find places near his/her house in case constraint is something like "when i get back home"
-					Point housePoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_house)
-							.getUserDefinedParameterByName()).getLocation();
+					LocationParameter house = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_house)
+							.getUserDefinedParameterByName());
+
+					Point housePoint;
+					if(house != null) housePoint = house.getLocation();
+					else throw new ParameterNotDefinedException("location_house");
+
 					Place myHouse = pman.getPlacesFromPoint(housePoint);
 					for (Place place : pman.getPlacesFromQuery(s + " in " + myHouse.getTown() + " in " + my.getState()))
 					{
@@ -320,8 +326,13 @@ public class ParseServlet extends AbstractDatabaseServlet
 								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
 					}
 
-					Point workPoint = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_work)
-							.getUserDefinedParameterByName()).getLocation();
+					LocationParameter work = ((LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), ParamsName.location_work)
+							.getUserDefinedParameterByName());
+
+					Point workPoint;
+					if(work != null) workPoint = work.getLocation();
+					else throw new ParameterNotDefinedException("location_work");
+
 					Place myWorkplace = pman.getPlacesFromPoint(workPoint);
 					for (Place place : pman.getPlacesFromQuery(s + " in " + myWorkplace.getTown() + " in " + my.getState()))
 					{
