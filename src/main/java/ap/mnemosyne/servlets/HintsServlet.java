@@ -60,9 +60,9 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 		LOGGER.setLevel(Level.INFO);
 		super.init(config);
-		LOGGER.info("Initializing ParseServlet..");
+		LOGGER.info("Initializing HintsServlet..");
 		pman = new PlacesManager();
-		LOGGER.info("Initializing ParseServlet.. Done");
+		LOGGER.info("Initializing HintsServlet.. Done");
 	}
 
 	public void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException
@@ -180,7 +180,12 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 			LocationParameter prevPlaceParameter = (LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), user, ParamsName.location_previous)
 					.getUserDefinedParameterByName();
-			ParamsName prevPosition = resolvePosition(userParametersMap, prevPlaceParameter.getLocation(), phoneTime);
+
+			ParamsName prevPosition = null;
+			if(prevPlaceParameter != null)
+			{
+				prevPosition = resolvePosition(userParametersMap, prevPlaceParameter.getLocation(), phoneTime);
+			}
 
 			for(Task t : tasks)
 			{
@@ -438,7 +443,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 							switch (t.getConstr().getType())
 							{
 								case at:
-									if(prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+									if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
 									{
 										LOGGER.info("Task has failed (asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
@@ -499,7 +504,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 								case after:
 									//Same as AT case
-									if(prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+									if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
 									{
 										LOGGER.info("Task has failed (asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
@@ -544,6 +549,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 						new LocationParameter(ParamsName.location_previous, user.getEmail(), ((LocationParameter)userParametersMap.get(position)).getLocation(), -1, null))
 						.updateUserDefinedParameter();
 
+			res.setStatus(HttpServletResponse.SC_OK);
+			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			new ResourceList<>(doable).toJSON(res.getOutputStream());
 		}
 		catch (SQLException sqle)
@@ -570,6 +577,12 @@ public class HintsServlet extends AbstractDatabaseServlet
 		{
 			LOGGER.severe("ClassNotFoundException: " + e.getMessage());
 			ServletUtils.sendMessage(new Message("ClassNotFoundException",
+					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch (NullPointerException e)
+		{
+			LOGGER.severe("NullPointerException: " + e.getMessage());
+			ServletUtils.sendMessage(new Message("NullPointerException",
 					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 
