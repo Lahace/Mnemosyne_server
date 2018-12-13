@@ -230,7 +230,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
@@ -262,7 +262,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
@@ -285,7 +285,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
@@ -307,7 +307,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
@@ -334,7 +334,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 									//computing nearest place where to satisfy this task
@@ -371,7 +371,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
@@ -407,7 +407,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
@@ -447,7 +447,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
@@ -480,7 +480,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
 											doable.add(new Hint(t.getId(), null ,true, true));
-											setTaskFailed(t, user);
+											//setTaskFailed(t, user);
 											break;
 										}
 
@@ -508,7 +508,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									{
 										LOGGER.info("Task has failed (asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
-										setTaskFailed(t, user);
+										//setTaskFailed(t, user);
 										break;
 									}
 
