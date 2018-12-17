@@ -13,7 +13,7 @@ import java.sql.SQLException;
 
 public class CreateTaskDatabase
 {
-	private final String stmt = "INSERT INTO mnemosyne.task(useremail, name, constr, possibleAtWork, repeatable, doneToday, failed, ignoreToday, placesToSatisfy)" +
+	private final String stmt = "INSERT INTO mnemosyne.task(useremail, name, constr, possibleAtWork, repeatable, doneToday, failed, ignoredToday, placesToSatisfy)" +
 			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *";
 	private final User u;
 	private final Task t;
@@ -64,7 +64,7 @@ public class CreateTaskDatabase
 			{
 				ret = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"),
 						t.getConstr(), rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-						rs.getBoolean("failed"), rs.getBoolean("ignoreToday"), t.getPlacesToSatisfy());
+						rs.getBoolean("failed"), rs.getBoolean("ignoredToday"), t.getPlacesToSatisfy());
 			}
 
 		}

@@ -12,7 +12,7 @@ public class UpdateTaskDatabase
 {
 	//NOT to be used to update sessionid
 	private final String stmt = "UPDATE mnemosyne.task SET name=?, constr=?, possibleAtWork=?, repeatable=?, doneToday=?, " +
-			"failed=?, ignoreToday=?, placesToSatisfy=? WHERE id=? AND useremail=? RETURNING *";
+			"failed=?, ignoredToday=?, placesToSatisfy=? WHERE id=? AND useremail=? RETURNING *";
 	private final Task t;
 	private final User u;
 	private final Connection conn;
@@ -65,7 +65,7 @@ public class UpdateTaskDatabase
 			if(rs.next())
 				ret = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"),
 						t.getConstr(), rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-						rs.getBoolean("failed"), rs.getBoolean("ignoreToday") ,t.getPlacesToSatisfy());
+						rs.getBoolean("failed"), rs.getBoolean("ignoredToday") ,t.getPlacesToSatisfy());
 
 		}
 		finally

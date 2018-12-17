@@ -55,7 +55,7 @@ CREATE TABLE mnemosyne.task(
     repeatable BOOLEAN NOT NULL,
     doneToday BOOLEAN NOT NULL,
     failed BOOLEAN NOT NULL,
-    ignoreToday BOOLEAN NOT NULL,
+    ignoredToday BOOLEAN NOT NULL,
     placesToSatisfy BYTEA NOT NULL, --serializing java object
     FOREIGN KEY (useremail) REFERENCES mnemosyne.user(email)
         ON DELETE CASCADE ON UPDATE CASCADE
