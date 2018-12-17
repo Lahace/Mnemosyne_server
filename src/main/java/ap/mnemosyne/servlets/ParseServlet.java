@@ -59,6 +59,19 @@ public class ParseServlet extends AbstractDatabaseServlet
 			return;
 		}
 
+		LocalTime phoneTime = null;
+		try
+		{
+			phoneTime = LocalTime.parse(req.getParameter("time"));
+		}
+		catch (DateTimeParseException | NullPointerException dtpe)
+		{
+			LOGGER.info("Bad request: Phone time not specified or badly formatted (Use HH:MM format)");
+			ServletUtils.sendMessage(new Message("Bad Request",
+					"PRSR14", "Phone time not specified or badly formatted (Use HH:MM format)"), res, HttpServletResponse.SC_BAD_REQUEST);
+			return;
+		}
+
 		double lat,lon;
 
 		try
@@ -92,6 +105,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		boolean repeatable = false;
 		boolean doneToday = false;
 		boolean failed = false;
+		boolean ignoreToday = tt.getTextualConstraints().get(0).isFuture();
 		Set<Place> placesToSatisfy = new HashSet<>();
 
 		try
@@ -402,7 +416,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 			LOGGER.info("Creating task..");
 
-			Task t = new Task(-1, user, name ,constr, possibleAtWork, repeatable, doneToday, failed, placesToSatisfy);
+			Task t = new Task(-1, user, name ,constr, possibleAtWork, repeatable, doneToday, failed, ignoreToday,placesToSatisfy);
 			Task ret = new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");

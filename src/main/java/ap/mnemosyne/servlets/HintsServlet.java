@@ -190,7 +190,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 			for(Task t : tasks)
 			{
 				LOGGER.info("Examining task: " + t.getName());
-				if(!t.isDoneToday() && !t.isFailed())
+				if(!t.isDoneToday() && !t.isFailed() && !t.isIgnoredToday())
 				{
 					LocalTime fromLunch = ((TimeParameter) userParametersMap.get(ParamsName.time_lunch)).getFromTime();
 					LocalTime toLunch = ((TimeParameter) userParametersMap.get(ParamsName.time_lunch)).getToTime();
@@ -681,7 +681,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 	private void setTaskFailed(Task t, User u) throws SQLException, IOException
 	{
-		Task tNew = new Task(t.getId(), t.getUser(),t.getName(),t.getConstr(), t.isPossibleAtWork(), t.isRepeatable(), t.isDoneToday(), true, t.getPlacesToSatisfy());
+		Task tNew = new Task(t.getId(), t.getUser(),t.getName(),t.getConstr(), t.isPossibleAtWork(), t.isRepeatable(), t.isDoneToday(), true, t.isIgnoredToday(),t.getPlacesToSatisfy());
 		new UpdateTaskDatabase(getDataSource().getConnection(), tNew, u).updateTask();
 	}
 }

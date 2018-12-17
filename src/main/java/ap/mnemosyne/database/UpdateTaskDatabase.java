@@ -12,7 +12,7 @@ public class UpdateTaskDatabase
 {
 	//NOT to be used to update sessionid
 	private final String stmt = "UPDATE mnemosyne.task SET name=?, constr=?, possibleAtWork=?, repeatable=?, doneToday=?, " +
-			"failed=?, placesToSatisfy=? WHERE id=? AND useremail=? RETURNING *";
+			"failed=?, ignoreToday=?, placesToSatisfy=? WHERE id=? AND useremail=? RETURNING *";
 	private final Task t;
 	private final User u;
 	private final Connection conn;
@@ -54,9 +54,10 @@ public class UpdateTaskDatabase
 			pstmt.setBoolean(4, t.isRepeatable());
 			pstmt.setBoolean(5, t.isDoneToday());
 			pstmt.setBoolean(6, t.isFailed());
-			pstmt.setBytes(7, places);
-			pstmt.setInt(8, t.getId());
-			pstmt.setString(9, u.getEmail());
+			pstmt.setBoolean(7, t.isIgnoredToday());
+			pstmt.setBytes(8, places);
+			pstmt.setInt(9, t.getId());
+			pstmt.setString(10, u.getEmail());
 
 
 			rs = pstmt.executeQuery();
@@ -64,7 +65,7 @@ public class UpdateTaskDatabase
 			if(rs.next())
 				ret = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"),
 						t.getConstr(), rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-						rs.getBoolean("failed"), t.getPlacesToSatisfy());
+						rs.getBoolean("failed"), rs.getBoolean("ignoreToday") ,t.getPlacesToSatisfy());
 
 		}
 		finally

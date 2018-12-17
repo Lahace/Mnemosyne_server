@@ -15,9 +15,7 @@ import eu.fbk.dh.tint.runner.TintPipeline;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +24,7 @@ public class ParserITv2
 {
 	private TintPipeline pipeline;
 	private final Logger LOGGER = Logger.getLogger(ParserITv2.class.getName());
+	private Map<String, String> textToTime = new HashMap<>();
 
 	public ParserITv2()
 	{
@@ -43,6 +42,7 @@ public class ParserITv2
 			return;
 		}
 		pipeline.load();
+		initializeTTTMap();
 		LOGGER.info("Loaded.");
 	}
 
@@ -61,6 +61,7 @@ public class ParserITv2
 	private String preProcessString(String string)
 	{
 		String toRet = string.toLowerCase();
+		toRet = toRet.replaceAll("mezzo giorno", "mezzogiorno");
 		List<String> toExclude = new ArrayList<>(Arrays.asList("ricordami che (.+$)", "ricordami di (.+$)", "devo (.+$)", "ricordami che devo (.+$)"));
 		int numMatch = matchesList(string, toExclude);
 
@@ -97,6 +98,7 @@ public class ParserITv2
 		String verb = "null";
 		String actionVerb = null;
 		String actionSubject = null;
+		boolean isFuture = false;
 		for(SemanticGraphEdge sge : sg.outgoingEdgeList(root))
 		{
 			switch(sge.getRelation().toString())
@@ -107,46 +109,115 @@ public class ParserITv2
 
 				case "advmod":
 					marker = null;
-					word = sge.getTarget().value();
-					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+					if(sge.getTarget().value().equals("domani"))
 					{
-						switch(sge2.getRelation().toString())
+						word = sge.getTarget().value();
+						for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 						{
-							case "case":
-								marker = sge2.getTarget().value();
-								break;
+							switch(sge2.getRelation().toString())
+							{
+								case "nmod":
+									isFuture = true;
+									word = textToTime.get(sge2.getTarget().value())==null ? sge2.getTarget().value() : textToTime.get(sge2.getTarget().value());
+									break;
 
-							case "mark":
-								marker = sge2.getTarget().value();
-								break;
+								case "case":
+									marker = sge2.getTarget().value();
+									break;
+
+								case "mark":
+									marker = sge2.getTarget().value();
+									break;
+							}
 						}
 					}
-					tconstr.add(new TextualConstraint(marker,word, "null"));
+					else
+					{
+						word = sge.getTarget().value();
+						for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+						{
+							switch(sge2.getRelation().toString())
+							{
+								case "case":
+									marker = sge2.getTarget().value();
+									break;
+
+								case "mark":
+									marker = sge2.getTarget().value();
+									break;
+							}
+						}
+					}
+					tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
 					break;
 
 				case "nmod":
 					marker = null;
-					try
-					{
-						//Gotta do this little hack, because docs on how to extract timestamps is scarce
-						word = text.substring(sge.getTarget().beginPosition(), sge.getTarget().endPosition() + 3);
-						if(word.length() == 4) word = "0" + word;
-						LocalTime.parse(word);
-					}
-					catch (StringIndexOutOfBoundsException | DateTimeParseException e)
+					isFuture = false;
+					if(sge.getTarget().value().equals("domani"))
 					{
 						word = sge.getTarget().value();
-					}
-					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
-					{
-						switch(sge2.getRelation().toString())
+						for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 						{
-							case "case":
-								marker = sge2.getTarget().value();
-								break;
+							switch(sge2.getRelation().toString())
+							{
+								case "case":
+									marker = sge2.getTarget().value();
+									break;
+
+								case "nmod":
+									isFuture = true;
+									word = sge2.getTarget().value();
+									for(SemanticGraphEdge sge3 : sg.outgoingEdgeList(sge2.getTarget()))
+									{
+										switch(sge3.getRelation().toString())
+										{
+											case "nmod":
+												word += "_" + sge3.getTarget().value();
+										}
+									}
+									break;
+
+								case "nummod":
+									isFuture = true;
+									word = sge2.getTarget().value();
+									for(SemanticGraphEdge sge3 : sg.outgoingEdgeList(sge2.getTarget()))
+									{
+										switch(sge3.getRelation().toString())
+										{
+											case "nmod":
+												word += "_" + sge3.getTarget().value();
+										}
+									}
+									break;
+							}
+						}
+						word = textToTime.get(word) == null ? word : textToTime.get(word);
+					}
+					else
+					{
+						try
+						{
+							//Gotta do this little hack, because docs on how to extract timestamps is scarce
+							word = text.substring(sge.getTarget().beginPosition(), sge.getTarget().endPosition() + 3);
+							if(word.length() == 4) word = "0" + word;
+							LocalTime.parse(word);
+						}
+						catch (StringIndexOutOfBoundsException | DateTimeParseException e)
+						{
+							word = sge.getTarget().value();
+						}
+						for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+						{
+							switch(sge2.getRelation().toString())
+							{
+								case "case":
+									marker = sge2.getTarget().value();
+									break;
+							}
 						}
 					}
-					tconstr.add(new TextualConstraint(marker,word, "null"));
+					tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
 					break;
 
 				case "nummod":
@@ -172,7 +243,7 @@ public class ParserITv2
 								break;
 						}
 					}
-					tconstr.add(new TextualConstraint(marker,word, "null"));
+					tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
 					break;
 
 				case "ccomp":
@@ -202,7 +273,7 @@ public class ParserITv2
 											break;
 									}
 								}
-								tconstr.add(new TextualConstraint(marker, word,  verb));
+								tconstr.add(new TextualConstraint(marker, word,  verb, isFuture));
 								break;
 						}
 					}
@@ -213,6 +284,7 @@ public class ParserITv2
 				case "advcl":
 					marker = null;
 					word = null;
+					isFuture = false;
 					verb = sge.getTarget().get(CoreAnnotations.LemmaAnnotation.class);
 					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 					{
@@ -225,9 +297,13 @@ public class ParserITv2
 							case "nmod":
 								word = sge2.getTarget().getString(CoreAnnotations.LemmaAnnotation.class);
 								break;
+
+							case "advmod":
+								isFuture = sge2.getTarget().value().equals("domani");
+								break;
 						}
 					}
-					tconstr.add(new TextualConstraint(marker, word,  verb));
+					tconstr.add(new TextualConstraint(marker, word,  verb, isFuture));
 					break;
 
 			}
@@ -246,6 +322,51 @@ public class ParserITv2
 				break;
 			}
 		return result;
+	}
+
+	private void initializeTTTMap()
+	{
+		textToTime.put("mezzogiorno", "12:00");
+		textToTime.put("una", "13:00");
+		textToTime.put("una_notte", "1:00");
+		textToTime.put("due", "14:00");
+		textToTime.put("due_pomeriggio", "14:00");
+		textToTime.put("due_notte", "2:00");
+		textToTime.put("due_mattina", "2:00");
+		textToTime.put("tre", "15:00");
+		textToTime.put("tre_pomeriggio", "15:00");
+		textToTime.put("tre_mattina", "3:00");
+		textToTime.put("tre_notte", "3:00");
+		textToTime.put("quattro", "16:00");
+		textToTime.put("quattro_pomeriggio", "16:00");
+		textToTime.put("quattro_notte", "4:00");
+		textToTime.put("quattro_mattina", "4:00");
+		textToTime.put("cinque", "17:00");
+		textToTime.put("cinque_pomeriggio", "17:00");
+		textToTime.put("cinque_mattina", "5:00");
+		textToTime.put("cinque_notte", "5:00");
+		textToTime.put("sei", "18:00");
+		textToTime.put("sei_sera", "18:00");
+		textToTime.put("sei_mattina", "6:00");
+		textToTime.put("sei_notte", "6:00");
+		textToTime.put("sette", "19:00");
+		textToTime.put("sette_sera", "19:00");
+		textToTime.put("sette_mattina", "7:00");
+		textToTime.put("sette_notte", "7:00");
+		textToTime.put("otto", "20:00");
+		textToTime.put("otto_sera", "20:00");
+		textToTime.put("otto_mattina", "8:00");
+		textToTime.put("otto_notte", "8:00");
+		textToTime.put("nove", "21:00");
+		textToTime.put("nove_sera", "21:00");
+		textToTime.put("nove_mattina", "9:00");
+		textToTime.put("nove_notte", "9:00");
+		textToTime.put("dieci", "22:00");
+		textToTime.put("dieci_mattina", "10:00");
+		textToTime.put("dieci_sera", "22:00");
+		textToTime.put("undici", "23:00");
+		textToTime.put("undici_mattina", "11:00");
+		textToTime.put("undici_sera", "23:00");
 	}
 
 	/*

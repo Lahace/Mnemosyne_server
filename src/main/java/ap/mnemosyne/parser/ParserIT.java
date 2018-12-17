@@ -206,7 +206,7 @@ public class ParserIT extends Parser
 								sn++;
 							}
 						}
-						textConstr.add(new TextualConstraint(matcher.group(1), res.substring(0, res.length() - 1), "verb")); //placeholder verb, no time to implement this
+						textConstr.add(new TextualConstraint(matcher.group(1), res.substring(0, res.length() - 1), "verb", false)); //placeholder verb, no time to implement this
 					}
 					else
 					{
