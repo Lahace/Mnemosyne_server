@@ -225,7 +225,6 @@ public class HintsServlet extends AbstractDatabaseServlet
 								case location_any:
 									//Tricky to manage
 									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
-									toBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getToTime();
 									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES)))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");

@@ -105,7 +105,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		boolean repeatable = false;
 		boolean doneToday = false;
 		boolean failed = false;
-		boolean ignoreToday = tt.getTextualConstraints().get(0).isFuture();
+		boolean ignoreToday = false;
 		Set<Place> placesToSatisfy = new HashSet<>();
 
 		try
@@ -200,6 +200,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 			if(!tt.getTextualConstraints().isEmpty())
 			{
 				TextualConstraint current = tt.getTextualConstraints().get(0);
+				ignoreToday = tt.getTextualConstraints().get(0).isFuture();
 				String toParse = null;
 				try
 				{

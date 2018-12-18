@@ -108,7 +108,6 @@ public class ParserITv2
 					break;
 
 				case "advmod":
-					marker = null;
 					if(sge.getTarget().value().equals("domani"))
 					{
 						word = sge.getTarget().value();
@@ -128,6 +127,20 @@ public class ParserITv2
 								case "mark":
 									marker = sge2.getTarget().value();
 									break;
+
+								case "nummod":
+									isFuture = true;
+									try
+									{
+										//Gotta do this little hack, because docs on how to extract timestamps is scarce
+										word = text.substring(sge2.getTarget().beginPosition(), sge2.getTarget().endPosition() + 3);
+										if(word.length() == 4) word = "0" + word;
+										LocalTime.parse(word);
+									}
+									catch (StringIndexOutOfBoundsException | DateTimeParseException e)
+									{
+										word = sge2.getTarget().value();
+									}
 							}
 						}
 					}
@@ -152,8 +165,6 @@ public class ParserITv2
 					break;
 
 				case "nmod":
-					marker = null;
-					isFuture = false;
 					if(sge.getTarget().value().equals("domani"))
 					{
 						word = sge.getTarget().value();
@@ -221,8 +232,6 @@ public class ParserITv2
 					break;
 
 				case "nummod":
-					marker = null;
-					word = null;
 					try
 					{
 						//Gotta do this little hack, because docs on how to extract timestamps is scarce
@@ -282,9 +291,6 @@ public class ParserITv2
 
 
 				case "advcl":
-					marker = null;
-					word = null;
-					isFuture = false;
 					verb = sge.getTarget().get(CoreAnnotations.LemmaAnnotation.class);
 					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 					{
