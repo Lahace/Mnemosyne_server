@@ -19,6 +19,7 @@ import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.constraints.Null;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.security.InvalidParameterException;
@@ -581,6 +582,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 		catch (NullPointerException e)
 		{
 			LOGGER.severe("NullPointerException: " + e.getMessage());
+			e.printStackTrace();
 			ServletUtils.sendMessage(new Message("NullPointerException",
 					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
@@ -590,11 +592,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 	private ParamsName resolvePosition(Map<ParamsName, Parameter> plist, String ssid, int cellID, LocalTime givenTime)
 	{
-		LocationParameter house = (LocationParameter) plist.get(ParamsName.location_house);
-		LocationParameter work = (LocationParameter) plist.get(ParamsName.location_work);
+		LocationParameter house;
+		LocationParameter work;
 		TimeParameter workTime = (TimeParameter) plist.get(ParamsName.time_work);
 
 		LOGGER.info("Identifying user's position with parameters ssid: " + ssid + " cellID: " + cellID + " givenTime: " + givenTime);
+
+		try{ house = (LocationParameter) plist.get(ParamsName.location_house); }catch(NullPointerException npe){ LOGGER.info("User did not set its home location"); return null;}
+		try{ work = (LocationParameter) plist.get(ParamsName.location_work); }catch(NullPointerException npe){ LOGGER.info("User did not set its work location"); return null;}
 
 		if(house.getSSID().equals(ssid) && house.getCellID() == cellID)
 		{
@@ -613,11 +618,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 	private ParamsName resolvePosition(Map<ParamsName, Parameter> plist, Point givenPoint, LocalTime givenTime) throws TransformException, FactoryException
 	{
 		org.locationtech.jts.geom.Point gisGivenPoint = givenPoint.toJTSPoint();
-		Point housePoint = ((LocationParameter) plist.get(ParamsName.location_house)).getLocation();
-		Point workPoint = ((LocationParameter) plist.get(ParamsName.location_work)).getLocation();
+		Point housePoint = null;
+		Point workPoint = null;
 		TimeParameter workTime = (TimeParameter) plist.get(ParamsName.time_work);
 
 		LOGGER.info("Identifying user's position with parameters givenPoint: " + givenPoint + " givenTime: " + givenTime);
+
+		try{ housePoint = ((LocationParameter) plist.get(ParamsName.location_house)).getLocation(); }catch(NullPointerException npe){ LOGGER.info("User did not set its home location"); return null;}
+		try{ workPoint = ((LocationParameter) plist.get(ParamsName.location_work)).getLocation(); }catch(NullPointerException npe){ LOGGER.info("User did not set its work location"); return null;}
 
 		if(workTime == null)
 		{
