@@ -63,7 +63,7 @@ public class ParserITv2
 		String toRet = string.toLowerCase();
 		toRet = toRet.replaceAll("mezzo giorno", "mezzogiorno");
 		List<String> toExclude = new ArrayList<>(Arrays.asList("ricordami che (.+$)", "ricordami di (.+$)", "devo (.+$)", "ricordami che devo (.+$)"));
-		int numMatch = matchesList(string, toExclude);
+		int numMatch = matchesList(toRet, toExclude);
 
 		if(numMatch >= 0)
 		{
