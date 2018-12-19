@@ -44,6 +44,7 @@ public class ParserITv2Test
 		p.parseString("ricordami di prendere il pane entro le 16");
 		p.parseString("ricordami di prenotare dal dottore entro le 17");
 		p.parseString("ricordami di dar da mangiare al gatto quando torno a casa");
+		p.parseString("ricordami di dare da mangiare al gatto quando torno a casa");
 		p.parseString("ricordami di fare la lavatrice quando torno a casa");
 		p.parseString("ricordami di mettere la crema prima di andare a letto");
 		p.parseString("ricordami di prendere il pane");

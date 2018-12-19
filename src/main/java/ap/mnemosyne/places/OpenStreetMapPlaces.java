@@ -214,16 +214,17 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			int houseNumber = -1;
 			String town = null;
 
-			if(address.get("town") == null)
-			{
-				if(address.get("village") != null)
-				{
-					town = address.get("village").asText();
-				}
-			}
-			else
+			if(address.get("town") != null)
 			{
 				town = address.get("town").asText();
+			}
+			else if(address.get("village") != null)
+			{
+				town = address.get("village").asText();
+			}
+			else if(address.get("city") != null)
+			{
+				town = address.get("city").asText();
 			}
 
 			try{ houseNumber = address.get("house_number").asInt();}catch (NullPointerException npe){}

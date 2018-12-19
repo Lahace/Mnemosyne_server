@@ -435,18 +435,21 @@ public class ParseServlet extends AbstractDatabaseServlet
 			LOGGER.severe("ServletException: " + bde.getMessage());
 			ServletUtils.sendMessage(new Message("Internal Server Error",
 					"PRSR09", bde.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			bde.printStackTrace();
 		}
 		catch (NoDataReceivedException ndre)
 		{
 			LOGGER.severe("NoDataReceivedException: " + ndre.getMessage());
 			ServletUtils.sendMessage(new Message("Bad Request",
 					"PRSR10", ndre.getMessage()), res, HttpServletResponse.SC_BAD_REQUEST);
+			ndre.printStackTrace();
 		}
 		catch(ParameterNotDefinedException pnde)
 		{
 			LOGGER.severe("ParameterNotDefinedException: " + pnde.getMessage());
 			ServletUtils.sendMessage(new Message("Not found",
 					"PRSR11", pnde.getMessage()), res, HttpServletResponse.SC_NOT_FOUND);
+			pnde.printStackTrace();
 		}
 		catch(NullPointerException npe)
 		{
