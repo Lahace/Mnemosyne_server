@@ -86,8 +86,8 @@ INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('lavatrice', 'electronic
 
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','pane','location_item');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','latte','location_item');
-INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','medicina','location_house');
-INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','medicine','location_house');
+INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','medicina','location_any');
+INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','medicine','location_any');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','crema','location_item');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prendere','lavatrice','location_item');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('comprare','pane','location_item');

@@ -258,7 +258,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									if((phoneTime.isAfter(toWork) && position == ParamsName.location_house) || (phoneTime.isAfter(latestClosing.getClosing())))
+									if((phoneTime.isAfter(toWork) && position == ParamsName.location_house && prevPosition != ParamsName.location_house) || (phoneTime.isAfter(latestClosing.getClosing())))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
@@ -267,7 +267,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 
 									if((phoneTime.isAfter(toWork) && distanceInMeters(myPoint, ((LocationParameter) userParametersMap.get(ParamsName.location_house)).getLocation())
-											<= LOCATION_RADIUS_BEFORE_METERS))
+											<= LOCATION_RADIUS_BEFORE_METERS) || (phoneTime.plusMinutes(TIME_NOTICE_MINUTES).isAfter(latestClosing.getClosing())))
 									{
 										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
 										doable.add(new Hint(t.getId(), nearest.getLeft() ,true));
@@ -281,7 +281,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									break;
 
 								case location_work:
-									if((phoneTime.isAfter(toWork) && position == null))
+									if((phoneTime.isAfter(toWork) && position != ParamsName.location_work))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										doable.add(new Hint(t.getId(), null ,true, true));
@@ -349,9 +349,10 @@ public class HintsServlet extends AbstractDatabaseServlet
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
+									if(nearest != null) timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
+									else timeToNearest = 0;
 
-									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime.plusMinutes(timeToNearest)))
+									if(((TaskTimeConstraint) t.getConstr()).getFromTime().plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime.plusMinutes(timeToNearest))) //not totally sure about this
 									{
 										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
 										doable.add(new Hint(t.getId(), nearest.getLeft() ,true));
@@ -385,7 +386,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
+									if(nearest != null) timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
+									else timeToNearest = 0;
 
 									if(((TaskTimeConstraint) t.getConstr()).getFromTime().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
 									{
@@ -421,7 +423,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									timeToLatest = pman.getMinutesToDestination(myPoint, latestClosing.getCoordinates());
+									if(nearest != null) timeToLatest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
+									else timeToLatest = 0;
 
 									if(latestClosing.getClosing().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToLatest)))
 									{
@@ -443,16 +446,16 @@ public class HintsServlet extends AbstractDatabaseServlet
 							switch (t.getConstr().getType())
 							{
 								case at:
-									if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
-									{
-										LOGGER.info("Task has failed (asking for confirmation)");
-										doable.add(new Hint(t.getId(), null ,true, true));
-										//setTaskFailed(t, user);
-										break;
-									}
-
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
+										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+										{
+											LOGGER.info("Task has failed (asking for confirmation)");
+											doable.add(new Hint(t.getId(), null ,true, true));
+											//setTaskFailed(t, user);
+											break;
+										}
+
 										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
 										{
 											if (position != null && position.equals(t.getConstr().getParamName()))
@@ -463,6 +466,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
+										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position.equals(t.getConstr().getParamName()))
+										{
+											LOGGER.info("Task has failed (asking for confirmation)");
+											doable.add(new Hint(t.getId(), null ,true, true));
+											//setTaskFailed(t, user);
+											break;
+										}
+
 										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()))
 										{
 											if (position == null || !position.equals(t.getConstr().getParamName()))
@@ -504,16 +515,16 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 								case after:
 									//Same as AT case
-									if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
-									{
-										LOGGER.info("Task has failed (asking for confirmation)");
-										doable.add(new Hint(t.getId(), null ,true, true));
-										//setTaskFailed(t, user);
-										break;
-									}
-
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
+										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+										{
+											LOGGER.info("Task has failed (asking for confirmation)");
+											doable.add(new Hint(t.getId(), null ,true, true));
+											//setTaskFailed(t, user);
+											break;
+										}
+
 										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
 										{
 											if (position != null && position.equals(t.getConstr().getParamName()))
@@ -524,6 +535,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
+										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position.equals(t.getConstr().getParamName()))
+										{
+											LOGGER.info("Task has failed (asking for confirmation)");
+											doable.add(new Hint(t.getId(), null ,true, true));
+											//setTaskFailed(t, user);
+											break;
+										}
+
 										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()))
 										{
 											if (position == null || !position.equals(t.getConstr().getParamName()))

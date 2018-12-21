@@ -33,6 +33,7 @@ public class ParserITv2Test
 		p.parseString("devo prenotare dal dottore entro le 7:30");
 		p.parseString("devo prenotare dal dottore prima di domani a mezzogiorno");
 		p.parseString("devo dar da mangiare al gatto quando torno a casa");
+		//p.parseString("devo dar da mangiare al gatto quando esco di casa");
 		p.parseString("devo dar da mangiare al gatto domani quando torno a casa");
 		p.parseString("devo fare la lavatrice quando torno a casa");
 		p.parseString("devo mettere la crema prima di andare a letto");

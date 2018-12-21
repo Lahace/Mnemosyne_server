@@ -334,7 +334,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					else throw new ParameterNotDefinedException("location_house");
 
 					Place myHouse = pman.getPlacesFromPoint(housePoint);
-					for (Place place : pman.getPlacesFromQuery(s + " in " + myHouse.getTown() + " in " + my.getState()))
+					for (Place place : pman.getPlacesFromQuery(s + " in " + myHouse.getTown() + " in " + myHouse.getState()))
 					{
 						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getRoad() ,place.getHouseNumber(),
 								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
@@ -348,7 +348,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 					else throw new ParameterNotDefinedException("location_work");
 
 					Place myWorkplace = pman.getPlacesFromPoint(workPoint);
-					for (Place place : pman.getPlacesFromQuery(s + " in " + myWorkplace.getTown() + " in " + my.getState()))
+					for (Place place : pman.getPlacesFromQuery(s + " in " + myWorkplace.getTown() + " in " + myWorkplace.getState()))
 					{
 						placesToSatisfy.add(new Place(place.getCountry(), place.getState(), place.getTown(), place.getSuburb(), place.getRoad() ,place.getHouseNumber(),
 								place.getName(), place.getPlaceType(), place.getCoordinates(), standardOpening, standardClosing));
@@ -359,59 +359,60 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 				if(parsed)
 				{
-
-					if(p.equals(ParamsName.location_item))
+					LOGGER.info("Removing useless places");
+					//Remove every place that's not open at the time specified
+					TimeParameter bed = (TimeParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(),
+							(User) req.getSession().getAttribute("current"), ParamsName.time_bed).getUserDefinedParameterByName();
+					Iterator<Place> iter = placesToSatisfy.iterator();
+					Set<Place> toReplace = new HashSet<>();
+					while(iter.hasNext())
 					{
-						//Remove every place that's not open at the time specified
-						TimeParameter bed = (TimeParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(),
-								(User) req.getSession().getAttribute("current"), ParamsName.time_bed).getUserDefinedParameterByName();
-						Iterator<Place> iter = placesToSatisfy.iterator();
-						Set<Place> toReplace = new HashSet<>();
-						while(iter.hasNext())
+						//TODO: maybe also add time to destination to the condition? -> specifiedTime + timeToDestination
+						Place place = iter.next();
+						if ((pair.getRight().equals(ConstraintTemporalType.at) && !TimeUtils.isTimeBetween(specifiedTime, place.getOpening(), place.getClosing())) ||
+								(pair.getRight().equals(ConstraintTemporalType.before) && TimeUtils.isTimeBetween(specifiedTime, bed.getToTime(), place.getOpening())) ||
+								(pair.getRight().equals(ConstraintTemporalType.after) && TimeUtils.isTimeBetween(specifiedTime, place.getClosing(), bed.getFromTime())))
 						{
-							//TODO: maybe also add time to destination to the condition? -> specifiedTime + timeToDestination
-							Place place = iter.next();
-							if ((pair.getRight().equals(ConstraintTemporalType.at) && !TimeUtils.isTimeBetween(specifiedTime, place.getOpening(), place.getClosing())) ||
-									(pair.getRight().equals(ConstraintTemporalType.before) && TimeUtils.isTimeBetween(specifiedTime, bed.getToTime(), place.getOpening())) ||
-									(pair.getRight().equals(ConstraintTemporalType.after) && TimeUtils.isTimeBetween(specifiedTime, place.getClosing(), bed.getFromTime())))
-							{
-								toReplace.add(place);
-							}
+							toReplace.add(place);
 						}
+					}
 
-						placesToSatisfy.removeAll(toReplace);
+					placesToSatisfy.removeAll(toReplace);
 
-						if (placesToSatisfy.isEmpty())
-						{
-							LOGGER.warning("FAILED: placesToSatisfy was emptied");
-							ServletUtils.sendMessage(new Message("Bad request",
-									"PRSR07", "No places found that's still/already open at: " + specifiedTime), res, HttpServletResponse.SC_BAD_REQUEST);
-							return;
-						}
+					if (placesToSatisfy.isEmpty())
+					{
+						LOGGER.warning("FAILED: placesToSatisfy was emptied");
+						ServletUtils.sendMessage(new Message("Bad request",
+								"PRSR07", "No places found that's still/already open at: " + specifiedTime), res, HttpServletResponse.SC_BAD_REQUEST);
+						return;
+					}
 
-						//changing constraint to match with places' closing/opening time
-						//getting earliest opening place and latest closing place
+					//changing constraint to match with places' closing/opening time
+					//getting earliest opening place and latest closing place
 
-						Place maxClosing = TimeUtils.findLatestOpenedPlace(placesToSatisfy);
-						Place minOpening = TimeUtils.findEarliestOpeningPlace(placesToSatisfy);
+					Place maxClosing = TimeUtils.findLatestOpenedPlace(placesToSatisfy);
+					Place minOpening = TimeUtils.findEarliestOpeningPlace(placesToSatisfy);
 
-						if (pair.getRight().equals(ConstraintTemporalType.before) && specifiedTime.isAfter(maxClosing.getClosing()))
-						{
-							constr = new TaskTimeConstraint(maxClosing.getClosing(), null, ParamsName.time_specified, pair.getRight());
-						}
-						else if (pair.getRight().equals(ConstraintTemporalType.after) && specifiedTime.isBefore(minOpening.getOpening()))
-						{
-							constr = new TaskTimeConstraint(minOpening.getOpening(), null, ParamsName.time_specified, pair.getRight());
-						}
-						else
-						{
-							constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
-						}
+					if (pair.getRight().equals(ConstraintTemporalType.before) && specifiedTime.isAfter(maxClosing.getClosing()))
+					{
+						constr = new TaskTimeConstraint(maxClosing.getClosing(), null, ParamsName.time_specified, pair.getRight());
+					}
+					else if (pair.getRight().equals(ConstraintTemporalType.after) && specifiedTime.isBefore(minOpening.getOpening()))
+					{
+						constr = new TaskTimeConstraint(minOpening.getOpening(), null, ParamsName.time_specified, pair.getRight());
 					}
 					else
 					{
 						constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
 					}
+				}
+			}
+			else
+			{
+				if(parsed)
+				{
+					LOGGER.info("Adding time constraint");
+					constr = new TaskTimeConstraint(specifiedTime, null, ParamsName.time_specified, pair.getRight());
 				}
 			}
 

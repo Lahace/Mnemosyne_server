@@ -22,6 +22,7 @@ public class PlacesManager
 
 	public Set<Place> getPlacesFromQuery(String query)
 	{
+		LOGGER.info("Resolving query: " + query);
 		Set<Place> toRet = new HashSet<>();
 		for(PlacesProvider p : classList)
 		{
