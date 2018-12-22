@@ -20,7 +20,7 @@ public class ParserITv2Test
 					add(new TextualConstraint("prima", "1:00", "null", true));
 				}}
 				));*/
-		p.parseString("devo prendere il latte domani prima delle dieci");
+		p.parseString("devo prendere il latte domani prima delle 17");
 		p.parseString("devo prendere il latte prima di domani alle due di pomeriggio");
 		p.parseString("devo prendere il latte prima di domani alle tre di mattina");
 		p.parseString("devo prendere il latte prima di domani alle quattro di notte");

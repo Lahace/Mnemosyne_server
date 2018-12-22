@@ -448,7 +448,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 								case at:
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
-										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
 											doable.add(new Hint(t.getId(), null ,true, true));
@@ -517,7 +517,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									//Same as AT case
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
-										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && !position.equals(t.getConstr().getParamName()))
+										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
 											doable.add(new Hint(t.getId(), null ,true, true));
@@ -560,13 +560,23 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 			//updating user's last known position
 			if(position == null)
-				new UpdateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
-						new LocationParameter(ParamsName.location_previous, user.getEmail(), new Point(lat,lon), -1, null))
-						.updateUserDefinedParameter();
+				if(prevPlaceParameter == null)
+					new CreateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
+							new LocationParameter(ParamsName.location_previous, user.getEmail(), new Point(lat,lon), -1, null))
+							.createUserDefinedParameter();
+				else
+					new UpdateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
+							new LocationParameter(ParamsName.location_previous, user.getEmail(), new Point(lat,lon), -1, null))
+							.updateUserDefinedParameter();
 			else
-				new UpdateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
-						new LocationParameter(ParamsName.location_previous, user.getEmail(), ((LocationParameter)userParametersMap.get(position)).getLocation(), -1, null))
-						.updateUserDefinedParameter();
+				if(prevPlaceParameter == null)
+					new CreateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
+							new LocationParameter(ParamsName.location_previous, user.getEmail(), ((LocationParameter)userParametersMap.get(position)).getLocation(), -1, null))
+							.createUserDefinedParameter();
+				else
+					new UpdateUserDefinedParameterDatabase(getDataSource().getConnection(), user,
+							new LocationParameter(ParamsName.location_previous, user.getEmail(), ((LocationParameter)userParametersMap.get(position)).getLocation(), -1, null))
+							.updateUserDefinedParameter();
 
 			res.setStatus(HttpServletResponse.SC_OK);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -662,18 +672,18 @@ public class HintsServlet extends AbstractDatabaseServlet
 		if(workDistance <= LOCATION_RADIUS_METERS && TimeUtils.isTimeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
 		{
 			LOGGER.info("User is at its workplace (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
-					" distance: " + houseDistance + " time: " + givenTime + ")");
+					" distance from house: " + houseDistance + "m, time: " + givenTime + ")");
 			return ParamsName.location_work;
 		}
 		else if(houseDistance <= LOCATION_RADIUS_METERS)
 		{
 			LOGGER.info("User is at its house (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
-					" distance: " + houseDistance + " time: " + givenTime + ")");
+					" distance from work: " + workDistance + "m, time: " + givenTime + ")");
 			return ParamsName.location_house;
 		}
 
 		LOGGER.info("User seems to be outside (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
-				" distance from house: " + houseDistance + " distance from work: " + workDistance + " time: " + givenTime + ")");
+				" distance from house: " + houseDistance + "m, distance from work: " + workDistance + "m, time: " + givenTime + ")");
 		return null;
 	}
 
