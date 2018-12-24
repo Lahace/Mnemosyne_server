@@ -72,6 +72,8 @@ INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('pane', 'bakery');
 INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('pane', 'supermarket');
 INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('medicina', 'pharmacy');
 INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('medicina', 'medical_supply');
+INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('insulina', 'medical_supply');
+INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('insulina', 'medical_supply');
 INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('medicina', 'mall');
 INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('medicina', 'supermarket');
 INSERT INTO mnemosyne.found_in(item,place_type) VALUES ('latte', 'dairy');
