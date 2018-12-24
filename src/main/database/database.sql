@@ -52,6 +52,7 @@ CREATE TABLE mnemosyne.task(
     name TEXT NOT NULL,
     constr BYTEA DEFAULT NULL, --serializing java object
     possibleAtWork BOOLEAN NOT NULL,
+    critical BOOLEAN NOT NULL,
     repeatable BOOLEAN NOT NULL,
     doneToday BOOLEAN NOT NULL,
     failed BOOLEAN NOT NULL,
@@ -75,6 +76,7 @@ CREATE TABLE mnemosyne.requires(
     verb VARCHAR(50) NOT NULL,
     item VARCHAR(50) NOT NULL,
     parameter VARCHAR(30) NOT NULL,
+    critical BOOLEAN DEFAULT FALSE,
     PRIMARY KEY (verb,item),
     FOREIGN KEY (verb) REFERENCES mnemosyne.verb(word)
         ON DELETE CASCADE ON UPDATE CASCADE,

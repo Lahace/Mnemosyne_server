@@ -102,6 +102,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		String name = tt.getFullSentence();
 		TaskConstraint constr = null;
 		boolean possibleAtWork = false;
+		boolean critical = false;
 		boolean repeatable = false;
 		boolean doneToday = false;
 		boolean failed = false;
@@ -112,7 +113,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 		{
 
 			LOGGER.info("Checking action validity..");
-			ParamsName p = new GetPnameByTextualActionDatabase(getDataSource().getConnection(), tt.getTextualAction()).getPnameByTextualAction();
+			Tuple<ParamsName, Boolean> p = new GetPnameByTextualActionDatabase(getDataSource().getConnection(), tt.getTextualAction()).getPnameByTextualAction();
 			if(p == null)
 			{
 				LOGGER.warning("FAILED: No action definition for: " + tt.getTextualAction().getVerb() + " " + tt.getTextualAction().getSubject());
@@ -126,7 +127,8 @@ public class ParseServlet extends AbstractDatabaseServlet
 			Point point;
 			boolean findPlacesForItem = false;
 			LOGGER.info("Resolving parameter " + p.toString() + " for actions");
-			switch (p)
+			critical = p.getRight();
+			switch (p.getLeft())
 			{
 				case location_item:
 					/*Deferring operation since it's quite heavy, we can then return error messages in (for examples) constraints before
@@ -138,7 +140,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 				case location_house:
 					LOGGER.info("Found location_house");
-					param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p)
+					param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p.getLeft())
 							.getUserDefinedParameterByName();
 					if(param == null)
 					{
@@ -161,7 +163,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 				case location_work:
 					LOGGER.info("Found location_work");
 					possibleAtWork = true;
-					param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p)
+					param = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current"), p.getLeft())
 							.getUserDefinedParameterByName();
 					if(param == null)
 					{
@@ -418,7 +420,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 
 			LOGGER.info("Creating task..");
 
-			Task t = new Task(-1, user, name ,constr, possibleAtWork, repeatable, doneToday, failed, ignoreToday,placesToSatisfy);
+			Task t = new Task(-1, user, name ,constr, possibleAtWork, critical, repeatable, doneToday, failed, ignoreToday,placesToSatisfy);
 			Task ret = new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -430,6 +432,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 			LOGGER.severe("SQLException: " + sqle.getMessage() + " -> Code: " + sqle.getErrorCode() + " State: " + sqle.getSQLState());
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"PRSR08", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			sqle.printStackTrace();
 		}
 		catch (ServletException bde)
 		{

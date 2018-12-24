@@ -2,6 +2,8 @@ package ap.mnemosyne.database;
 
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.parser.resources.TextualAction;
+import ap.mnemosyne.util.Tuple;
+import org.apache.xpath.operations.Bool;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,11 +22,11 @@ public class GetPnameByTextualActionDatabase
 		this.ta = ta;
 	}
 
-	public ParamsName getPnameByTextualAction() throws SQLException
+	public Tuple<ParamsName, Boolean> getPnameByTextualAction() throws SQLException
 	{
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
-		ParamsName ret = null;
+		Tuple<ParamsName, Boolean> ret = null;
 
 		try
 		{
@@ -35,7 +37,7 @@ public class GetPnameByTextualActionDatabase
 			rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				ret = ParamsName.valueOf(rs.getString("parameter"));
+				ret = new Tuple<>(ParamsName.valueOf(rs.getString("parameter")), rs.getBoolean("critical"));
 			}
 
 		}

@@ -47,19 +47,19 @@ public class GetTaskByIDDatabase
 				if(read instanceof TaskPlaceConstraint)
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), (TaskPlaceConstraint) read,
-							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
+							rs.getBoolean("possibleAtWork"), rs.getBoolean("critical"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
 							rs.getBoolean("failed"), rs.getBoolean("ignoredToday"), set);
 				}
 				else if(read instanceof TaskTimeConstraint)
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), (TaskTimeConstraint) read,
-							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
+							rs.getBoolean("possibleAtWork"), rs.getBoolean("critical"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
 							rs.getBoolean("failed"), rs.getBoolean("ignoredToday"), set);
 				}
 				else
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), null,
-							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
+							rs.getBoolean("possibleAtWork"), rs.getBoolean("critical"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
 							rs.getBoolean("failed"), rs.getBoolean("ignoredToday"), set);
 				}
 			}

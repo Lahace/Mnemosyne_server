@@ -36,9 +36,12 @@ public class HintsServlet extends AbstractDatabaseServlet
 	public final int LOCATION_RADIUS_BEFORE_METERS = 2000;
 	public final int LOCATION_RADIUS_BEFORE_URGENT_METERS = 500;
 	public final int LOCATION_INTEREST_DISTANCE_METERS = 800;
+	public final int LOCATION_INTEREST_DISTANCE_METERS_CRITICAL = 1500;
 	public final int TIME_NOTICE_MINUTES = 30;
+	public final int TIME_NOTICE_MINUTES_CRITICAL = 45;
 	public final int TIME_MAX_SLACK_MINUTES = 10;
 	public final int TIME_EVENTS_BEFORE_BED_MINUTES = 20;
+	public final int TIME_EVENTS_BEFORE_BED_MINUTES_CRITICAL = 40;
 	public final double MULTIPLIER_TIME_NOTICE = 0.2;
 
 	private final Logger LOGGER = Logger.getLogger(HintsServlet.class.getName());
@@ -202,7 +205,20 @@ public class HintsServlet extends AbstractDatabaseServlet
 						int timeToLatest;
 						LocalTime fromBed;
 						LocalTime toBed;
+						int intrestDistanceMeters, timeNoticeMinutes, timeEventsBeforeBed;
 						if(confirmMap.get(t.getId()) != null) confirmMap.put(t.getId(), true); //i've seen this task, it has not been deleted and it supposedly still requires confirmation
+						if(t.isCritical())
+						{
+							intrestDistanceMeters = LOCATION_INTEREST_DISTANCE_METERS_CRITICAL;
+							timeNoticeMinutes = TIME_NOTICE_MINUTES_CRITICAL;
+							timeEventsBeforeBed = TIME_EVENTS_BEFORE_BED_MINUTES_CRITICAL;
+						}
+						else
+						{
+							intrestDistanceMeters = LOCATION_INTEREST_DISTANCE_METERS;
+							timeNoticeMinutes = TIME_NOTICE_MINUTES;
+							timeEventsBeforeBed = TIME_EVENTS_BEFORE_BED_MINUTES;
+						}
 
 						if(t.getConstr() == null)
 						{
@@ -227,7 +243,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 								case location_any:
 									//Tricky to manage
 									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
-									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES)))
+									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed)))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										confirmMap.put(t.getId(), true);
@@ -236,7 +252,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										break;
 									}
 
-									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES).plusMinutes(TIME_NOTICE_MINUTES)))
+									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed).plusMinutes(timeNoticeMinutes)))
 									{
 										LOGGER.info("Adding to doable, urgent");
 										confirmMap.remove(t.getId());
@@ -272,13 +288,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 
 									if((phoneTime.isAfter(toWork) && distanceInMeters(myPoint, ((LocationParameter) userParametersMap.get(ParamsName.location_house)).getLocation())
-											<= LOCATION_RADIUS_BEFORE_METERS) || (phoneTime.plusMinutes(TIME_NOTICE_MINUTES).isAfter(latestClosing.getClosing())))
+											<= LOCATION_RADIUS_BEFORE_METERS) || (phoneTime.plusMinutes(timeNoticeMinutes).isAfter(latestClosing.getClosing())))
 									{
 										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
 										confirmMap.remove(t.getId());
 										doable.add(new Hint(t.getId(), nearest.getLeft() ,true));
 									}
-									else if(distanceInMeters(myPoint, nearest.getLeft().getCoordinates()) <= LOCATION_INTEREST_DISTANCE_METERS)
+									else if(distanceInMeters(myPoint, nearest.getLeft().getCoordinates()) <= intrestDistanceMeters)
 									{
 										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
 										confirmMap.remove(t.getId());
@@ -297,7 +313,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										break;
 									}
 
-									if(toWork.isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES)))
+									if(toWork.isBefore(phoneTime.plusMinutes(timeNoticeMinutes)))
 									{
 										LOGGER.info("Adding to doable, urgent");
 										confirmMap.remove(t.getId());
@@ -313,7 +329,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 								case location_house:
 									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
-									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES)))
+									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed)))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										confirmMap.put(t.getId(), true);
@@ -322,7 +338,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										break;
 									}
 
-									if(fromBed.isBefore(phoneTime.plusMinutes(TIME_EVENTS_BEFORE_BED_MINUTES).plusMinutes(TIME_NOTICE_MINUTES)))
+									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed).plusMinutes(timeNoticeMinutes)))
 									{
 										LOGGER.info("Adding to doable, urgent");
 										confirmMap.remove(t.getId());
@@ -386,7 +402,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										}
 									}
 									else if((toTime != null && fromTime.isBefore(phoneTime))
-											|| (toTime == null && phoneTime.isAfter(fromTime.plusMinutes(TIME_MAX_SLACK_MINUTES).minusMinutes(timeToNearest).minusMinutes(TIME_NOTICE_MINUTES))))
+											|| (toTime == null && phoneTime.isAfter(fromTime.plusMinutes(TIME_MAX_SLACK_MINUTES).minusMinutes(timeToNearest).minusMinutes(timeNoticeMinutes))))
 									{
 										if(nearest != null)
 										{
@@ -428,7 +444,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(nearest != null) timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
 									else timeToNearest = 0;
 
-									if(fromTime.isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToNearest)))
+									if(fromTime.isBefore(phoneTime.plusMinutes(timeNoticeMinutes).plusMinutes(timeToNearest)))
 									{
 										if(nearest != null)
 										{
@@ -443,7 +459,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 											doable.add(new Hint(t.getId(), null, true));
 										}
 									}
-									else if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS)
+									else if(nearest.getRight()<=intrestDistanceMeters)
 									{
 										if(nearest != null)
 										{
@@ -486,7 +502,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(nearest != null) timeToLatest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
 									else timeToLatest = 0;
 
-									if(latestClosing.getClosing().isBefore(phoneTime.plusMinutes(TIME_NOTICE_MINUTES).plusMinutes(timeToLatest)))
+									if(latestClosing.getClosing().isBefore(phoneTime.plusMinutes(timeNoticeMinutes).plusMinutes(timeToLatest)))
 									{
 										if(nearest != null)
 										{
@@ -501,7 +517,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 											doable.add(new Hint(t.getId(), null, true));
 										}
 									}
-									else if(nearest.getRight()<=LOCATION_INTEREST_DISTANCE_METERS && phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime()))
+									else if(nearest.getRight()<=intrestDistanceMeters && phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime()))
 									{
 										if(nearest != null)
 										{
@@ -808,7 +824,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 	private void setTaskFailed(Task t, User u) throws SQLException, IOException
 	{
-		Task tNew = new Task(t.getId(), t.getUser(),t.getName(),t.getConstr(), t.isPossibleAtWork(), t.isRepeatable(), t.isDoneToday(), true, t.isIgnoredToday(),t.getPlacesToSatisfy());
+		Task tNew = new Task(t.getId(), t.getUser(),t.getName(),t.getConstr(), t.isPossibleAtWork(), t.isCritical(), t.isRepeatable(), t.isDoneToday(), true, t.isIgnoredToday(),t.getPlacesToSatisfy());
 		new UpdateTaskDatabase(getDataSource().getConnection(), tNew, u).updateTask();
 	}
 }

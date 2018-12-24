@@ -157,13 +157,13 @@ public class RestTask
 
 			new CreateTaskDatabase(getDataSource().getConnection(),
 					new Task(12,((User)req.getSession().getAttribute("current")).getEmail() , "Prova task time", new TaskTimeConstraint(new LocalTime(16,0), null, ParamsName.time_bed, ConstraintTemporalType.after),
-							false, false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+							false, false, false,false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 
 			new CreateTaskDatabase(getDataSource().getConnection(),
 					new Task(12,((User)req.getSession().getAttribute("current")).getEmail() , "prova task place", new TaskPlaceConstraint(
 							new Place("italy", "veneto", "schio", "magré", "Via lmao",2, "casa", "housing",
 									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before, NormalizedActions.get),
-							false, false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+							false, false, false,false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
 			res.setStatus(HttpServletResponse.SC_OK);
 		}
 		catch(ServletException | IOException se)
