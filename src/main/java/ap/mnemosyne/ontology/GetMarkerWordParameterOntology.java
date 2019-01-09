@@ -3,6 +3,7 @@ package ap.mnemosyne.ontology;
 import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ResultSet;
 
+@Deprecated
 public class GetMarkerWordParameterOntology
 {
 	private OntologyEngine oe;

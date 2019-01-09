@@ -12,7 +12,6 @@
 
 	<packaging>war</packaging>
 
-	<!-- Project description elements -->
 	<name>Mnemosyne_Server</name>
 
 	<description>Lato server per Mnemosyne</description>
@@ -38,30 +37,21 @@
 		<url>http://www.dei.unipd.it/en/</url>
 	</organization>
 
-	<!-- Build settings -->
-	
-	<!-- Specifies the encoding to be used for project source files -->
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	
-	<!-- Configuration of the default build lifecycle -->
 	<build>
 		<defaultGoal>compile</defaultGoal>
 		
-		<!-- source code folder -->
 		<sourceDirectory>${basedir}/src/main/java</sourceDirectory>
 		
-		<!-- compiled code folder -->
 		<directory>${basedir}/target</directory>
 		
-		<!-- name of the generated package -->
 		<finalName>${project.artifactId}</finalName>
 
-		<!-- configuration of the plugins for the different goals -->
 		<plugins>
 		
-			<!-- compiler plugin: source and target code is for Java 1.8 -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -73,7 +63,6 @@
 			</plugin>
 			
 			
-			<!-- javadoc plugin: output in the javadoc folder -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
@@ -86,49 +75,23 @@
 				</configuration>
 			</plugin>
 
-			<!-- packager plugin: create a WAR file to be deployed -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>3.2.0</version>
 				<configuration>
 					<webXml>${basedir}/src/main/webapp/WEB-INF/web.xml</webXml>
+					<webResources>
+						<resource>
+							<!-- this is relative to the pom.xml directory -->
+							<directory>src/main/resources</directory>
+						</resource>
+					</webResources>
 				</configuration>
-			</plugin>		
+			</plugin>
 		</plugins>
-		
-		<!--  process resources before compilation and packaging -->
-		<resources>
-			
-			<!--  copy JSP files to the target directory -->
-			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}/jsp</targetPath>
-				<directory>${basedir}/src/main/webapp/jsp</directory>
-				<includes>
-					<include>**/*.*</include>
-				</includes>
-			</resource>
-			
-			<!--  copy configuration files to the target directory -->
-			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}/META-INF</targetPath>
-				<directory>${basedir}/src/main/webapp/META-INF</directory>
-				<includes>
-					<include>**/*.*</include>
-				</includes>
-			</resource>
-			<!--  copy configuration files to the target directory -->
-			<resource>
-				<targetPath>${basedir}/target/${project.artifactId}/resources/ontology</targetPath>
-				<directory>${basedir}/src/main/webapp/resources/ontology</directory>
-				<includes>
-					<include>**/*.owl</include>
-				</includes>
-			</resource>
-		</resources>
 	</build>
 
-	<!--Extra repo-->
 	<repositories>
 		<repository>
 			<id>maven2-repository.dev.java.net</id>
@@ -150,18 +113,17 @@
 		</repository>
 	</repositories>
 
-	<!-- Dependencies -->
 	<dependencies>
-		<dependency>
-			<groupId>eu.fbk.dh</groupId>
-			<artifactId>tint-runner</artifactId>
-			<version>0.2</version>
-		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
 			<version>3.1.0</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>eu.fbk.dh</groupId>
+			<artifactId>tint-runner</artifactId>
+			<version>0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.tomcat</groupId>
@@ -190,6 +152,11 @@
 			<version>2.9.7</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-joda</artifactId>
+			<version>2.9.7</version>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
@@ -211,23 +178,23 @@
 		</dependency>
 		<dependency>
 			<groupId>org.geotools</groupId>
-			<artifactId>gt-shapefile</artifactId>
-			<version>21-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.geotools</groupId>
-			<artifactId>gt-swing</artifactId>
-			<version>21-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.geotools</groupId>
 			<artifactId>gt-geometry</artifactId>
+			<version>21-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.geotools</groupId>
+			<artifactId>gt-epsg-hsql</artifactId>
 			<version>21-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpclient</artifactId>
 			<version>4.5.6</version>
+		</dependency>
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.10.1</version>
 		</dependency>
 	</dependencies>
 

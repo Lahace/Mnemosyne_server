@@ -2,6 +2,7 @@ package ap.mnemosyne.parser.resources;
 
 import java.security.InvalidParameterException;
 
+@Deprecated
 public class Marker
 {
 	String marker;

@@ -2,12 +2,15 @@ package ap.mnemosyne.parser.resources;
 
 public class TextualConstraint
 {
-	String constraintMarker, constraintWord;
+	private String constraintMarker, constraintWord, verb;
+	private boolean isFuture;
 
-	public TextualConstraint(String constraintMarker, String constraintWord)
+	public TextualConstraint(String constraintMarker, String constraintWord, String verb, boolean isFuture)
 	{
 		this.constraintMarker = constraintMarker;
 		this.constraintWord = constraintWord;
+		this.isFuture = isFuture;
+		this.verb = verb;
 	}
 
 	public String getConstraintMarker()
@@ -15,19 +18,19 @@ public class TextualConstraint
 		return constraintMarker;
 	}
 
-	public void setConstraintMarker(String constraintMarker)
-	{
-		this.constraintMarker = constraintMarker;
-	}
-
 	public String getConstraintWord()
 	{
 		return constraintWord;
 	}
 
-	public void setConstraintWord(String constraintWord)
+	public boolean isFuture()
 	{
-		this.constraintWord = constraintWord;
+		return isFuture;
+	}
+
+	public String getVerb()
+	{
+		return verb;
 	}
 
 	@Override
@@ -36,6 +39,8 @@ public class TextualConstraint
 		return "TextualConstraint{" +
 				"constraintMarker='" + constraintMarker + '\'' +
 				", constraintWord='" + constraintWord + '\'' +
+				", verb='" + verb + '\'' +
+				", isFuture='" + isFuture + '\'' +
 				'}';
 	}
 

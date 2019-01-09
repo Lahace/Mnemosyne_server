@@ -6,7 +6,7 @@ import java.sql.*;
 
 public class CreateUserDatabase
 {
-	private final String stmt = "INSERT INTO mnemosyne.user(email, password, sessionid) VALUES (?, crypt(?, gen_salt('bf')), ?)";
+	private final String stmt = "INSERT INTO mnemosyne.user(email, password, sessionid) VALUES (?, crypt(?, gen_salt('bf')), ?) RETURNING *";
 	private final User u;
 	private final Connection conn;
 
@@ -27,10 +27,10 @@ public class CreateUserDatabase
 			pstmt.setString(1, u.getEmail());
 			pstmt.setString(2, u.getPassword());
 			pstmt.setString(3, null);
-			int rows = pstmt.executeUpdate();
+			rs = pstmt.executeQuery();
 
-			if(rows > 0)
-				ret = new User(u.getSessionID(), u.getEmail(),u.getPassword());
+			if(rs.next())
+				ret = new User(rs.getString("sessionid"), rs.getString("email"), null);
 
 		}
 		finally

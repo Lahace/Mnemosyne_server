@@ -16,8 +16,9 @@
 
 package ap.mnemosyne.resources;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -49,12 +50,6 @@ public class Message extends Resource {
 	 * Additional details about the error, if any
 	 */
 	private final String errorDetails;
-	
-	/**
-	 * Indicates whether the message is about an error or not.
-	 */
-	private final boolean isError;
-
 
 	/**
 	 * Creates an error message.
@@ -66,11 +61,11 @@ public class Message extends Resource {
 	 * @param errorDetails
 	 *            additional details about the error.
 	 */
-	public Message(final String message, final String errorCode, final String errorDetails) {
+	@JsonCreator
+	public Message(@JsonProperty("message") final String message, @JsonProperty("error-code") final String errorCode, @JsonProperty("error-error-details") final String errorDetails) {
 		this.message = message;
 		this.errorCode = errorCode;
 		this.errorDetails = errorDetails;
-		this.isError = true;
 	}
 
 
@@ -84,7 +79,6 @@ public class Message extends Resource {
 		this.message = message;
 		this.errorCode = null;
 		this.errorDetails = null;
-		this.isError = false;
 	}
 
 
@@ -115,41 +109,15 @@ public class Message extends Resource {
 		return errorDetails;
 	}
 
-	/**
-	 * Indicates whether the message is about an error or not.
-	 * 
-	 * @return {@code true} is the message is about an error, {@code false} otherwise.
-	 */
-	public final boolean isError() {
-		return isError;
-	}
-
 	@Override
 	public final void toJSON(final OutputStream out) throws IOException {
 
-		final JsonGenerator jg = JSON_FACTORY.createGenerator(new OutputStreamWriter(out, StandardCharsets.UTF_8));
-
-		jg.writeStartObject();
-
-		jg.writeFieldName(Message.class.getSimpleName().toLowerCase());
-
-		jg.writeStartObject();
-
-		jg.writeStringField("message", message);
-
-		if(errorCode != null) {
-			jg.writeStringField("error-code", errorCode);
-		}
-
-		if(errorDetails != null) {
-			jg.writeStringField("error-details", errorDetails);
-		}
-
-		jg.writeEndObject();
-
-		jg.writeEndObject();
-
-		jg.flush();
+		PrintWriter pw = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
+		ObjectMapper om = new ObjectMapper();
+		om.findAndRegisterModules();
+		pw.print(om.writeValueAsString(this));
+		pw.flush();
+		pw.close();
 	}
 
 	@Override
@@ -167,5 +135,4 @@ public class Message extends Resource {
 		om.findAndRegisterModules();
 		return om.writeValueAsString(this);
 	}
-
 }

@@ -7,29 +7,36 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.joda.time.LocalTime;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalTime;
 
 @JsonTypeName("task-time-constraint")
 public class TaskTimeConstraint extends TaskConstraint
 {
-	private LocalTime constraintTime;
+	private LocalTime fromTime, toTime;
 
 	@JsonCreator
-	public TaskTimeConstraint(@JsonProperty("constraintTime") LocalTime constraintTime, @JsonProperty("paramName") ParamsName paramsName , @JsonProperty("type") ConstraintTemporalType type)
+	public TaskTimeConstraint(@JsonProperty("from_time") LocalTime fromTime, @JsonProperty("to_time") LocalTime toTime ,
+	                          @JsonProperty("param-name") ParamsName paramsName , @JsonProperty("type") ConstraintTemporalType type)
 	{
 		super(paramsName, type);
-		this.constraintTime = constraintTime;
+		this.fromTime = fromTime;
+		this.toTime = toTime;
 	}
 
-	public LocalTime getConstraintTime()
+	public LocalTime getFromTime()
 	{
-		return constraintTime;
+		return fromTime;
+	}
+
+	public LocalTime getToTime()
+	{
+		return toTime;
 	}
 
 	@Override

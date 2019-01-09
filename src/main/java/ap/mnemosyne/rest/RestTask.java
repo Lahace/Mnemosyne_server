@@ -1,13 +1,12 @@
 package ap.mnemosyne.rest;
 
-import ap.mnemosyne.database.CreateTaskDatabase;
-import ap.mnemosyne.database.GetTaskByIDDatabase;
-import ap.mnemosyne.database.GetTaskByUserDatabase;
+import ap.mnemosyne.database.*;
 import ap.mnemosyne.enums.ConstraintTemporalType;
+import ap.mnemosyne.enums.NormalizedActions;
 import ap.mnemosyne.enums.ParamsName;
 import ap.mnemosyne.resources.*;
-import ap.mnemosyne.servlets.AbstractDatabaseServlet;
 import ap.mnemosyne.util.ServletUtils;
+import org.joda.time.LocalTime;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -20,9 +19,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.LocalTime;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Path("task")
 public class RestTask
@@ -32,7 +31,7 @@ public class RestTask
 	{
 		try
 		{
-			List<Task> tl = new GetTaskByUserDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current")).getTaskByUser();
+			List<Task> tl = new GetTasksByUserDatabase(getDataSource().getConnection(), (User) req.getSession(false).getAttribute("current")).getTasksByUser();
 			if(tl != null)
 			{
 				res.setStatus(HttpServletResponse.SC_OK);
@@ -59,7 +58,7 @@ public class RestTask
 
 	@GET
 	@Path("{id}")
-	public void getTaskByID(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("id") int id) throws IOException, ServletException
+	public void getTaskByID(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("id") int id) throws IOException
 	{
 		try
 		{
@@ -76,34 +75,35 @@ public class RestTask
 						"400", "Task was not found"), res, HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
+		catch(ServletException | IOException | ClassNotFoundException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
 		catch(SQLException sqle)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		catch (ClassNotFoundException ex)
-		{
-			ServletUtils.sendMessage(new Message("Internal Server Error",
-					"500", ex.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-		}
 	}
 
 	@POST
-	public void createTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException, ServletException
+	public void createTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
 		try
 		{
-			if (!ServletUtils.checkContentType(MediaType.APPLICATION_JSON, req, res)) return;
+			if (!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
 			Task t = Task.fromJSON(req.getInputStream());
 			Task ret = new CreateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).createTask();
-			res.setStatus(HttpServletResponse.SC_OK);
+			res.setStatus(HttpServletResponse.SC_CREATED);
 			res.setHeader("Content-Type", "application/json; charset=utf-8");
 			ret.toJSON(res.getOutputStream());
 
 		}
-		catch (IOException ioe)
+		catch(ServletException | IOException se)
 		{
-			ServletUtils.sendMessage(new Message("IOException in RestTask", "500", ioe.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		catch(SQLException sqle)
 		{
@@ -113,22 +113,92 @@ public class RestTask
 	}
 
 	@PUT
-	public void createTestTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException, ServletException
+	public void updateTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
+	{
+		try
+		{
+			if (!ServletUtils.checkContentType(new MediaType("application", "json", "utf-8").toString(), req, res)) return;
+			Task t = Task.fromJSON(req.getInputStream());
+			Task ret = new UpdateTaskDatabase(getDataSource().getConnection(), t, (User) req.getSession(false).getAttribute("current")).updateTask();
+			if(ret == null)
+			{
+				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			}
+			else
+			{
+				res.setStatus(HttpServletResponse.SC_OK);
+				res.setHeader("Content-Type", "application/json; charset=utf-8");
+				ret.toJSON(res.getOutputStream());
+			}
+
+		}
+		catch(ServletException | IOException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@PUT
+	@Path("test")
+	public void createTestTask(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
 	{
 		//Class to serialize and create example tasks
 		try
 		{
-			ArrayList<Place> plist = new ArrayList<>();
-			plist.add(new Place("italy", "veneto", "schio", "magré", 2, "Famila",
-					"supermarket", new Point(45.714012, 11.353281), LocalTime.of(9,0), LocalTime.of(20,30)));
+			Set<Place> plist = new HashSet<>();
+			plist.add(new Place("italy", "veneto", "schio", "magré", "Via lmao",2, "Famila",
+					"supermarket", new Point(45.714012, 11.353281), new LocalTime(9,0), new LocalTime(20,30)));
+
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Nome", new TaskTimeConstraint(LocalTime.of(16,0), ParamsName.time_bed, ConstraintTemporalType.dopo),
-							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+					new Task(12,((User)req.getSession().getAttribute("current")).getEmail() , "Prova task time", new TaskTimeConstraint(new LocalTime(16,0), null, ParamsName.time_bed, ConstraintTemporalType.after),
+							false, false, false,false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+
 			new CreateTaskDatabase(getDataSource().getConnection(),
-					new Task(12,"asd@asd.it" , "Nome", new TaskPlaceConstraint(
-							new Place("italy", "veneto", "schio", "magré", 2, "casa", "housing",
-									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.prima),
-							false, false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+					new Task(12,((User)req.getSession().getAttribute("current")).getEmail() , "prova task place", new TaskPlaceConstraint(
+							new Place("italy", "veneto", "schio", "magré", "Via lmao",2, "casa", "housing",
+									new Point(45.703336, 11.356497), null, null), ParamsName.location_house, ConstraintTemporalType.before, NormalizedActions.get),
+							false, false, false,false, false, false, plist), (User) req.getSession().getAttribute("current")).createTask();
+			res.setStatus(HttpServletResponse.SC_OK);
+		}
+		catch(ServletException | IOException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+		catch(SQLException sqle)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
+					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+		}
+	}
+
+	@DELETE
+	@Path("{id}")
+	public void deleteTask(@Context HttpServletRequest req, @Context HttpServletResponse res, @PathParam("id") int id) throws IOException
+	{
+		try
+		{
+			User u = (User) req.getSession(false).getAttribute("current");
+			if(new DeleteTaskDatabase(getDataSource().getConnection(), id, u).deleteTask())
+			{
+				ServletUtils.sendMessage(new Message("Ok"), res, HttpServletResponse.SC_OK);
+			}
+			else
+			{
+				ServletUtils.sendMessage(new Message("Error while deleting task",
+						"400", "Task was not deleted"), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			}
+		}
+		catch(ServletException | IOException se)
+		{
+			ServletUtils.sendMessage(new Message("Internal Server Error",
+					"500", se.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
 		catch(SQLException sqle)
 		{

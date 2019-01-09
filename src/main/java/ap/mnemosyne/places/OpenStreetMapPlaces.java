@@ -3,6 +3,7 @@ package ap.mnemosyne.places;
 import ap.mnemosyne.exceptions.NoDataReceivedException;
 import ap.mnemosyne.resources.Place;
 import ap.mnemosyne.resources.Point;
+import ap.mnemosyne.servlets.ParseServlet;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.ResponseHandler;
@@ -16,38 +17,53 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
 
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class OpenStreetMapPlaces implements PlacesProvider
 {
 
-	private static long lastRequest = 0;
+	private static Long lastRequest = new Long(0);
 	private final static long msTimeBetweenRequests = 1000;
 	private final String requestUrl = "https://nominatim.openstreetmap.org/search";
 	private final String requestUrlReverse = "https://nominatim.openstreetmap.org/reverse";
+	private final Logger LOGGER = Logger.getLogger(OpenStreetMapPlaces.class.getName());
 
 	@Override
-	public List<Place> getPlacesFromQuery(String query) throws RuntimeException
+	public List<Place> getPlacesFromQuery(String query) throws RuntimeException, NoDataReceivedException
 	{
-		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
-
-		if(timeWait<0)
+		LOGGER.info("Resolving places from query.. waiting");
+		long timeWait = 0;
+		while (true)
 		{
-			try
+			synchronized (lastRequest)
 			{
-				Thread.sleep(-1*timeWait);
+				timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
 			}
-			catch (InterruptedException e)
+
+			if (timeWait < 0)
 			{
-				//ignored
+				try
+				{
+					Thread.sleep(-1 * timeWait);
+				}
+				catch (InterruptedException e)
+				{
+					//ignored
+				}
+			}
+			else
+			{
+				break;
 			}
 		}
+		LOGGER.info("Resolving places from query");
 		List<Place> toRet = new ArrayList<>();
 		try
 		{
@@ -66,8 +82,22 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			ResponseHandler<String> handler = new BasicResponseHandler();
 
 			String body = handler.handleResponse(resp);
+			synchronized (lastRequest)
+			{
+				lastRequest = System.currentTimeMillis();
+			}
+			try
+			{
+				LOGGER.info("PlacesFromQuery response: " + body.substring(0, 50) + "..");
+			}
+			catch(StringIndexOutOfBoundsException e)
+			{
+				LOGGER.info("PlacesFromQuery response: " + body);
+			}
 			ObjectMapper map = new ObjectMapper();
 			JsonNode obj = map.readTree(body);
+			if(obj.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this query (" + query + ")");
+
 			for(JsonNode node : obj)
 			{
 				JsonNode address = node.get("address");
@@ -76,12 +106,26 @@ public class OpenStreetMapPlaces implements PlacesProvider
 				{
 					name = address.get(node.get("type").asText()) != null ? address.get(node.get("type").asText()).asText() : null;
 				}
+
+				String town = null;
+				if(address.get("town") == null)
+				{
+					if(address.get("village") != null)
+					{
+						town = address.get("village").asText();
+					}
+				}
+				else
+				{
+					town = address.get("town").asText();
+				}
 				int houseNumber = -1;
 				try{ houseNumber = address.get("house_number").asInt();}catch (NullPointerException npe){} //Ignore
 				Place p = new Place(address.get("country")!=null ? address.get("country").asText() : null,
 						address.get("state")!=null ? address.get("state").asText() : null,
-						address.get("town")!=null ? address.get("town").asText() : null,
+						town,
 						address.get("suburb")!=null ? address.get("suburb").asText() : null,
+						address.get("road")!=null ? address.get("road").asText() : null,
 						houseNumber,
 						name,
 						node.get("type")!=null ? node.get("type").asText() : null,
@@ -93,30 +137,42 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		}
 		catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException | IOException | URISyntaxException e)
 		{
+			LOGGER.info("RUNTIME EXCEPTION " + e.getMessage());
 			throw new RuntimeException(e);
 		}
-
-		lastRequest = System.currentTimeMillis();
 		return toRet;
 	}
 
 	@Override
-	public Place getPlaceFromLatLon(Point point)
+	public Place getPlaceFromPoint(Point point) throws NoDataReceivedException
 	{
-		long timeWait = System.currentTimeMillis()-lastRequest-msTimeBetweenRequests;
-
-		if(timeWait<0)
+		LOGGER.info("Resolving place from point.. waiting");
+		long timeWait;
+		while (true)
 		{
-			try
+			synchronized (lastRequest)
 			{
-				Thread.sleep(-1*timeWait);
+				timeWait = System.currentTimeMillis() - lastRequest - msTimeBetweenRequests;
 			}
-			catch (InterruptedException e)
+
+			if (timeWait < 0)
 			{
-				//ignored
+				try
+				{
+					Thread.sleep(-1 * timeWait);
+				}
+				catch (InterruptedException e)
+				{
+					//ignored
+				}
+			}
+			else
+			{
+				break;
 			}
 		}
 
+		LOGGER.info("Resolving place from point");
 		Place p = null;
 		try {
 
@@ -133,24 +189,50 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			ResponseHandler<String> handler = new BasicResponseHandler();
 
 			String body = handler.handleResponse(resp);
+			synchronized (lastRequest)
+			{
+				lastRequest = System.currentTimeMillis();
+			}
+			try
+			{
+				LOGGER.info("PlacesFromQuery response: " + body.substring(0, 50) + "..");
+			}
+			catch(StringIndexOutOfBoundsException e)
+			{
+				LOGGER.info("PlacesFromQuery response: " + body);
+			}
 			ObjectMapper map = new ObjectMapper();
 			JsonNode node = map.readTree(body);
-			if(node == null) throw new NoDataReceivedException();
+			if(node.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this lat/lon " + node);
 
 			JsonNode address = node.get("address");
-			if(address == null) throw new NoDataReceivedException();
-
 			String name = null;
 			if(node.get("type") != null)
 			{
 				name = address.get(node.get("type").asText()) != null ? address.get(node.get("type").asText()).asText() : null;
 			}
 			int houseNumber = -1;
+			String town = null;
+
+			if(address.get("town") != null)
+			{
+				town = address.get("town").asText();
+			}
+			else if(address.get("village") != null)
+			{
+				town = address.get("village").asText();
+			}
+			else if(address.get("city") != null)
+			{
+				town = address.get("city").asText();
+			}
+
 			try{ houseNumber = address.get("house_number").asInt();}catch (NullPointerException npe){}
 			p = new Place(address.get("country")!=null ? address.get("country").asText() : null,
 					address.get("state")!=null ? address.get("state").asText() : null,
-					address.get("town")!=null ? address.get("town").asText() : null,
+					town,
 					address.get("suburb")!=null ? address.get("suburb").asText() : null,
+					address.get("road")!=null ? address.get("road").asText() : null,
 					houseNumber,
 					name,
 					node.get("type")!=null ? node.get("type").asText() : null,
@@ -164,8 +246,18 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			throw new RuntimeException(e);
 		}
 
-		lastRequest = System.currentTimeMillis();
+		if(p.getTown() == null)
+		{
+			//If coordinates are off, no town is returned
+			throw new NoDataReceivedException("OpenStreetMaps: Invalid data received");
+		}
 		return p;
+	}
+
+	@Override
+	public int getMinutesToDestination(Point from, Point to) throws NoDataReceivedException
+	{
+		return -1;
 	}
 
 	private CloseableHttpClient getHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException

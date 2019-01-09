@@ -5,13 +5,15 @@ import java.util.List;
 
 public class TextualTask
 {
-	TextualAction textualAction;
-	List<TextualConstraint> textualConstraints;
+	private TextualAction textualAction;
+	private List<TextualConstraint> textualConstraints;
+	private String fullSentence;
 
-	public TextualTask(TextualAction textualAction, List<TextualConstraint> textualConstraints)
+	public TextualTask(TextualAction textualAction, List<TextualConstraint> textualConstraints, String fullSentence)
 	{
 		this.textualAction = textualAction;
 		this.textualConstraints = textualConstraints;
+		this.fullSentence = fullSentence;
 	}
 
 	public TextualAction getTextualAction()
@@ -34,12 +36,23 @@ public class TextualTask
 		this.textualConstraints = textualConstraint;
 	}
 
+	public String getFullSentence()
+	{
+		return fullSentence;
+	}
+
+	public void setFullSentence(String fullSentence)
+	{
+		this.fullSentence = fullSentence;
+	}
+
 	@Override
 	public String toString()
 	{
 		return "TextualTask{" +
 				"textualAction=" + textualAction +
-				", textualConstraint=" + textualConstraints +
+				", textualConstraints=" + textualConstraints +
+				", fullSentence='" + fullSentence + '\'' +
 				'}';
 	}
 

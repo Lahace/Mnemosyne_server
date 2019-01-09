@@ -6,36 +6,41 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @JsonTypeName("task")
-public class Task extends Resource
+public class Task extends Resource implements Serializable
 {
 	private int id;
 	private String user;
 	private String name;
 	private TaskConstraint constr;
 	private boolean possibleAtWork;
+	private boolean critical;
 	private boolean repeatable;
 	private boolean doneToday;
 	private boolean failed;
-	private List<Place> placesToSatisfy;
+	private boolean ignoredToday;
+	private Set<Place> placesToSatisfy;
 
 	@JsonCreator
 	public Task(@JsonProperty("id") int id,@JsonProperty("user") String user, @JsonProperty("name") String name, @JsonProperty("constr") TaskConstraint constr,
-	            @JsonProperty("possibleAtWork") boolean possibleAtWork, @JsonProperty("repeatable") boolean repeatable, @JsonProperty("doneToday") boolean doneToday,
-	            @JsonProperty("failed") boolean failed, @JsonProperty("placesToSatisfy") List<Place> placesToSatisfy)
+	            @JsonProperty("possibleAtWork") boolean possibleAtWork, @JsonProperty("critical") boolean critical, @JsonProperty("repeatable") boolean repeatable, @JsonProperty("doneToday") boolean doneToday,
+	            @JsonProperty("failed") boolean failed, @JsonProperty("ignoredToday") boolean ignoredToday, @JsonProperty("placesToSatisfy") Set<Place> placesToSatisfy)
 	{
 		this.user = user;
 		this.name = name;
 		this.constr = constr;
 		this.id = id;
 		this.possibleAtWork = possibleAtWork;
+		this.critical = critical;
 		this.repeatable = repeatable;
 		this.doneToday = doneToday;
 		this.failed = failed;
+		this.ignoredToday = ignoredToday;
 		this.placesToSatisfy = placesToSatisfy;
 	}
 
@@ -64,6 +69,11 @@ public class Task extends Resource
 		return possibleAtWork;
 	}
 
+	public boolean isCritical()
+	{
+		return critical;
+	}
+
 	public boolean isRepeatable()
 	{
 		return repeatable;
@@ -79,7 +89,12 @@ public class Task extends Resource
 		return failed;
 	}
 
-	public List<Place> getPlacesToSatisfy()
+	public boolean isIgnoredToday()
+	{
+		return ignoredToday;
+	}
+
+	public Set<Place> getPlacesToSatisfy()
 	{
 		return placesToSatisfy;
 	}
@@ -92,11 +107,28 @@ public class Task extends Resource
 				", constr=" + constr +
 				", id=" + id +
 				", possibleAtWork=" + possibleAtWork +
+				", critical=" + critical +
 				", repeatable=" + repeatable +
 				", doneToday=" + doneToday +
 				", failed=" + failed +
+				", ignoredToday=" + ignoredToday +
 				", placesToSatisfy=" + placesToSatisfy +
 				'}';
+	}
+
+	@Override
+	public boolean equals(Object o)
+	{
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		Task task = (Task) o;
+		return id == task.id;
+	}
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(id, user, name, constr, possibleAtWork, critical, repeatable, doneToday, failed, placesToSatisfy);
 	}
 
 	@Override

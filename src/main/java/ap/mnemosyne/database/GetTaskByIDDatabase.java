@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
+import java.util.Set;
 
 public class GetTaskByIDDatabase
 {
@@ -37,7 +37,7 @@ public class GetTaskByIDDatabase
 
 			while (rs.next()) {
 				ObjectInputStream in = new ObjectInputStream(new ByteArrayInputStream(rs.getBytes("placesToSatisfy")));
-				List<Place> list = (List<Place>) in.readObject();
+				Set<Place> set = (Set<Place>) in.readObject();
 				in.close();
 
 				in = new ObjectInputStream(new ByteArrayInputStream(rs.getBytes("constr")));
@@ -47,23 +47,22 @@ public class GetTaskByIDDatabase
 				if(read instanceof TaskPlaceConstraint)
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), (TaskPlaceConstraint) read,
-							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-							rs.getBoolean("failed"), list);
+							rs.getBoolean("possibleAtWork"), rs.getBoolean("critical"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
+							rs.getBoolean("failed"), rs.getBoolean("ignoredToday"), set);
 				}
 				else if(read instanceof TaskTimeConstraint)
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), (TaskTimeConstraint) read,
-							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-							rs.getBoolean("failed"), list);
+							rs.getBoolean("possibleAtWork"), rs.getBoolean("critical"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
+							rs.getBoolean("failed"), rs.getBoolean("ignoredToday"), set);
 				}
 				else
 				{
 					t = new Task(rs.getInt("id"), rs.getString("useremail"), rs.getString("name"), null,
-							rs.getBoolean("possibleAtWork"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
-							rs.getBoolean("failed"), list);
+							rs.getBoolean("possibleAtWork"), rs.getBoolean("critical"), rs.getBoolean("repeatable"), rs.getBoolean("doneToday"),
+							rs.getBoolean("failed"), rs.getBoolean("ignoredToday"), set);
 				}
 			}
-
 		}
 		finally
 		{
@@ -82,5 +81,4 @@ public class GetTaskByIDDatabase
 
 		return t;
 	}
-
 }

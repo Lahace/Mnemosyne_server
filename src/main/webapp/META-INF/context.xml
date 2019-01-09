@@ -6,7 +6,7 @@
           type="javax.sql.DataSource"
           factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
           driverClassName="org.postgresql.Driver"
-          url="jdbc:postgresql://URL"
+          url="jdbc:postgresql:URL"
           username="user"
           password="password"
           testOnBorrow="true"
@@ -19,4 +19,5 @@
           removeAbandonedTimeout="60"
           removeAbandoned="true"
 	/>
+
 </Context>
