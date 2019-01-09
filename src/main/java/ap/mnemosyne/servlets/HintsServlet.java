@@ -41,7 +41,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 	public final int TIME_NOTICE_MINUTES_CRITICAL = 45;
 	public final int TIME_MAX_SLACK_MINUTES = 10;
 	public final int TIME_EVENTS_BEFORE_BED_MINUTES = 20;
-	public final int TIME_EVENTS_BEFORE_BED_MINUTES_CRITICAL = 40;
+	public final int TIME_EVENTS_BEFORE_BED_MINUTES_CRITICAL = 5;
 	public final double MULTIPLIER_TIME_NOTICE = 0.2;
 
 	private final Logger LOGGER = Logger.getLogger(HintsServlet.class.getName());
@@ -463,20 +463,17 @@ public class HintsServlet extends AbstractDatabaseServlet
 											doable.add(new Hint(t.getId(), null, true));
 										}
 									}
-									else if(nearest.getRight()<=intrestDistanceMeters)
+									else if(nearest != null && nearest.getRight()<=intrestDistanceMeters)
 									{
-										if(nearest != null)
-										{
-											LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
-											confirmMap.remove(t.getId());
-											doable.add(new Hint(t.getId(), nearest.getLeft(), false));
-										}
-										else
-										{
-											LOGGER.info("Adding to doable, non urgent");
-											confirmMap.remove(t.getId());
-											doable.add(new Hint(t.getId(), null, false));
-										}
+										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
+										confirmMap.remove(t.getId());
+										doable.add(new Hint(t.getId(), nearest.getLeft(), false));
+									}
+									else if(nearest == null)
+									{
+										LOGGER.info("Adding to doable, non urgent");
+										confirmMap.remove(t.getId());
+										doable.add(new Hint(t.getId(), null, false));
 									}
 
 									break;
@@ -484,7 +481,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 								case after:
 									LOGGER.info("Found: " + t.getConstr().getType());
 									latestClosing = TimeUtils.findLatestOpenedPlace(t.getPlacesToSatisfy());
-									if(latestClosing.getClosing().isBefore(phoneTime))
+									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
+									if((latestClosing != null && latestClosing.getClosing().isBefore(phoneTime)) || (fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed))))
 									{
 										LOGGER.info("Task has failed (asking for confirmation)");
 										confirmMap.put(t.getId(), true);
@@ -506,7 +504,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(nearest != null) timeToLatest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
 									else timeToLatest = 0;
 
-									if(latestClosing.getClosing().isBefore(phoneTime.plusMinutes(timeNoticeMinutes).plusMinutes(timeToLatest)))
+									if((latestClosing != null && latestClosing.getClosing().isBefore(phoneTime.plusMinutes(timeNoticeMinutes).plusMinutes(timeToLatest))) ||
+											(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed).plusMinutes(timeNoticeMinutes))))
 									{
 										if(nearest != null)
 										{
@@ -521,22 +520,21 @@ public class HintsServlet extends AbstractDatabaseServlet
 											doable.add(new Hint(t.getId(), null, true));
 										}
 									}
-									else if(nearest.getRight()<=intrestDistanceMeters && phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime()))
+									else if(phoneTime.isAfter(((TaskTimeConstraint) t.getConstr()).getFromTime()))
 									{
-										if(nearest != null)
+										if(nearest != null && nearest.getRight()<=intrestDistanceMeters)
 										{
 											LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
 											confirmMap.remove(t.getId());
 											doable.add(new Hint(t.getId(), nearest.getLeft(), false));
 										}
-										else
+										else if(nearest == null)
 										{
 											LOGGER.info("Adding to doable, non urgent");
 											confirmMap.remove(t.getId());
 											doable.add(new Hint(t.getId(), null, false));
 										}
 									}
-
 									break;
 							}
 						}
