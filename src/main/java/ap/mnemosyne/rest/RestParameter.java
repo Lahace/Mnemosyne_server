@@ -45,11 +45,6 @@ public class RestParameter
 			}
 			new ResourceList<>(plist).toJSON(res.getOutputStream());
 		}
-		catch(IllegalArgumentException iae)
-		{
-			ServletUtils.sendMessage(new Message("Bad Request",
-					"400", "Parameter does not exists"), res, HttpServletResponse.SC_BAD_REQUEST);
-		}
 		catch (SQLException sqle)
 		{
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
@@ -173,7 +168,7 @@ public class RestParameter
 			}
 			else
 			{
-				ServletUtils.sendMessage(new Message("Ok",
+				ServletUtils.sendMessage(new Message("Bad Request",
 						"400", "Parameter was not deleted, maybe it's not defined?"), res, HttpServletResponse.SC_BAD_REQUEST);
 			}
 		}

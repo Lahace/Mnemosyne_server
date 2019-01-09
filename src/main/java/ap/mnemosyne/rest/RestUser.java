@@ -164,7 +164,7 @@ public class RestUser
 			}
 			else
 			{
-				ServletUtils.sendMessage(new Message("Ok",
+				ServletUtils.sendMessage(new Message("Bad Request",
 						"400", "User was not deleted, maybe it's not defined?"), res, HttpServletResponse.SC_BAD_REQUEST);
 			}
 

@@ -72,7 +72,7 @@ public class RestTask
 			else
 			{
 				ServletUtils.sendMessage(new Message("Not Found",
-						"400", "Task was not found"), res, HttpServletResponse.SC_NOT_FOUND);
+						"404", "Task was not found"), res, HttpServletResponse.SC_NOT_FOUND);
 			}
 		}
 		catch(ServletException | IOException | ClassNotFoundException se)
@@ -191,8 +191,8 @@ public class RestTask
 			}
 			else
 			{
-				ServletUtils.sendMessage(new Message("Error while deleting task",
-						"400", "Task was not deleted"), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				ServletUtils.sendMessage(new Message("Bad Request",
+						"400", "Task was not deleted (maybe it was not found?)"), res, HttpServletResponse.SC_BAD_REQUEST);
 			}
 		}
 		catch(ServletException | IOException se)

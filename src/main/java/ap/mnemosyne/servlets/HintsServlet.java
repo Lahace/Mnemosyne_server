@@ -231,6 +231,10 @@ public class HintsServlet extends AbstractDatabaseServlet
 							else if(t.getPlacesToSatisfy().size() == 1)
 							{
 								taskPos = resolvePosition(userParametersMap, t.getPlacesToSatisfy().iterator().next().getCoordinates(), phoneTime);
+								if(taskPos == null)
+								{
+									taskPos = ParamsName.location_item;
+								}
 							}
 							else
 							{
