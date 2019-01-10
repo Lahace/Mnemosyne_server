@@ -246,6 +246,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 							{
 								case location_any:
 									//Tricky to manage
+									LOGGER.info("Found: " + taskPos);
 									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
 									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed)))
 									{
@@ -271,6 +272,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									break;
 
 								case location_item:
+									LOGGER.info("Found: " + taskPos);
 									nearest = null;
 									latestClosing = TimeUtils.findLatestOpenedPlace(t.getPlacesToSatisfy());
 									if(position != null)
@@ -308,6 +310,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									break;
 
 								case location_work:
+									LOGGER.info("Found: " + taskPos);
 									if((phoneTime.isAfter(toWork) && position != ParamsName.location_work))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
@@ -332,6 +335,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									break;
 
 								case location_house:
+									LOGGER.info("Found: " + taskPos);
 									fromBed = ((TimeParameter) userParametersMap.get(ParamsName.time_bed)).getFromTime();
 									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed)))
 									{
@@ -364,7 +368,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 							switch (t.getConstr().getType())
 							{
 								case at:
-									LOGGER.info("Found: " + t.getConstr().getType());
+									LOGGER.info("Found: " + t.getConstr().getType() + " (time)");
 									if((toTime != null && toTime.plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime))
 											|| (toTime == null && fromTime.plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime)))
 									{
@@ -544,6 +548,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 							switch (t.getConstr().getType())
 							{
 								case at:
+									LOGGER.info("Found: " + t.getConstr().getType() + " (place)");
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
 										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
@@ -583,6 +588,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									break;
 
 								case before:
+									LOGGER.info("Found: " + t.getConstr().getType() + " (place)");
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
 										if(position != null && position.equals(t.getConstr().getParamName()))
@@ -618,6 +624,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 								case after:
 									//Same as AT case
+									LOGGER.info("Found: " + t.getConstr().getType() + " (place)");
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
 										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
@@ -780,18 +787,18 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 		if(workDistance <= LOCATION_RADIUS_METERS && TimeUtils.isTimeBetween(givenTime, workTime.getFromTime(), workTime.getToTime()))
 		{
-			LOGGER.info("User is at its workplace (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
+			LOGGER.info("Position corresponds to workplace (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
 					" distance from house: " + houseDistance + "m, time: " + givenTime + ")");
 			return ParamsName.location_work;
 		}
 		else if(houseDistance <= LOCATION_RADIUS_METERS)
 		{
-			LOGGER.info("User is at its house (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
+			LOGGER.info("Position corresponds to house (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
 					" distance from work: " + workDistance + "m, time: " + givenTime + ")");
 			return ParamsName.location_house;
 		}
 
-		LOGGER.info("User seems to be outside (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
+		LOGGER.info("Position is not a known place (parameters are lat: " + givenPoint.getLat() + " lon: " + givenPoint.getLon() +
 				" distance from house: " + houseDistance + "m, distance from work: " + workDistance + "m, time: " + givenTime + ")");
 		return null;
 	}

@@ -16,6 +16,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Path("user")
 public class RestUser
@@ -91,17 +94,16 @@ public class RestUser
 
 	@PUT
 	@Path("password")
-	public void updateUserPassword(@Context HttpServletRequest req, @Context HttpServletResponse res) throws IOException
+	public void updateUserPassword(@Context HttpServletRequest req, @Context HttpServletResponse res, @FormParam("oldpsw") String oldpsw, @FormParam("newpsw") String newpsw) throws IOException
 	{
 		if(!ServletUtils.checkContentType(MediaType.APPLICATION_FORM_URLENCODED, req, res)) return;
 		try
 		{
-			String oldpsw = req.getParameter("old");
-			String newpsw = req.getParameter("new");
+			Logger LOGGER = Logger.getLogger(RestUser.class.getName());
 			User u = (User) req.getSession(false).getAttribute("current");
 			if(oldpsw == null || newpsw == null)
 			{
-				ServletUtils.sendMessage(new Message("Unauthorized",
+				ServletUtils.sendMessage(new Message("Bad Request",
 						"400", "Please specify both new and old password"), res, HttpServletResponse.SC_BAD_REQUEST);
 				return;
 			}

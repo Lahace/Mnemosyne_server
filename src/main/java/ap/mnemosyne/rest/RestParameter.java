@@ -68,8 +68,8 @@ public class RestParameter
 			Parameter pdb = new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), u , p).getUserDefinedParameterByName();
 			if(pdb == null)
 			{
-				ServletUtils.sendMessage(new Message("Bad Request",
-						"400", "Parameter " + param + " is not defined for user " + u.getEmail()), res, HttpServletResponse.SC_BAD_REQUEST);
+				ServletUtils.sendMessage(new Message("Not Found",
+						"404", "Parameter " + param + " is not defined for user " + u.getEmail()), res, HttpServletResponse.SC_NOT_FOUND);
 				return;
 			}
 			res.setStatus(HttpServletResponse.SC_OK);
