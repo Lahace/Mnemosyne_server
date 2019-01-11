@@ -241,6 +241,13 @@ public class ParseServlet extends AbstractDatabaseServlet
 						switch (ParamsName.valueOf(map.get("parameter")))
 						{
 							case location_work:
+								if(map.get("timing").equals(ConstraintTemporalType.before) && map.get("normalized_action").equals(NormalizedActions.leave))
+								{
+									LOGGER.warning("FAILED: Leave is not implemented for location_work ");
+									ServletUtils.sendMessage(new Message("Not implemented",
+											"PRSR13", "This constraint is not supported yet"), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
+									return;
+								}
 								possibleAtWork = true;
 								constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
 								break;
@@ -251,6 +258,7 @@ public class ParseServlet extends AbstractDatabaseServlet
 									LOGGER.warning("FAILED: Leave is not implemented for location_house ");
 									ServletUtils.sendMessage(new Message("Not implemented",
 											"PRSR13", "This constraint is not supported yet"), res, HttpServletResponse.SC_NOT_IMPLEMENTED);
+									return;
 								}
 								constr = this.solveLocationConstraint(ParamsName.valueOf(map.get("parameter")), map, req);
 								break;

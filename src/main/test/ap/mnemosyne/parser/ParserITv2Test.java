@@ -27,6 +27,9 @@ public class ParserITv2Test
 		p.parseString("devo prendere il latte prima di domani alle sette di sera");
 		p.parseString("devo prendere il latte prima di rientrare a casa");
 		p.parseString("devo prendere le medicine quando ceno");
+		p.parseString("devo prendere le medicine prima di arrivare al lavoro");
+		p.parseString("devo assumere le medicine");
+		p.parseString("devo assumere la medicina");
 		p.parseString("devo prendere le medicine prima di domani a mezzogiorno");
 		p.parseString("devo pagare il bollo entro domani");
 		p.parseString("devo prendere il pane entro le 16:30");
@@ -40,6 +43,9 @@ public class ParserITv2Test
 		p.parseString("devo prendere il pane");
 		System.out.println("=======================");
 		p.parseString("ricordami di prendere il pane prima di rientrare a casa");
+		p.parseString("ricordami di prendere le medicine dopo pranzo");
+		p.parseString("ricordami di assumere le medicine");
+		p.parseString("ricordami di assumere la medicina");
 		p.parseString("ricordami di prendere le medicine dopo pranzo");
 		p.parseString("ricordami di pagare il bollo entro domani");
 		p.parseString("ricordami di prendere il pane entro le 16");
