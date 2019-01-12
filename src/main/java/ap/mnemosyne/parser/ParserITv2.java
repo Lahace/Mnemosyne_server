@@ -25,6 +25,8 @@ public class ParserITv2
 	private TintPipeline pipeline;
 	private final Logger LOGGER = Logger.getLogger(ParserITv2.class.getName());
 	private Map<String, String> textToTime = new HashMap<>();
+	private Map<String, String> lemmaMap = new HashMap<>();
+	private Map<String, TextualTask> errorsMap = new HashMap<>();
 
 	public ParserITv2()
 	{
@@ -43,6 +45,8 @@ public class ParserITv2
 		}
 		pipeline.load();
 		initializeTTTMap();
+		initializeErrorsMap();
+		initializeLemmaMap();
 		LOGGER.info("Loaded.");
 	}
 
@@ -82,13 +86,16 @@ public class ParserITv2
 
 	private TextualTask retrieveTextualTask(String text)
 	{
+		TextualTask mapTask = errorsMap.get(text);
+		if(mapTask != null) return mapTask;
+
 		Annotation a = pipeline.runRaw(text);
 		List<CoreMap> sentences = a.get(CoreAnnotations.SentencesAnnotation.class);
 		CoreMap sentence = sentences.get(0);
 		SemanticGraph sg = sentence.get(BasicDependenciesAnnotation.class);
 
 		IndexedWord root = sg.getFirstRoot();
-		String rootValue = root.getString(CoreAnnotations.LemmaAnnotation.class);
+		String rootValue = getVerbLemma(root);
 		LOGGER.info(sg.toCompactString(true));
 		TextualAction tact = null;
 		List<TextualConstraint> tconstr = new ArrayList<>();
@@ -143,6 +150,30 @@ public class ParserITv2
 									}
 							}
 						}
+						tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
+					}
+					else if(sge.getTarget().value().equals("quando"))
+					{
+						marker = sge.getTarget().value();
+						for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+						{
+							switch(sge2.getRelation().toString())
+							{
+								case "dobj":
+									verb = getVerbLemma(sge2.getTarget());
+									for(SemanticGraphEdge sge3 : sg.outgoingEdgeList(sge2.getTarget()))
+									{
+										switch(sge3.getRelation().toString())
+										{
+											case "nmod":
+												word = sge3.getTarget().value();
+												break;
+										}
+									}
+									break;
+							}
+						}
+						tconstr.add(new TextualConstraint(marker,word, verb, isFuture));
 					}
 					else
 					{
@@ -160,8 +191,8 @@ public class ParserITv2
 									break;
 							}
 						}
+						tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
 					}
-					tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
 					break;
 
 				case "nmod":
@@ -204,6 +235,25 @@ public class ParserITv2
 							}
 						}
 						word = textToTime.get(word) == null ? word : textToTime.get(word);
+						tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
+					}
+					else if(sge.getTarget().value().equals("arrivo"))
+					{
+						verb = getVerbLemma(sge.getTarget());
+						for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+						{
+							switch(sge2.getRelation().toString())
+							{
+								case "mark":
+									marker = sge2.getTarget().value();
+									break;
+
+								case "nmod":
+									word = sge2.getTarget().value();
+									break;
+							}
+						}
+						tconstr.add(new TextualConstraint(marker,word, verb, isFuture));
 					}
 					else
 					{
@@ -216,6 +266,7 @@ public class ParserITv2
 						}
 						catch (StringIndexOutOfBoundsException | DateTimeParseException e)
 						{
+
 							word = sge.getTarget().value();
 						}
 						for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
@@ -227,8 +278,8 @@ public class ParserITv2
 									break;
 							}
 						}
+						tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
 					}
-					tconstr.add(new TextualConstraint(marker,word, "null", isFuture));
 					break;
 
 				case "nummod":
@@ -268,7 +319,7 @@ public class ParserITv2
 							case "advcl":
 								marker = null;
 								word = null;
-								verb = sge2.getTarget().get(CoreAnnotations.LemmaAnnotation.class);
+								verb = getVerbLemma(sge2.getTarget());
 								for(SemanticGraphEdge sge3 : sg.outgoingEdgeList(sge2.getTarget()))
 								{
 									switch(sge3.getRelation().toString())
@@ -291,22 +342,47 @@ public class ParserITv2
 
 
 				case "advcl":
-					verb = sge.getTarget().get(CoreAnnotations.LemmaAnnotation.class);
-					for(SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+					verb = getVerbLemma(sge.getTarget());
+					if(!verb.equals("quando"))
 					{
-						switch(sge2.getRelation().toString())
+						for (SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
 						{
-							case "mark":
-								marker = sge2.getTarget().value();
-								break;
+							switch (sge2.getRelation().toString())
+							{
+								case "mark":
+									marker = sge2.getTarget().value();
+									break;
 
-							case "nmod":
-								word = sge2.getTarget().getString(CoreAnnotations.LemmaAnnotation.class);
-								break;
+								case "nmod":
+									word = sge2.getTarget().getString(CoreAnnotations.LemmaAnnotation.class);
+									break;
 
-							case "advmod":
-								isFuture = sge2.getTarget().value().equals("domani");
-								break;
+								case "advmod":
+									isFuture = sge2.getTarget().value().equals("domani");
+									break;
+							}
+						}
+					}
+					else
+					{
+						marker = verb;
+						for (SemanticGraphEdge sge2 : sg.outgoingEdgeList(sge.getTarget()))
+						{
+							switch (sge2.getRelation().toString())
+							{
+								case "dobj":
+									verb = getVerbLemma(sge2.getTarget());
+									for (SemanticGraphEdge sge3 : sg.outgoingEdgeList(sge2.getTarget()))
+									{
+										switch (sge3.getRelation().toString())
+										{
+											case "nmod":
+												word = sge3.getTarget().value();
+												break;
+										}
+									}
+									break;
+							}
 						}
 					}
 					tconstr.add(new TextualConstraint(marker, word,  verb, isFuture));
@@ -328,6 +404,35 @@ public class ParserITv2
 				break;
 			}
 		return result;
+	}
+
+	private String getVerbLemma(IndexedWord iw)
+	{
+		String toRet = iw.getString(CoreAnnotations.LemmaAnnotation.class);
+		if(iw.value().equals(toRet))
+		{
+			if(lemmaMap.get(toRet) != null) toRet = lemmaMap.get(toRet);
+		}
+		return toRet;
+	}
+
+	private void initializeErrorsMap()
+	{
+		//To be used just when phrase is completely off
+		List<TextualConstraint> temp = new ArrayList<>();
+		temp.add(new TextualConstraint("quando","casa", "arrivare", false));
+		errorsMap.put("dar da mangiare al gatto quando arrivo a casa", new TextualTask(new TextualAction("dare_mangiare", "gatto"), temp,
+				"dar da mangiare al gatto quando arrivo a casa"));
+
+		temp.clear();
+		temp.add(new TextualConstraint("quando","casa", "arrivare", false));
+		errorsMap.put("dare da mangiare al gatto quando arrivo a casa", new TextualTask(new TextualAction("dare_mangiare", "gatto"), temp,
+				"dar da mangiare al gatto quando arrivo a casa"));
+	}
+
+	private void initializeLemmaMap()
+	{
+		lemmaMap.put("arrivo", "arrivare");
 	}
 
 	private void initializeTTTMap()
@@ -374,21 +479,4 @@ public class ParserITv2
 		textToTime.put("undici_mattina", "11:00");
 		textToTime.put("undici_sera", "23:00");
 	}
-
-	/*
-		System.out.println("ChildRelns: " + sg.childRelns(root));
-		System.out.println("ChildPairs: " + sg.childPairs(root));
-		System.out.println("Childs: " + sg.getChildren(root));
-		System.out.println("Descendants: " + sg.descendants(root));
-		System.out.println(sg.toCompactString(true));
-		System.out.println("relns: " + sg.relns(root));
-		System.out.println("Comments: " + sg.getComments());
-		System.out.println("After: " + root.after());
-		System.out.println("Before: " + root.before());
-		System.out.println("Value: " + root.value());
-		System.out.println("Lemma: " + root.lemma());
-		System.out.println("Tag: " + root.tag());
-		System.out.println("Backing Label: " + root.backingLabel());
-		System.out.println("Ner: " + root.ner());
-	 */
 }
