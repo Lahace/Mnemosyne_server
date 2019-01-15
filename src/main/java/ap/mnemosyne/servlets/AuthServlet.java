@@ -3,14 +3,21 @@ package ap.mnemosyne.servlets;
 import ap.mnemosyne.database.CheckUserCredentialsDatabase;
 import ap.mnemosyne.database.UpdateUserSessionDatabase;
 import ap.mnemosyne.listeners.SessionListener;
+import ap.mnemosyne.places.PlacesManager;
+import ap.mnemosyne.resources.Place;
 import ap.mnemosyne.resources.User;
 import ap.mnemosyne.resources.Message;
 import ap.mnemosyne.util.ServletUtils;
+import org.apache.jena.reasoner.rulesys.builtins.Print;
 
 import javax.servlet.http.*;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.util.Set;
 
 public class AuthServlet extends AbstractDatabaseServlet
 {
@@ -72,7 +79,23 @@ public class AuthServlet extends AbstractDatabaseServlet
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 		}
-		return;
+	}
+
+	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
+	{
+		String q = req.getParameter("q");
+		Set<Place> temp = (new PlacesManager()).getPlacesFromQuery(q);
+		StringBuilder result = new StringBuilder();
+		for(Place t : temp)
+		{
+			result.append(t.toJSON());
+		}
+		res.setStatus(HttpServletResponse.SC_OK);
+		res.setHeader("Content-Type", "application/json; charset=utf-8");
+		PrintWriter pw = new PrintWriter(new OutputStreamWriter(res.getOutputStream(), StandardCharsets.UTF_8));
+		pw.print(result.toString());
+		pw.flush();
+		pw.close();
 	}
 
 	public void doDelete(HttpServletRequest req, HttpServletResponse res) throws IOException

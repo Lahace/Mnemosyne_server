@@ -9,7 +9,7 @@ public class PlacesManagerTest
 	@Test
 	public void testPlaces() throws NoDataReceivedException
 	{
-		//System.out.println(new OpenStreetMapPlaces().getPlaceFromPoint(new Point(45.7151009, 11.2585446)));
-		System.out.println(new PlacesManager().getMinutesToDestination(new Point(45.703280,11.356476),new Point(45.723583, 11.430306)));
+		System.out.println(new OpenStreetMapPlaces().getPlaceFromPoint(new Point(45.703139, 11.356694)));
+		//System.out.println(new OpenStreetMapPlaces().getPlacesFromQuery("bakery in schio"));
 	}
 }

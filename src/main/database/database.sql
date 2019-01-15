@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS mnemosyne.item;
 DROP TABLE IF EXISTS mnemosyne.parameter;
 DROP TABLE IF EXISTS mnemosyne.verb;
 DROP TABLE IF EXISTS mnemosyne.place_type;
+DROP TABLE IF EXISTS mnemosyne.place_cache;
 DROP TYPE IF EXISTS paramType;
 DROP TYPE IF EXISTS timing;
 DROP TYPE IF EXISTS norm_act;
@@ -61,6 +62,14 @@ CREATE TABLE mnemosyne.task(
     FOREIGN KEY (useremail) REFERENCES mnemosyne.user(email)
         ON DELETE CASCADE ON UPDATE CASCADE
     --N.B. for future developement, add extra tables to avoid serialization
+);
+
+CREATE TABLE mnemosyne.place_cache(
+    query TEXT NOT NULL,
+    provider VARCHAR(40) NOT NULL,
+    response_date TIMESTAMP NOT NULL,
+    response JSON NOT NULL,
+    PRIMARY KEY (query, provider)
 );
 
 CREATE TABLE mnemosyne.verb(
