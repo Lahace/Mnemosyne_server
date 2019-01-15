@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS mnemosyne.parameter;
 DROP TABLE IF EXISTS mnemosyne.verb;
 DROP TABLE IF EXISTS mnemosyne.place_type;
 DROP TABLE IF EXISTS mnemosyne.place_cache;
+DROP TABLE IF EXISTS mnemosyne.parser_cache;
 DROP TYPE IF EXISTS paramType;
 DROP TYPE IF EXISTS timing;
 DROP TYPE IF EXISTS norm_act;
@@ -70,6 +71,13 @@ CREATE TABLE mnemosyne.place_cache(
     response_date TIMESTAMP NOT NULL,
     response JSON NOT NULL,
     PRIMARY KEY (query, provider)
+);
+
+CREATE TABLE mnemosyne.parser_cache(
+    task TEXT NOT NULL,
+    version VARCHAR(20) NOT NULL,
+    result BYTEA NOT NULL,
+    PRIMARY KEY (task)
 );
 
 CREATE TABLE mnemosyne.verb(

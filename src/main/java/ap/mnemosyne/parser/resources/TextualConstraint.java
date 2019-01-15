@@ -1,6 +1,8 @@
 package ap.mnemosyne.parser.resources;
 
-public class TextualConstraint
+import java.io.Serializable;
+
+public class TextualConstraint implements Serializable
 {
 	private String constraintMarker, constraintWord, verb;
 	private boolean isFuture;

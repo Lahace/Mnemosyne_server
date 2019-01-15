@@ -1,9 +1,10 @@
 package ap.mnemosyne.parser.resources;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TextualTask
+public class TextualTask implements Serializable
 {
 	private TextualAction textualAction;
 	private List<TextualConstraint> textualConstraints;

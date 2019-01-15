@@ -1,6 +1,8 @@
 package ap.mnemosyne.parser.resources;
 
-public class TextualAction
+import java.io.Serializable;
+
+public class TextualAction implements Serializable
 {
 	private String verb, subject;
 

@@ -3,6 +3,8 @@ package ap.mnemosyne.servlets;
 import ap.mnemosyne.database.CheckUserCredentialsDatabase;
 import ap.mnemosyne.database.UpdateUserSessionDatabase;
 import ap.mnemosyne.listeners.SessionListener;
+import ap.mnemosyne.parser.ParserITv2;
+import ap.mnemosyne.parser.resources.TextualTask;
 import ap.mnemosyne.places.PlacesManager;
 import ap.mnemosyne.resources.Place;
 import ap.mnemosyne.resources.User;
@@ -81,22 +83,18 @@ public class AuthServlet extends AbstractDatabaseServlet
 		}
 	}
 
-	public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
+	/*public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{
+	//FOR TEST PURPOSES
 		String q = req.getParameter("q");
-		Set<Place> temp = (new PlacesManager()).getPlacesFromQuery(q);
-		StringBuilder result = new StringBuilder();
-		for(Place t : temp)
-		{
-			result.append(t.toJSON());
-		}
+		TextualTask temp = (new ParserITv2()).parseString(q);
 		res.setStatus(HttpServletResponse.SC_OK);
 		res.setHeader("Content-Type", "application/json; charset=utf-8");
 		PrintWriter pw = new PrintWriter(new OutputStreamWriter(res.getOutputStream(), StandardCharsets.UTF_8));
-		pw.print(result.toString());
+		pw.print(temp.toString());
 		pw.flush();
 		pw.close();
-	}
+	}*/
 
 	public void doDelete(HttpServletRequest req, HttpServletResponse res) throws IOException
 	{

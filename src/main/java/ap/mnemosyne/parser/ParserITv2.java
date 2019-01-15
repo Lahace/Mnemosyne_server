@@ -1,8 +1,12 @@
 package ap.mnemosyne.parser;
 
+import ap.mnemosyne.database.CreateParserCacheRecordDatabase;
+import ap.mnemosyne.database.DeleteParserCacheRecordDatabase;
+import ap.mnemosyne.database.GetParserCacheRecordByTaskDatabase;
 import ap.mnemosyne.parser.resources.TextualAction;
 import ap.mnemosyne.parser.resources.TextualConstraint;
 import ap.mnemosyne.parser.resources.TextualTask;
+import ap.mnemosyne.resources.ParserCacheRecord;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.IndexedWord;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -12,7 +16,12 @@ import edu.stanford.nlp.semgraph.SemanticGraphEdge;
 import edu.stanford.nlp.util.CoreMap;
 import eu.fbk.dh.tint.runner.TintPipeline;
 
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.servlet.ServletException;
+import javax.sql.DataSource;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -24,6 +33,7 @@ public class ParserITv2
 {
 	private TintPipeline pipeline;
 	private final Logger LOGGER = Logger.getLogger(ParserITv2.class.getName());
+	private final String PARSER_VERSION = "2.0";
 	private Map<String, String> textToTime = new HashMap<>();
 	private Map<String, String> lemmaMap = new HashMap<>();
 	private Map<String, TextualTask> errorsMap = new HashMap<>();
@@ -52,11 +62,16 @@ public class ParserITv2
 
 	public TextualTask parseString(String text)
 	{
+		return parseString(text, true);
+	}
+
+	public TextualTask parseString(String text, boolean useCache)
+	{
 		//Phase 1
 		String pre = this.preProcessString(text);
 
 		//Phase 2
-		TextualTask tt = this.retrieveTextualTask(pre);
+		TextualTask tt = this.retrieveTextualTask(pre, useCache);
 		LOGGER.info(tt.toString());
 
 		return tt;
@@ -83,11 +98,45 @@ public class ParserITv2
 		return toRet;
 	}
 
-
-	private TextualTask retrieveTextualTask(String text)
+	private TextualTask retrieveTextualTask(String text, boolean useCache)
 	{
 		TextualTask mapTask = errorsMap.get(text);
-		if(mapTask != null) return mapTask;
+		long time = System.currentTimeMillis();
+		if(mapTask != null)
+		{
+			LOGGER.info("task found in ErrorsMap, returning...");
+			return mapTask;
+		}
+
+		if(useCache)
+		{
+			try
+			{
+				ParserCacheRecord pcr = new GetParserCacheRecordByTaskDatabase(getDataSource().getConnection(), text).getParserCacheRecordByTask();
+				if(pcr != null)
+				{
+					if(pcr.getVersion().equals(PARSER_VERSION))
+					{
+						LOGGER.info("Cache hit, returning (in " + (System.currentTimeMillis() - time) + "ms) task: " + pcr.getResult().toString());
+						return pcr.getResult();
+					}
+					else
+					{
+						LOGGER.info("Cache entry has expired, proceeding with pipeline parsing...");
+						new DeleteParserCacheRecordDatabase(getDataSource().getConnection(), text).deleteParserCacheRecordDatabase();
+					}
+				}
+				else
+				{
+					LOGGER.info("Cache miss, proceeding with pipeline parsing...");
+				}
+			}
+			catch (SQLException | IOException | ServletException | ClassNotFoundException e)
+			{
+				LOGGER.warning("Could not access cache, check error logs");
+				e.printStackTrace();
+			}
+		}
 
 		Annotation a = pipeline.runRaw(text);
 		List<CoreMap> sentences = a.get(CoreAnnotations.SentencesAnnotation.class);
@@ -390,8 +439,20 @@ public class ParserITv2
 
 			}
 		}
-
-		return new TextualTask(tact, tconstr, text);
+		TextualTask toRet = new TextualTask(tact, tconstr, text);
+		LOGGER.info("Returning (in " + (System.currentTimeMillis() - time) + "ms) task: " + toRet.toString());
+		try
+		{
+			new CreateParserCacheRecordDatabase(getDataSource().getConnection(), new ParserCacheRecord(text, PARSER_VERSION ,toRet))
+					.createPlaceCacheRecord();
+			LOGGER.info("Cache record created");
+		}
+		catch (SQLException | ServletException | IOException e)
+		{
+			LOGGER.warning("Could not create cache record, check error logs");
+			e.printStackTrace();
+		}
+		return toRet;
 	}
 
 	private int matchesList(String toMatch, List<String> regexps)
@@ -479,4 +540,22 @@ public class ParserITv2
 		textToTime.put("undici_mattina", "11:00");
 		textToTime.put("undici_sera", "23:00");
 	}
+	private DataSource getDataSource() throws ServletException
+	{
+		InitialContext cxt;
+		DataSource ds;
+
+		try {
+			cxt = new InitialContext();
+			ds = (DataSource) cxt.lookup("java:/comp/env/jdbc/mnemosyne");
+		} catch (NamingException e) {
+			ds = null;
+
+			throw new ServletException(
+					String.format("Impossible to access the connection pool to the database: %s",
+							e.getMessage()));
+		}
+		return ds;
+	}
+
 }
