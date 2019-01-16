@@ -35,10 +35,10 @@ public class HintsServlet extends AbstractDatabaseServlet
 	public final int LOCATION_RADIUS_METERS = 150;
 	public final int LOCATION_RADIUS_BEFORE_METERS = 2000;
 	public final int LOCATION_RADIUS_BEFORE_URGENT_METERS = 500;
-	public final int LOCATION_INTEREST_DISTANCE_METERS = 800;
-	public final int LOCATION_INTEREST_DISTANCE_METERS_CRITICAL = 1500;
-	public final int TIME_NOTICE_MINUTES = 30;
-	public final int TIME_NOTICE_MINUTES_CRITICAL = 45;
+	public final int LOCATION_INTEREST_DISTANCE_METERS = 50;
+	public final int LOCATION_INTEREST_DISTANCE_METERS_CRITICAL = 500;
+	public final int TIME_NOTICE_MINUTES = 20;
+	public final int TIME_NOTICE_MINUTES_CRITICAL = 30;
 	public final int TIME_MAX_SLACK_MINUTES = 10;
 	public final int TIME_EVENTS_BEFORE_BED_MINUTES = 20;
 	public final int TIME_EVENTS_BEFORE_BED_MINUTES_CRITICAL = 5;
@@ -284,7 +284,11 @@ public class HintsServlet extends AbstractDatabaseServlet
 										nearest = getClosestToMeFromList(new Point(lat,lon), t.getPlacesToSatisfy());
 									}
 
-									if((phoneTime.isAfter(toWork) && position == ParamsName.location_house && prevPosition != ParamsName.location_house) || (phoneTime.isAfter(latestClosing.getClosing())))
+									if(nearest != null) timeToNearest = pman.getMinutesToDestination(myPoint, nearest.getLeft().getCoordinates());
+									else timeToNearest = 0;
+
+									if((phoneTime.isAfter(toWork) && position == ParamsName.location_house && prevPosition != ParamsName.location_house) ||
+											(phoneTime.isAfter(latestClosing.getClosing())))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
 										confirmMap.put(t.getId(), true);
@@ -294,7 +298,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 
 									if((phoneTime.isAfter(toWork) && distanceInMeters(myPoint, ((LocationParameter) userParametersMap.get(ParamsName.location_house)).getLocation())
-											<= LOCATION_RADIUS_BEFORE_METERS) || (phoneTime.plusMinutes(timeNoticeMinutes).isAfter(latestClosing.getClosing())))
+											<= LOCATION_RADIUS_BEFORE_METERS) || (phoneTime.plusMinutes(timeNoticeMinutes).plusMinutes(timeToNearest).isAfter(latestClosing.getClosing())))
 									{
 										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
 										confirmMap.remove(t.getId());

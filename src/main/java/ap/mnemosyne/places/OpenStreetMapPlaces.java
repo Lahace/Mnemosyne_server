@@ -143,7 +143,6 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			}
 			ObjectMapper map = new ObjectMapper();
 			JsonNode obj = map.readTree(body);
-			if(obj.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this query (" + query + ")");
 			if((new CreatePlaceCacheRecordDatabase(getDataSource().getConnection(), new PlaceCacheRecord(query, PROVIDER_CACHE_ID, DateTime.now(), body)))
 					.createPlaceCacheRecord())
 			{
@@ -153,6 +152,8 @@ public class OpenStreetMapPlaces implements PlacesProvider
 			{
 				LOGGER.warning("Error writing cache record");
 			}
+			if(obj.size() == 0) throw new NoDataReceivedException("OpenStreetMaps: No data received with this query (" + query + ")");
+
 			for(JsonNode node : obj)
 			{
 				toRet.add(computePlace(node));
