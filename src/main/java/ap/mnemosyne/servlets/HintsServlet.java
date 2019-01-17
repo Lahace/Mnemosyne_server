@@ -192,7 +192,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 			for(Task t : tasks)
 			{
 				LOGGER.info("Examining task: " + t.getName());
-				if(confirmMap.get(t.getId()) != null) confirmMap.put(t.getId(), false);
+				if(confirmMap.get(t.getId()) != null) synchronized (confirmMap){confirmMap.put(t.getId(), false);}
 				if(!t.isDoneToday() && !t.isFailed() && !t.isIgnoredToday())
 				{
 					LocalTime fromLunch = ((TimeParameter) userParametersMap.get(ParamsName.time_lunch)).getFromTime();
@@ -206,7 +206,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 						LocalTime fromBed;
 						LocalTime toBed;
 						int intrestDistanceMeters, timeNoticeMinutes, timeEventsBeforeBed;
-						if(confirmMap.get(t.getId()) != null) confirmMap.put(t.getId(), true); //i've seen this task, it has not been deleted and it supposedly still requires confirmation
+						if(confirmMap.get(t.getId()) != null) synchronized (confirmMap){confirmMap.put(t.getId(), true);} //i've seen this task, it has not been deleted and it supposedly still requires confirmation
 						if(t.isCritical())
 						{
 							intrestDistanceMeters = LOCATION_INTEREST_DISTANCE_METERS_CRITICAL;
@@ -251,7 +251,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed)))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
-										confirmMap.put(t.getId(), true);
+										synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 										doable.add(new Hint(t.getId(), null ,true, true));
 										//setTaskFailed(t, user);
 										break;
@@ -260,13 +260,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed).plusMinutes(timeNoticeMinutes)))
 									{
 										LOGGER.info("Adding to doable, urgent");
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), null ,true));
 									}
 									else
 									{
 										LOGGER.info("Adding to doable, non urgent");
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), null ,false));
 									}
 									break;
@@ -291,7 +291,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 											(phoneTime.isAfter(latestClosing.getClosing())))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
-										confirmMap.put(t.getId(), true);
+										synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 										doable.add(new Hint(t.getId(), null ,true, true));
 										//setTaskFailed(t, user);
 										break;
@@ -301,13 +301,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 											<= LOCATION_RADIUS_BEFORE_METERS) || (phoneTime.plusMinutes(timeNoticeMinutes).plusMinutes(timeToNearest).isAfter(latestClosing.getClosing())))
 									{
 										LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), nearest.getLeft() ,true));
 									}
 									else if(distanceInMeters(myPoint, nearest.getLeft().getCoordinates()) <= intrestDistanceMeters)
 									{
 										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), nearest.getLeft() ,false));
 									}
 
@@ -318,7 +318,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if((phoneTime.isAfter(toWork) && position != ParamsName.location_work))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
-										confirmMap.put(t.getId(), true);
+										synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 										doable.add(new Hint(t.getId(), null ,true, true));
 										//setTaskFailed(t, user);
 										break;
@@ -327,13 +327,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(toWork.isBefore(phoneTime.plusMinutes(timeNoticeMinutes)))
 									{
 										LOGGER.info("Adding to doable, urgent");
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), null ,true));
 									}
 									else if(position == ParamsName.location_work)
 									{
 										LOGGER.info("Adding to doable, non urgent");
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), null ,false));
 									}
 									break;
@@ -344,7 +344,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed)))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
-										confirmMap.put(t.getId(), true);
+										synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 										doable.add(new Hint(t.getId(), null ,true, true));
 										//setTaskFailed(t, user);
 										break;
@@ -353,13 +353,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed).plusMinutes(timeNoticeMinutes)))
 									{
 										LOGGER.info("Adding to doable, urgent");
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), null ,true));
 									}
 									else if(position == ParamsName.location_house)
 									{
 										LOGGER.info("Adding to doable, non urgent");
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), null ,false));
 									}
 									break;
@@ -377,7 +377,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 											|| (toTime == null && fromTime.plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime)))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
-										confirmMap.put(t.getId(), true);
+										synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 										doable.add(new Hint(t.getId(), null ,true, true));
 										//setTaskFailed(t, user);
 										break;
@@ -398,34 +398,34 @@ public class HintsServlet extends AbstractDatabaseServlet
 									else timeToNearest = 0;
 
 									if((toTime != null && toTime.isBefore(phoneTime))
-											|| (toTime == null && fromTime.plusMinutes(TIME_MAX_SLACK_MINUTES).isBefore(phoneTime.plusMinutes(timeToNearest)))) //not totally sure about this
+											|| (toTime == null && fromTime.isBefore(phoneTime.plusMinutes(timeToNearest)))) //not totally sure about this
 									{
 										if(nearest != null)
 										{
 											LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), nearest.getLeft(), true));
 										}
 										else
 										{
 											LOGGER.info("Adding to doable, urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), null, true));
 										}
 									}
 									else if((toTime != null && fromTime.isBefore(phoneTime))
-											|| (toTime == null && phoneTime.isAfter(fromTime.plusMinutes(TIME_MAX_SLACK_MINUTES).minusMinutes(timeToNearest).minusMinutes(timeNoticeMinutes))))
+											|| (toTime == null && phoneTime.plusMinutes(timeToNearest).isAfter(fromTime.plusMinutes(TIME_MAX_SLACK_MINUTES).minusMinutes(timeNoticeMinutes))))
 									{
 										if(nearest != null)
 										{
 											LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), nearest.getLeft(), false));
 										}
 										else
 										{
 											LOGGER.info("Adding to doable, non urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), null, false));
 										}
 									}
@@ -437,7 +437,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if(fromTime.isBefore(phoneTime))
 									{
 										LOGGER.info("Task has failed (Asking for confirmation)");
-										confirmMap.put(t.getId(), true);
+										synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 										doable.add(new Hint(t.getId(), null ,true, true));
 										//setTaskFailed(t, user);
 										break;
@@ -461,26 +461,26 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(nearest != null)
 										{
 											LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), nearest.getLeft(), true));
 										}
 										else
 										{
 											LOGGER.info("Adding to doable, urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), null, true));
 										}
 									}
 									else if(nearest != null && nearest.getRight()<=intrestDistanceMeters)
 									{
 										LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), nearest.getLeft(), false));
 									}
 									else if(nearest == null)
 									{
 										LOGGER.info("Adding to doable, non urgent");
-										confirmMap.remove(t.getId());
+										synchronized (confirmMap){confirmMap.remove(t.getId());}
 										doable.add(new Hint(t.getId(), null, false));
 									}
 
@@ -493,7 +493,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									if((latestClosing != null && latestClosing.getClosing().isBefore(phoneTime)) || (fromBed.isBefore(phoneTime.plusMinutes(timeEventsBeforeBed))))
 									{
 										LOGGER.info("Task has failed (asking for confirmation)");
-										confirmMap.put(t.getId(), true);
+										synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 										doable.add(new Hint(t.getId(), null ,true, true));
 										//setTaskFailed(t, user);
 										break;
@@ -518,13 +518,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(nearest != null)
 										{
 											LOGGER.info("Adding to doable, urgent with place : " + nearest.getLeft());
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), nearest.getLeft(), true));
 										}
 										else
 										{
 											LOGGER.info("Adding to doable, urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), null, true));
 										}
 									}
@@ -533,13 +533,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(nearest != null && nearest.getRight()<=intrestDistanceMeters)
 										{
 											LOGGER.info("Adding to doable, non urgent with place : " + nearest.getLeft());
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), nearest.getLeft(), false));
 										}
 										else if(nearest == null)
 										{
 											LOGGER.info("Adding to doable, non urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), null, false));
 										}
 									}
@@ -558,7 +558,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
-											confirmMap.put(t.getId(), true);
+											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 											doable.add(new Hint(t.getId(), null ,true, true));
 											//setTaskFailed(t, user);
 											break;
@@ -567,7 +567,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if (position != null && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Adding to doable, non urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), false));
 										}
 									}
@@ -576,7 +576,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
-											confirmMap.put(t.getId(), true);
+											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 											doable.add(new Hint(t.getId(), null ,true, true));
 											//setTaskFailed(t, user);
 											break;
@@ -585,7 +585,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if (position == null || !position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Adding to doable, non urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), false));
 										}
 									}
@@ -598,7 +598,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(position != null && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
-											confirmMap.put(t.getId(), true);
+											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 											doable.add(new Hint(t.getId(), null ,true, true));
 											//setTaskFailed(t, user);
 											break;
@@ -609,13 +609,13 @@ public class HintsServlet extends AbstractDatabaseServlet
 											if(distanceInMeters(myPoint, ((TaskPlaceConstraint)t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_URGENT_METERS)
 											{
 												LOGGER.info("Adding to doable, urgent");
-												confirmMap.remove(t.getId());
+												synchronized (confirmMap){confirmMap.remove(t.getId());}
 												doable.add(new Hint(t.getId(), true));
 											}
 											else if(distanceInMeters(myPoint, ((TaskPlaceConstraint)t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_METERS)
 											{
 												LOGGER.info("Adding to doable, non urgent");
-												confirmMap.remove(t.getId());
+												synchronized (confirmMap){confirmMap.remove(t.getId());}
 												doable.add(new Hint(t.getId(), false));
 											}
 										}
@@ -634,7 +634,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
-											confirmMap.put(t.getId(), true);
+											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 											doable.add(new Hint(t.getId(), null ,true, true));
 											//setTaskFailed(t, user);
 											break;
@@ -643,7 +643,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if (position != null && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Adding to doable, non urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), false));
 										}
 									}
@@ -652,7 +652,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
-											confirmMap.put(t.getId(), true);
+											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
 											doable.add(new Hint(t.getId(), null ,true, true));
 											//setTaskFailed(t, user);
 											break;
@@ -661,7 +661,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 										if (position == null || !position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Adding to doable, non urgent");
-											confirmMap.remove(t.getId());
+											synchronized (confirmMap){confirmMap.remove(t.getId());}
 											doable.add(new Hint(t.getId(), false));
 										}
 									}
@@ -672,11 +672,15 @@ public class HintsServlet extends AbstractDatabaseServlet
 				}
 			}
 
-			for(Map.Entry<Integer, Boolean> e : confirmMap.entrySet())
+			synchronized (confirmMap)
 			{
-				if(!e.getValue()) confirmMap.remove(e.getKey());
-				else doable.add(new Hint(e.getKey(), null, true, true));
+				for(Map.Entry<Integer, Boolean> e : confirmMap.entrySet())
+				{
+					if(!e.getValue()) confirmMap.remove(e.getKey());
+					else doable.add(new Hint(e.getKey(), null, true, true));
+				}
 			}
+			
 
 			//updating user's last known position
 			if(position == null)
