@@ -573,7 +573,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
-										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position != null && position.equals(t.getConstr().getParamName()))
+										if((prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
+												&& position != null && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
 											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
@@ -649,7 +650,8 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
-										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position.equals(t.getConstr().getParamName()))
+										if((prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
+												&& position != null && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
 											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
@@ -674,13 +676,17 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 			synchronized (confirmMap)
 			{
+				Map<Integer,Boolean> toRemove = new HashMap<>();
 				for(Map.Entry<Integer, Boolean> e : confirmMap.entrySet())
 				{
-					if(!e.getValue()) confirmMap.remove(e.getKey());
+					if(!e.getValue()) toRemove.put(e.getKey(), e.getValue());
 					else doable.add(new Hint(e.getKey(), null, true, true));
 				}
+				for(Map.Entry<Integer, Boolean> e : toRemove.entrySet())
+				{
+					confirmMap.remove(e.getKey());
+				}
 			}
-			
 
 			//updating user's last known position
 			if(position == null)
