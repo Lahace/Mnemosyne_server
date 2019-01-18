@@ -33,8 +33,8 @@ import java.util.logging.Logger;
 public class HintsServlet extends AbstractDatabaseServlet
 {
 	public final int LOCATION_RADIUS_METERS = 150;
-	public final int LOCATION_RADIUS_BEFORE_METERS = 2000;
-	public final int LOCATION_RADIUS_BEFORE_URGENT_METERS = 500;
+	public final int LOCATION_RADIUS_BEFORE_METERS = 3000;
+	public final int LOCATION_RADIUS_BEFORE_URGENT_METERS = 1000;
 	public final int LOCATION_INTEREST_DISTANCE_METERS = 50;
 	public final int LOCATION_INTEREST_DISTANCE_METERS_CRITICAL = 500;
 	public final int TIME_NOTICE_MINUTES = 20;
