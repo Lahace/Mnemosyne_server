@@ -46,7 +46,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 	private final Logger LOGGER = Logger.getLogger(HintsServlet.class.getName());
 	private PlacesManager pman;
-	private Map<Integer, Boolean> confirmMap = new HashMap<>();
+	private final Map<Integer, Boolean> confirmMap = new HashMap<>();
 
 	public void init(ServletConfig config) throws ServletException
 	{
@@ -573,7 +573,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
-										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position.equals(t.getConstr().getParamName()))
+										if(prevPosition != null && !prevPosition.equals(t.getConstr().getParamName()) && position != null && position.equals(t.getConstr().getParamName()))
 										{
 											LOGGER.info("Task has failed (asking for confirmation)");
 											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
