@@ -125,10 +125,10 @@ INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('comprare','vitamine
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('comprare','vitamina','location_item');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('pagare','bollo','location_item');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('prenotare','dottore','location_any');
-INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','gatto','location_house');
-INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','cane','location_house');
-INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','gatti','location_house');
-INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','cani','location_house');
+INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','gatto','location_any');
+INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','cane','location_any');
+INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','gatti','location_any');
+INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('dare_mangiare','cani','location_any');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('fare','lavatrice','location_house');
 INSERT INTO mnemosyne.requires(verb,item,parameter) VALUES ('mettere','crema','location_house');
 
