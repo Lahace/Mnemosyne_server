@@ -267,7 +267,14 @@ public class OpenStreetMapPlaces implements PlacesProvider
 		String town = null;
 		if(address.get("town") == null)
 		{
-			if(address.get("village") != null)
+			if(address.get("village") == null)
+			{
+				if(address.get("city") != null)
+				{
+					town = address.get("city").asText();
+				}
+			}
+			else
 			{
 				town = address.get("village").asText();
 			}
