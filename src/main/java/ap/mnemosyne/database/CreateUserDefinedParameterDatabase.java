@@ -9,7 +9,7 @@ import java.sql.*;
 
 public class CreateUserDefinedParameterDatabase
 {
-	private final String stmt = "INSERT INTO mnemosyne.defines(email, parameter, type, location, location_SSID, location_cellID, from_time, to_time) VALUES (?, ?, ?::paramType, ?::point, ?, ?, ?, ?) RETURNING *";
+	private final String stmt = "INSERT INTO mnemosyne.defines(email, parameter, location, location_SSID, location_cellID, from_time, to_time) VALUES (?, ?, ?::point, ?, ?, ?, ?) RETURNING *";
 	private final User u;
 	private final Connection conn;
 	private final Parameter p;
@@ -33,26 +33,24 @@ public class CreateUserDefinedParameterDatabase
 			{
 				pstmt.setString(1, u.getEmail());
 				pstmt.setString(2, p.getName().toString());
-				pstmt.setString(3, "time");
-				pstmt.setObject(4, null);
-				pstmt.setString(5, null);
-				pstmt.setInt(6, -1);
+				pstmt.setObject(3, null);
+				pstmt.setString(4, null);
+				pstmt.setInt(5, -1);
 				Time tfrom = new Time(((TimeParameter) p).getFromTime().toDateTimeToday().getMillis());
-				pstmt.setTime(7, tfrom);
+				pstmt.setTime(6, tfrom);
 				Time tto = new Time(((TimeParameter) p).getToTime().toDateTimeToday().getMillis());
-				pstmt.setTime(8, tto);
+				pstmt.setTime(7, tto);
 			}
 			else if(p instanceof LocationParameter)
 			{
 				pstmt.setString(1, u.getEmail());
 				pstmt.setString(2, p.getName().toString());
-				pstmt.setString(3, "location");
 				PGpoint point = new PGpoint(((LocationParameter)p).getLocation().getLat(), ((LocationParameter)p).getLocation().getLon());
-				pstmt.setObject(4, point);
-				pstmt.setString(5, ((LocationParameter)p).getSSID());
-				pstmt.setInt(6, ((LocationParameter)p).getCellID());
+				pstmt.setObject(3, point);
+				pstmt.setString(4, ((LocationParameter)p).getSSID());
+				pstmt.setInt(5, ((LocationParameter)p).getCellID());
+				pstmt.setTime(6, null);
 				pstmt.setTime(7, null);
-				pstmt.setTime(8, null);
 			}
 			else
 			{
@@ -63,20 +61,16 @@ public class CreateUserDefinedParameterDatabase
 
 			if(rs.next())
 			{
-				if(rs.getString("type").equals("time"))
+				if(p instanceof TimeParameter)
 				{
 					ret = new TimeParameter(ParamsName.valueOf(rs.getString("parameter")), rs.getString("email"),
 							new LocalTime(rs.getTime("from_time")), new LocalTime(rs.getTime("to_time")));
 				}
-				else if(rs.getString("type").equals("location"))
+				else
 				{
 					PGpoint retPoint = (PGpoint) rs.getObject("location");
 					ret = new LocationParameter(ParamsName.valueOf(rs.getString("parameter")), rs.getString("email"),
 							new Point(retPoint.x, retPoint.y), rs.getInt("location_cellID"), rs.getString("location_SSID"));
-				}
-				else
-				{
-					throw new SQLException("Unknown parameter type, someone screwed up managing DB records");
 				}
 			}
 

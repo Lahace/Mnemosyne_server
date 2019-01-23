@@ -717,6 +717,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 			LOGGER.severe("SQLException: " + sqle.getMessage() + " -> Code: " + sqle.getErrorCode() + " State: " + sqle.getSQLState());
 			ServletUtils.sendMessage(new Message("Internal Server Error (SQL State: " + sqle.getSQLState() + ", error code: " + sqle.getErrorCode() + ")",
 					"500", sqle.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			sqle.printStackTrace();
 			return;
 		}
 		catch (TransformException e)
@@ -724,6 +725,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 			LOGGER.severe("TransformException: " + e.getMessage());
 			ServletUtils.sendMessage(new Message("TransformException",
 					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			e.printStackTrace();
 			return;
 		}
 		catch (FactoryException e)
@@ -731,12 +733,14 @@ public class HintsServlet extends AbstractDatabaseServlet
 			LOGGER.severe("FactoryException: " + e.getMessage());
 			ServletUtils.sendMessage(new Message("FactoryException",
 					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			e.printStackTrace();
 		}
 		catch (ClassNotFoundException e)
 		{
 			LOGGER.severe("ClassNotFoundException: " + e.getMessage());
 			ServletUtils.sendMessage(new Message("ClassNotFoundException",
 					"500", e.getMessage()), res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			e.printStackTrace();
 		}
 		catch (NullPointerException e)
 		{
@@ -793,8 +797,6 @@ public class HintsServlet extends AbstractDatabaseServlet
 			workTime = new TimeParameter(ParamsName.time_work, null,
 					new LocalTime(0,0), new LocalTime(0,0));
 		}
-
-		CoordinateReferenceSystem sourceCRS = CRS.decode("EPSG:4326");
 
 		int houseDistance = distanceInMeters(givenPoint, housePoint);
 		int workDistance = distanceInMeters(givenPoint, workPoint);

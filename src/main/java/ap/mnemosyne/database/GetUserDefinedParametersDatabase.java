@@ -15,7 +15,9 @@ import java.util.Map;
 
 public class GetUserDefinedParametersDatabase
 {
-	private final String stmt = "SELECT * FROM mnemosyne.defines WHERE email=?";
+	private final String stmt = "SELECT * FROM mnemosyne.defines " +
+			"LEFT JOIN parameter ON defines.parameter=parameter.pname " +
+			"WHERE email=?";
 	private final Connection conn;
 	private final User user;
 
@@ -40,32 +42,35 @@ public class GetUserDefinedParametersDatabase
 
 			while (rs.next())
 			{
-				if(rs.getString("type").equals("location"))
+				String type = rs.getString("type");
+				if(type != null)
 				{
-					PGpoint point = (PGpoint) rs.getObject("location");
-					ret.put(ParamsName.valueOf(rs.getString("parameter")),new LocationParameter(ParamsName.valueOf(rs.getString("parameter")), user.getEmail(), new Point(point.x, point.y),
-							rs.getInt("location_cellID"), rs.getString("location_SSID")));
-				}
-				else if(rs.getString("type").equals("time"))
-				{
-					LocalTime to = null;
-					try
+					if (type.equals("location"))
 					{
-						to = new LocalTime(rs.getTime("to_time"));
+						PGpoint point = (PGpoint) rs.getObject("location");
+						ret.put(ParamsName.valueOf(rs.getString("parameter")), new LocationParameter(ParamsName.valueOf(rs.getString("parameter")), user.getEmail(), new Point(point.x, point.y),
+								rs.getInt("location_cellID"), rs.getString("location_SSID")));
 					}
-					catch (DateTimeParseException dtpe)
+					else if (type.equals("time"))
 					{
-						//ignore
+						LocalTime to = null;
+						try
+						{
+							to = new LocalTime(rs.getTime("to_time"));
+						}
+						catch (DateTimeParseException dtpe)
+						{
+							//ignore
+						}
+						ret.put(ParamsName.valueOf(rs.getString("parameter")), new TimeParameter(ParamsName.valueOf(rs.getString("parameter")),
+								user.getEmail(), new LocalTime(rs.getTime("from_time")), to));
 					}
-					ret.put(ParamsName.valueOf(rs.getString("parameter")),new TimeParameter(ParamsName.valueOf(rs.getString("parameter")),
-							user.getEmail(), new LocalTime(rs.getTime("from_time")), to));
+					else
+					{
+						//should never happen
+						throw new SQLException("Parameter type " + rs.getString("type") + "not known");
+					}
 				}
-				else
-				{
-					//should never happen
-					throw new SQLException("Parameter type " + rs.getString("type") + "not known");
-				}
-
 			}
 		}
 		finally

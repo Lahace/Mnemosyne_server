@@ -2,16 +2,16 @@ INSERT INTO mnemosyne.user(email, password) VALUES('asd@asd.it', crypt('password
 INSERT INTO mnemosyne.user(email, password) VALUES('asd2@asd.it', crypt('password', gen_salt('bf', 8)));
 INSERT INTO mnemosyne.user(email, password) VALUES('asd3@asd.it', crypt('password', gen_salt('bf', 8)));
 
-INSERT INTO mnemosyne.parameter(pname) VALUES('location_house');
-INSERT INTO mnemosyne.parameter(pname) VALUES('location_work');
+INSERT INTO mnemosyne.parameter(pname) VALUES('location_house', 'location');
+INSERT INTO mnemosyne.parameter(pname) VALUES('location_work', 'location');
 INSERT INTO mnemosyne.parameter(pname) VALUES('location_item');
 INSERT INTO mnemosyne.parameter(pname) VALUES('location_any');
-INSERT INTO mnemosyne.parameter(pname) VALUES('location_previous');
-INSERT INTO mnemosyne.parameter(pname) VALUES('time_lunch');
-INSERT INTO mnemosyne.parameter(pname) VALUES('time_bed');
-INSERT INTO mnemosyne.parameter(pname) VALUES('time_work');
-INSERT INTO mnemosyne.parameter(pname) VALUES('time_dinner');
-INSERT INTO mnemosyne.parameter(pname) VALUES('time_specified');
+INSERT INTO mnemosyne.parameter(pname) VALUES('location_previous', 'location');
+INSERT INTO mnemosyne.parameter(pname) VALUES('time_lunch', 'time');
+INSERT INTO mnemosyne.parameter(pname) VALUES('time_bed', 'time');
+INSERT INTO mnemosyne.parameter(pname) VALUES('time_work', 'time');
+INSERT INTO mnemosyne.parameter(pname) VALUES('time_dinner', 'time');
+INSERT INTO mnemosyne.parameter(pname) VALUES('time_specified', 'time');
 
 INSERT INTO mnemosyne.defines(email, parameter, type, location_cellID, from_time, to_time) VALUES ('asd@asd.it','time_lunch','time',-1,'12:00', '13:00');
 INSERT INTO mnemosyne.defines(email, parameter, type, location_cellID, from_time, to_time) VALUES ('asd@asd.it','time_dinner','time',-1,'19:00', '20:00');

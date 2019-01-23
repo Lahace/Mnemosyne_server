@@ -13,7 +13,9 @@ import java.time.format.DateTimeParseException;
 
 public class GetUserDefinedParameterByNameDatabase
 {
-	private final String stmt = "SELECT * FROM mnemosyne.defines WHERE email=? AND parameter=?";
+	private final String stmt = "SELECT * FROM mnemosyne.defines " +
+			"LEFT JOIN parameter ON defines.parameter=parameter.pname " +
+			"WHERE email=? AND parameter=?";
 	private final Connection conn;
 	private final User user;
 	private final ParamsName param;
@@ -41,30 +43,37 @@ public class GetUserDefinedParameterByNameDatabase
 
 			while (rs.next())
 			{
-				if(rs.getString("type").equals("location"))
+				String type = rs.getString("type");
+				if(type != null)
 				{
-					PGpoint point = (PGpoint) rs.getObject("location");
-					ret = new LocationParameter(param, user.getEmail(), new Point(point.x, point.y), rs.getInt("location_cellID"), rs.getString("location_SSID"));
-				}
-				else if(rs.getString("type").equals("time"))
-				{
-					LocalTime to = null;
-					try
+					if (type.equals("location"))
 					{
-						to = new LocalTime(rs.getTime("to_time"));
+						PGpoint point = (PGpoint) rs.getObject("location");
+						ret = new LocationParameter(param, user.getEmail(), new Point(point.x, point.y), rs.getInt("location_cellID"), rs.getString("location_SSID"));
 					}
-					catch (DateTimeParseException dtpe)
+					else if (type.equals("time"))
 					{
-						//ignore
+						LocalTime to = null;
+						try
+						{
+							to = new LocalTime(rs.getTime("to_time"));
+						}
+						catch (DateTimeParseException dtpe)
+						{
+							//ignore
+						}
+						ret = new TimeParameter(param, user.getEmail(), new LocalTime(rs.getTime("from_time")), to);
 					}
-					ret = new TimeParameter(param, user.getEmail(), new LocalTime(rs.getTime("from_time")), to);
+					else
+					{
+						//should never happen
+						throw new SQLException("Parameter type " + rs.getString("type") + "not known");
+					}
 				}
 				else
 				{
-					//should never happen
-					throw new SQLException("Parameter type " + rs.getString("type") + "not known");
+					throw new SQLException("Parameter " + param.toString() + " cannot be requested");
 				}
-
 			}
 		}
 		finally
