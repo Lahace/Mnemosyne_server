@@ -182,6 +182,7 @@ public class HintsServlet extends AbstractDatabaseServlet
 
 			LocationParameter prevPlaceParameter = (LocationParameter) new GetUserDefinedParameterByNameDatabase(getDataSource().getConnection(), user, ParamsName.location_previous)
 					.getUserDefinedParameterByName();
+			Map<ParamsName, Boolean> hasBeen = new GetHasBeenRecordsByUserDatabase(getDataSource().getConnection(), user).getHasBeenRecordsByUser();
 
 			ParamsName prevPosition = null;
 			if(prevPlaceParameter != null)
@@ -551,43 +552,52 @@ public class HintsServlet extends AbstractDatabaseServlet
 							//This is only possible with known places (eg. work or house)
 							switch (t.getConstr().getType())
 							{
+								case after:
 								case at:
 									LOGGER.info("Found: " + t.getConstr().getType() + " (place)");
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
-										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
+										if(hasBeen.get(t.getConstr().getParamName()) != null && hasBeen.get(t.getConstr().getParamName()))
 										{
-											LOGGER.info("Task has failed (asking for confirmation)");
-											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
-											doable.add(new Hint(t.getId(), null ,true, true));
-											//setTaskFailed(t, user);
-											break;
-										}
+											LOGGER.info("User has already been at " + position);
+											if (prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
+											{
+												LOGGER.info("Task has failed (asking for confirmation)");
+												synchronized (confirmMap) { confirmMap.put(t.getId(), true); }
+												doable.add(new Hint(t.getId(), null, true, true));
+												//setTaskFailed(t, user);
+												break;
+											}
 
-										if (position != null && position.equals(t.getConstr().getParamName()))
-										{
-											LOGGER.info("Adding to doable, non urgent");
-											synchronized (confirmMap){confirmMap.remove(t.getId());}
-											doable.add(new Hint(t.getId(), false));
+											if (position != null && position.equals(t.getConstr().getParamName()))
+											{
+												LOGGER.info("Adding to doable, non urgent");
+												synchronized (confirmMap) { confirmMap.remove(t.getId()); }
+												doable.add(new Hint(t.getId(), false));
+											}
 										}
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
-										if((prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
-												&& position != null && position.equals(t.getConstr().getParamName()))
+										if(hasBeen.get(t.getConstr().getParamName()) != null && hasBeen.get(t.getConstr().getParamName()))
 										{
-											LOGGER.info("Task has failed (asking for confirmation)");
-											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
-											doable.add(new Hint(t.getId(), null ,true, true));
-											//setTaskFailed(t, user);
-											break;
-										}
+											LOGGER.info("User has already been at " + position);
+											if((prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
+													&& position != null && position.equals(t.getConstr().getParamName()))
+											{
+												LOGGER.info("Task has failed (asking for confirmation)");
+												synchronized (confirmMap){confirmMap.put(t.getId(), true);}
+												doable.add(new Hint(t.getId(), null ,true, true));
+												//setTaskFailed(t, user);
+												break;
+											}
 
-										if (position == null || !position.equals(t.getConstr().getParamName()))
-										{
-											LOGGER.info("Adding to doable, non urgent");
-											synchronized (confirmMap){confirmMap.remove(t.getId());}
-											doable.add(new Hint(t.getId(), false));
+											if (position == null || !position.equals(t.getConstr().getParamName()))
+											{
+												LOGGER.info("Adding to doable, non urgent");
+												synchronized (confirmMap){confirmMap.remove(t.getId());}
+												doable.add(new Hint(t.getId(), false));
+											}
 										}
 									}
 									break;
@@ -596,76 +606,36 @@ public class HintsServlet extends AbstractDatabaseServlet
 									LOGGER.info("Found: " + t.getConstr().getType() + " (place)");
 									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
 									{
-										if(position != null && position.equals(t.getConstr().getParamName()))
+										if(hasBeen.get(t.getConstr().getParamName()) != null && hasBeen.get(t.getConstr().getParamName()))
 										{
-											LOGGER.info("Task has failed (asking for confirmation)");
-											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
-											doable.add(new Hint(t.getId(), null ,true, true));
-											//setTaskFailed(t, user);
-											break;
-										}
-
-										if(prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
-										{
-											if(distanceInMeters(myPoint, ((TaskPlaceConstraint)t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_URGENT_METERS)
+											if (position != null && position.equals(t.getConstr().getParamName()))
 											{
-												LOGGER.info("Adding to doable, urgent");
-												synchronized (confirmMap){confirmMap.remove(t.getId());}
-												doable.add(new Hint(t.getId(), true));
+												LOGGER.info("Task has failed (asking for confirmation)");
+												synchronized (confirmMap) { confirmMap.put(t.getId(), true); }
+												doable.add(new Hint(t.getId(), null, true, true));
+												//setTaskFailed(t, user);
+												break;
 											}
-											else if(distanceInMeters(myPoint, ((TaskPlaceConstraint)t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_METERS)
+											if (prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
 											{
-												LOGGER.info("Adding to doable, non urgent");
-												synchronized (confirmMap){confirmMap.remove(t.getId());}
-												doable.add(new Hint(t.getId(), false));
+												if (distanceInMeters(myPoint, ((TaskPlaceConstraint) t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_URGENT_METERS)
+												{
+													LOGGER.info("Adding to doable, urgent");
+													synchronized (confirmMap) { confirmMap.remove(t.getId()); }
+													doable.add(new Hint(t.getId(), true));
+												}
+												else if (distanceInMeters(myPoint, ((TaskPlaceConstraint) t.getConstr()).getConstraintPlace().getCoordinates()) <= LOCATION_RADIUS_BEFORE_METERS)
+												{
+													LOGGER.info("Adding to doable, non urgent");
+													synchronized (confirmMap) { confirmMap.remove(t.getId()); }
+													doable.add(new Hint(t.getId(), false));
+												}
 											}
 										}
 									}
 									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
 									{
 										//NOT possible for now
-									}
-									break;
-
-								case after:
-									//Same as AT case
-									LOGGER.info("Found: " + t.getConstr().getType() + " (place)");
-									if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.get))
-									{
-										if(prevPosition != null && prevPosition.equals(t.getConstr().getParamName()) && (position == null || !position.equals(t.getConstr().getParamName())))
-										{
-											LOGGER.info("Task has failed (asking for confirmation)");
-											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
-											doable.add(new Hint(t.getId(), null ,true, true));
-											//setTaskFailed(t, user);
-											break;
-										}
-
-										if (position != null && position.equals(t.getConstr().getParamName()))
-										{
-											LOGGER.info("Adding to doable, non urgent");
-											synchronized (confirmMap){confirmMap.remove(t.getId());}
-											doable.add(new Hint(t.getId(), false));
-										}
-									}
-									else if(((TaskPlaceConstraint) t.getConstr()).getNormalizedAction().equals(NormalizedActions.leave))
-									{
-										if((prevPosition == null || !prevPosition.equals(t.getConstr().getParamName()))
-												&& position != null && position.equals(t.getConstr().getParamName()))
-										{
-											LOGGER.info("Task has failed (asking for confirmation)");
-											synchronized (confirmMap){confirmMap.put(t.getId(), true);}
-											doable.add(new Hint(t.getId(), null ,true, true));
-											//setTaskFailed(t, user);
-											break;
-										}
-
-										if (position == null || !position.equals(t.getConstr().getParamName()))
-										{
-											LOGGER.info("Adding to doable, non urgent");
-											synchronized (confirmMap){confirmMap.remove(t.getId());}
-											doable.add(new Hint(t.getId(), false));
-										}
 									}
 									break;
 							}
@@ -686,6 +656,19 @@ public class HintsServlet extends AbstractDatabaseServlet
 				{
 					confirmMap.remove(e.getKey());
 				}
+			}
+
+			if(prevPosition != null && position == null)
+			{
+				if(hasBeen.get(prevPosition) != null)
+				{
+					if(!hasBeen.get(prevPosition)) new UpdateHasBeenRecordDatabase(getDataSource().getConnection(), user, prevPosition, true).updateHasBeenRecordDatabase();
+				}
+				else
+				{
+					new CreateHasBeenRecordDatabase(getDataSource().getConnection(), user, prevPosition, true).createHasBeenRecord();
+				}
+				hasBeen.put(prevPosition, true);
 			}
 
 			//updating user's last known position
