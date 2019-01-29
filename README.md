@@ -38,7 +38,7 @@ clean package resources:resources
 ```
 It's gonna download tons of dependencies, go get a coffee
 
-1. Install Tomcat 8 with `sudo apt-get install tomcat8 tomcat8-admin tomcat8-common`
+13. Install Tomcat 8 with `sudo apt-get install tomcat8 tomcat8-admin tomcat8-common`
 
 1. Create a user for mnemosyne: edit the file `tomcat-users.xml` found in `/etc/tomcat8/` and add the following lines inside the `<tomcat-users>` tag:
 ```
@@ -46,7 +46,9 @@ It's gonna download tons of dependencies, go get a coffee
 <user username="mnemosyne" password="any-password" roles="manager-gui" />
 ```
 
-1. type `localhost:8080` in any browser on the machine where tomcat is installed in to see if it's working and click on "manager webapp"
+15. run `sudo service tomcat8 restart` to apply the changes
+
+16. type `localhost:8080` in any browser on the machine where tomcat is installed in to see if it's working and click on "manager webapp"
 
 1. deploy the .war package that maven created in `~/Mnemosyne_server/target/mnemosyne.war`
 
