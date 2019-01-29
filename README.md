@@ -54,6 +54,53 @@ It's gonna download tons of dependencies, go get a coffee
 
 You're finally good to go.
 
+#### Extra steps
+if you want to reset repeatable tasks/places in the `hasBeen` table every night, follow these steps:
+1. install psycopg2 using this command : `pip install psycopg2`
+1. Create a python script with the following code:
+```python
+#!/usr/bin/python
+import psycopg2
+
+def connect():
+    """ Connect to the PostgreSQL database server """
+    conn = None
+    try:
+        # connect to the PostgreSQL server
+        print('Connecting to the PostgreSQL database...')
+        conn = psycopg2.connect(host="localhost",database="mnemosyne", user="your-username", password="your-password")
+
+        # create a cursor
+        cur = conn.cursor()
+
+        # execute a statement
+        print('Executing statement...')
+        stmt = ('UPDATE mnemosyne.task SET doneToday=false, failed=false WHERE repeatable=true;' +
+                'UPDATE mnemosyne.task SET ignoredToday=false WHERE ignoredToday=true;' +
+                'UPDATE mnemosyne.hasbeen SET beenthere=false;')
+        cur.execute(stmt)
+        conn.commit()
+
+        # close the communication with the PostgreSQL
+        cur.close()
+        print('Done.')
+    except (Exception, psycopg2.DatabaseError) as error:
+        print(error)
+    finally:
+        if conn is not None:
+            conn.close()
+            print('Database connection closed.')
+
+
+if __name__ == '__main__':
+    connect()
+```
+1. type `crontab -e`
+1. Add the following line to your crontab:
+`0 3 * * * python /full/path/to/the/python/script`
+
+Now this script will run every night at 3 A.M.
+
 ## OpenStreetMap Nominatim
 
 In order to find places where to satisfy tasks, OpenStreetMap Nominatim service is used.
