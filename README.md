@@ -28,7 +28,7 @@ variable, it's usually `/usr/lib/jvm/jdk-*version*-oracle-*details about your bu
 
 1. Edit the file found in `~/Mnemosyne_server/src/main/webapp/META-INF/context.xml` and insert there the username of the owner of the `mnemosyne` schema and it's corresponding password below.
 
-1. Go to https://openrouteservice.org/, sign up and get an API key, then create a file in `~/Mnemosyne_server/src/main/resources/ap/mnemosyne/places/` named `openroute.key` and write there the API key you just got.
+1. Go to https://openrouteservice.org/, sign up and get an API key, then create the folder `~/Mnemosyne_server/src/main/resources/ap/mnemosyne/places/` and, inside it, create a new file named `openroute.key` and write there the API key you just got.
 
 1. Install maven and compile using the following:
 ```bash
@@ -46,7 +46,7 @@ It's gonna download tons of dependencies, go get a coffee
 <user username="mnemosyne" password="any-password" roles="manager-gui" />
 ```
 
-15. run `sudo service tomcat8 restart` to apply the changes
+15. run `sudo service tomcat8 restart` to apply changes
 
 16. type `localhost:8080` in any browser on the machine where tomcat is installed in to see if it's working and click on "manager webapp"
 
