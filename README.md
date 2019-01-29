@@ -53,3 +53,8 @@ It's gonna download tons of dependencies, go get a coffee
 1. deploy the .war package that maven created in `~/Mnemosyne_server/target/mnemosyne.war`
 
 You're finally good to go.
+
+## OpenStreetMap Nominatim
+
+In order to find places where to satisfy tasks, OpenStreetMap Nominatim service is used.
+Documentation can be found here https://wiki.openstreetmap.org/wiki/Nominatim
