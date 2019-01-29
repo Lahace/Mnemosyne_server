@@ -95,7 +95,7 @@ def connect():
 if __name__ == '__main__':
     connect()
 ```
-1. type `crontab -e`
+3. type `crontab -e`
 1. Add the following line to your crontab:
 `0 3 * * * python /full/path/to/the/python/script`
 
