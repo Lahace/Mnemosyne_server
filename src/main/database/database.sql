@@ -20,15 +20,6 @@ CREATE TYPE paramType AS ENUM('time','location');
 CREATE TYPE timing AS ENUM('before','at', 'after');
 CREATE TYPE norm_act AS ENUM('leave', 'get');
 
-create or replace function isLocationParameter(VARCHAR(30)) returns boolean as $$
-select exists (
-    select 1
-    from "parameter"
-    where pname = $1
-        and type='location'
-);
-$$ language sql;
-
 CREATE TABLE mnemosyne.user (
     email VARCHAR(255) PRIMARY KEY,
     password TEXT NOT NULL,
@@ -39,6 +30,15 @@ CREATE TABLE mnemosyne.parameter (
     pname VARCHAR(30) PRIMARY KEY,
     type paramType DEFAULT NULL
 );
+
+create or replace function isLocationParameter(VARCHAR(30)) returns boolean as $$
+select exists (
+    select 1
+    from "parameter"
+    where pname = $1
+        and type='location'
+);
+$$ language sql;
 
 CREATE TABLE mnemosyne.hasBeen (
     email VARCHAR(255) NOT NULL,
@@ -64,9 +64,7 @@ CREATE TABLE mnemosyne.defines(
     FOREIGN KEY (email) REFERENCES mnemosyne.user(email)
         ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (parameter) REFERENCES mnemosyne.parameter(pname)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CHECK ((type='time' AND location IS NULL AND to_time IS NOT NULL AND location_SSID IS NULL AND location_cellID <0)
-        OR (type='location' AND from_time IS NULL AND to_time IS NULL AND location IS NOT NULL AND parameter NOT IN ('location_any')))
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE mnemosyne.task(

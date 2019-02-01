@@ -88,6 +88,9 @@ public class OpenStreetMapPlaces implements PlacesProvider
 
 		LOGGER.info("Resolving places from query... waiting");
 		long timeWait = 0;
+
+		//TODO: ADD QUEUE FOR REQUESTS!
+		//This next block is totally not working, it needs to allow requests to be sent with 1s delay between them but it does not
 		while (true)
 		{
 			synchronized (lastRequest)
